@@ -129,7 +129,7 @@ class Misconceptions(Enum):
         40, 'Inconsistent or tautological expression'
     )
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_IN_SUM_OR_AVG = MisconceptionDetails(
-        41, 'using DISTINCT used inside SUM or AVG to remove duplicate value outside of the aggregation'
+        41, 'using DISTINCT used inside SUM or AVG to remove duplicate values outside of the aggregation'
     )
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES = MisconceptionDetails(
         42, 'DISTINCT usage potentially removing important duplicates'
