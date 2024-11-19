@@ -4,10 +4,9 @@ import util
 
 
 class MisconceptionDetails:
-    def __init__(self, id: int, description: str, context: str = '', requirements: list[str] = []):
+    def __init__(self, id: int, description: str, requirements: list[str] = []):
         self.id = id
         self._description = description
-        self._context = context
         self._requirements = requirements
 
     @property
@@ -221,21 +220,16 @@ class Misconceptions(Enum):
 
     SEM_1_INCONSISTENT_EXPRESSION_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION = MisconceptionDetails(
         id=40,
-        description='Inconsistent or tautological expression',
-        context='Tautological expressions are expressions that always evaluate to TRUE; inconsistent expressions are expressions that always evaluate to FALSE',
+        description='writing tautological or inconsistent expressions',
+        requirements=[
+            'The assignment must contain a request which could trick students into writing one of the following: 1) a condition that always evaluates to TRUE; 2) a condition which always evaluates to FALSE;',
+            'The assignment must contain a request which could trick students into writing a condition which is loone of the following: 1) a condition that always evaluates to TRUE; 2) a condition which always evaluates to FALSE; 3) a part of the condition is contained within another part (e.g. x>500 OR x>700 -> in this case x>700 is contained within x>500); a part of the condition is invalidated by another part (e.g. (x < 5 AND y > 10) OR x >= 5)',
+        ],
     )
 
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_IN_SUM_OR_AVG = MisconceptionDetails(
         id=41,
-        description='using DISTINCT used inside SUM or AVG to remove duplicate values outside of the aggregation',
-        # context='''
-        #     Some users incorrectly assume that using DISTINCT inside SUM or AVG functions will calculate the total or average of all unique values across rows, ignoring duplicates in the entire column regardless of the context. In reality, DISTINCT applies to the subset of values passed to the aggregation function, and its scope is limited to ensuring that duplicates are excluded within the calculation process for the specific aggregation.
-        #     SUM(DISTINCT column): Users often expect SUM(column) and SUM(DISTINCT column) to produce similar results, but the latter can be significantly lower if the column contains many duplicates.
-        #     AVG(DISTINCT column): This differs from AVG(column), which includes all values, even duplicates.
-        #     A common mistake is to believe that SUM(DISTINCT) or AVG(DISTINCT) aggregates values across all rows but somehow retains duplicates outside the context of the calculation. This is incorrect because DISTINCT filters only the specific values passed to the aggregation function.
-        #     As an example, an assignment for this misconception might ask students to calculate the total amount spent by each customer on unique products they have ordered.
-        
-        # ''',
+        description='using DISTINCT inside SUM or AVG to remove duplicate values outside of the aggregation',
         requirements=[
             # 'Correct query should not include DISTINCT inside SUM or AVG',
             'Using DISTINCT inside SUM or AVG should produce the wrong result',
@@ -514,13 +508,18 @@ class Misconceptions(Enum):
         description='GROUP BY clause creates singleton groups unnecessarily',
     )
 
-    COM_1_COMPLICATION_GROUP_BY_CAN_BE_REPLACED_WITH_DISTINCT = MisconceptionDetails(
+    COM_1_COMPLICATION_GROUP_BY_WITH_ONLY_A_SINGLE_GROUP = MisconceptionDetails(
         id=96,
+        description='using GROUP BY with a single group',
+    )
+
+    COM_1_COMPLICATION_GROUP_BY_CAN_BE_REPLACED_WITH_DISTINCT = MisconceptionDetails(
+        id=97,
         description='GROUP BY clause could be replaced by DISTINCT',
     )
 
     COM_1_COMPLICATION_UNION_CAN_BE_REPLACED_BY_OR = MisconceptionDetails(
-        id=97,
+        id=98,
         description='UNION operation could be replaced by OR condition',
     )
 

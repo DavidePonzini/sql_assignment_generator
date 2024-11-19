@@ -20,9 +20,12 @@ class AssignmentSolution(BaseModel):
 
 
 class Assignment:
-    def __init__(self, misconceptions: list[Misconceptions], language: str = 'PostgreSQL'):
+    def __init__(self, misconceptions: list[Misconceptions], language: str = 'PostgreSQL', topic: None | str = None):
+        assert len(misconceptions) > 0, 'No misconceptions provided'
+
         self.misconceptions = misconceptions
         self.language = language
+        self.topic = topic
 
         self.message = chatgpt.Message()
         
@@ -58,6 +61,11 @@ class Assignment:
             
             The assignment has to be designed in order to trigger the misconception(s) in students, so that the teacher could then explain them.
         '''
+
+        if self.topic is not None:
+            message += f'''
+                The topic of the assignment is {self.topic}
+            '''
 
         misconceptions_requirements = []
         for misconception in self.misconceptions:
