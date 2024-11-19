@@ -237,7 +237,8 @@ class Misconceptions(Enum):
         
         # ''',
         requirements=[
-            'Correct query should not include DISTINCT inside SUM or AVG'
+            # 'Correct query should not include DISTINCT inside SUM or AVG',
+            'Using DISTINCT inside SUM or AVG should produce the wrong result',
             # 'Correct query should include DISTINCT outside SUM or AVG; wrong query should include DISTINCT inside SUM or AVG',
             # 'Query should preferibly use only use one of SUM or AVG',
         ],

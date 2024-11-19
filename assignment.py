@@ -51,33 +51,27 @@ class Assignment:
     def _generate_assignment(self):
         misconceptions_descriptions = '\n'.join([f'- {misconception.value.description}' for misconception in self.misconceptions])
 
-        misconceptions_context = '\n'.join([f'- {misconception.value.context}' for misconception in self.misconceptions])
+        message = f'''
+            Generate an assignment asking students to write a single {self.language} query.
+            The assignment should focus on the following misconception(s):
+            {misconceptions_descriptions}
+            
+            The assignment has to be designed in order to trigger the misconception(s) in students, so that the teacher could then explain them.
+        '''
 
         misconceptions_requirements = []
         for misconception in self.misconceptions:
             for requirement in misconception.value.requirements:
                 misconceptions_requirements.append(requirement)
-        if len(misconceptions_requirements) == 0:
-            misconceptions_requirements = 'None'
-        else:
+
+        if len(misconceptions_requirements) > 0:
             misconceptions_requirements = '\n'.join([f'- {req}' for req in misconceptions_requirements])
 
-        message = f'''
-            Generate an assignment asking students to write a single {self.language} query.
-            The assignment should be formulated in a way that could cause the students to erroneously apply the misconception.
-
-            Use the information provided by the context for generating the assignment.
-            Also, you must respect the requirements when creating the assignment. 
-
-            The assignment should focus on the following misconception(s):
-            {misconceptions_descriptions}
-
-            --- Context ---
-            {misconceptions_context}
-
-            --- Requirements ---
-            {misconceptions_requirements}
-        '''
+            message += f'''
+                Also, you must respect the following requirements when creating the assignment:
+                {misconceptions_requirements}
+            '''
+        
         message = util.strip_lines(message)
 
         self.message.add_message(chatgpt.MessageRole.USER, message)
@@ -96,6 +90,7 @@ class Assignment:
     def _generate_schema(self):
         message = f'''
             Provide the schema, formatted as a {self.language} CREATE TABLE script.
+            Return only the {self.language} code and nothing else
         '''
         message = util.strip_lines(message)
 
@@ -113,9 +108,10 @@ class Assignment:
     
     def _generate_solutions(self):
         message = f'''
-            Return the correct solution, as well as the expected wrong solution containing the misconception. Print only the {self.language} code.
+            Return the correct solution in JSON format, as well as the expected wrong solution containing the misconception. Print only the {self.language} code.
         '''
         message = util.strip_lines(message)
         
         self.message.add_message(chatgpt.MessageRole.USER, message)
         self.solution = self.message.generate_answer(model=chatgpt.AIModel.GPT4o, json_format=AssignmentSolution)
+
