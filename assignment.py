@@ -64,7 +64,7 @@ class Assignment:
 
         if self.topic is not None:
             message += f'''
-                The topic of the assignment is {self.topic}
+                The assignment should revolve about the following topic: {self.topic}.
             '''
 
         misconceptions_requirements = []
@@ -76,7 +76,7 @@ class Assignment:
             misconceptions_requirements = '\n'.join([f'- {req}' for req in misconceptions_requirements])
 
             message += f'''
-                Also, you must respect the following requirements when creating the assignment:
+                Also, you must respect the following requirement(s) when creating the assignment:
                 {misconceptions_requirements}
             '''
         

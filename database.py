@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from dav_tools import database, messages, chatgpt
-import util
 
 
 db = database.PostgreSQL(

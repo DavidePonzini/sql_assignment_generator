@@ -1,4 +1,6 @@
 from enum import Enum
+import random
+import time
 
 import util
 
@@ -8,6 +10,7 @@ class MisconceptionDetails:
         self.id = id
         self._description = description
         self._requirements = requirements
+        self._rseed = time.time()
 
     @property
     def description(self) -> str:
@@ -19,7 +22,18 @@ class MisconceptionDetails:
     
     @property
     def requirements(self) -> list[str]:
-        return [util.strip_lines(req) for req in self._requirements]
+        # set seed to ensure requirements are generated consintently during program execution
+        random.seed(self._rseed)
+
+        reqs = []
+
+        for req in self._requirements:
+            if isinstance(req, list):
+                req = random.choice(req)        # take a random requirement from a list
+
+            reqs.append(util.strip_lines(req))
+
+        return reqs
 
 
 class Misconceptions(Enum):
@@ -213,34 +227,54 @@ class Misconceptions(Enum):
         description='Additional semicolon in query',
     )
     
+    # ok
     SEM_1_INCONSISTENT_EXPRESSION_AND_INSTEAD_OF_OR = MisconceptionDetails(
         id=39,
-        description='Inconsistent expression: using AND instead of OR',
+        description='erroneosly using AND instead of OR',
+        requirements=[
+            'Use two conditions on the same attribute, connected by OR',    # without this, we usually get conditions on two different attributes 
+            'Formulate the request so that students could be mislead into using AND instead of OR',
+        ]
     )
 
+    # TODO tautological on inconsistent: does not work
     SEM_1_INCONSISTENT_EXPRESSION_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION = MisconceptionDetails(
         id=40,
         description='writing tautological or inconsistent expressions',
         requirements=[
-            'The assignment must contain a request which could trick students into writing one of the following: 1) a condition that always evaluates to TRUE; 2) a condition which always evaluates to FALSE;',
-            'The assignment must contain a request which could trick students into writing a condition which is loone of the following: 1) a condition that always evaluates to TRUE; 2) a condition which always evaluates to FALSE; 3) a part of the condition is contained within another part (e.g. x>500 OR x>700 -> in this case x>700 is contained within x>500); a part of the condition is invalidated by another part (e.g. (x < 5 AND y > 10) OR x >= 5)',
+            [
+                'The assignment must contain a request which could lead students into writing a condition that seems meaningful to solving the request but actually always evaluates to TRUE.',
+                'The assignment must contain a request which could lead students into writing a condition that seems meaningful to solving the request but actually always evaluates to FALSE.',
+                # 'The assignment must contain a request which could trick students into writing a part of a condition which is logically contained within another part (e.g. x>500 OR x>700: in this case x>700 is contained within x>500)',
+                # 'The assignment must contain a request which could trick students into writing a part of a condition which is made not necessary by another part (e.g. (x < 5 AND y > 10) OR x >= 5: in this case the condition can be replaced with y>10 OR x >= 5)',
+            ],
         ],
     )
 
+    # ok
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_IN_SUM_OR_AVG = MisconceptionDetails(
         id=41,
         description='using DISTINCT inside SUM or AVG to remove duplicate values outside of the aggregation',
         requirements=[
-            # 'Correct query should not include DISTINCT inside SUM or AVG',
-            'Using DISTINCT inside SUM or AVG should produce the wrong result',
-            # 'Correct query should include DISTINCT outside SUM or AVG; wrong query should include DISTINCT inside SUM or AVG',
-            # 'Query should preferibly use only use one of SUM or AVG',
+            [
+                'Using DISTINCT inside SUM should produce the wrong result',
+                'Using DISTINCT inside AVG should produce the wrong result',
+            ],
         ],
     )
 
+    # ok
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES = MisconceptionDetails(
         id=42,
-        description='DISTINCT usage potentially removing important duplicates',
+        description='using DISTINCT or GROUP BY might remove important duplicates',
+        requirements=[
+            'The query should list all values of a column which can have duplicate names',  # without this, queries usually ask for ids. Names help keeping the query practical
+            'The query should require some filtering conditions',   # helps keeping the query interesting, otherwise we just get a plain SELECT ... FROM ...
+            [
+                'Using DISTINCT should produce the wrong result. The correct solution should not use DISTINCT',
+                'Using GROUP BY should produce the wrong result. The correct solution should not use GROUP BY',
+            ],
+        ],
     )
 
     SEM_1_INCONSISTENT_EXPRESSION_WILDCARDS_WITHOUT_LIKE = MisconceptionDetails(
