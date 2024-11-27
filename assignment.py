@@ -55,7 +55,7 @@ class Assignment:
         misconceptions_descriptions = '\n'.join([f'- {misconception.value.description}' for misconception in self.misconceptions])
 
         message = f'''
-            Generate an assignment asking students to write a single {self.language} query.
+            Generate an assignment asking students to write exactly one {self.language} query.
             The assignment should focus on the following misconception(s):
             {misconceptions_descriptions}
             

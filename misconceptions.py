@@ -265,7 +265,6 @@ class Misconceptions(Enum):
         description='Additional semicolon in query',
     )
     
-    # ok
     SEM_1_INCONSISTENT_EXPRESSION_AND_INSTEAD_OF_OR = MisconceptionDetails(
         id=39,
         description='erroneosly using AND instead of OR',
@@ -289,7 +288,6 @@ class Misconceptions(Enum):
         ],
     )
 
-    # ok
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_IN_SUM_OR_AVG = MisconceptionDetails(
         id=41,
         description='using DISTINCT inside SUM or AVG to remove duplicate values outside of the aggregation',
@@ -301,7 +299,6 @@ class Misconceptions(Enum):
         ],
     )
 
-    # ok
     SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES = MisconceptionDetails(
         id=42,
         description='using DISTINCT or GROUP BY might remove important duplicates',
@@ -315,16 +312,21 @@ class Misconceptions(Enum):
         ],
     )
 
-    # TODO SEM 43
     SEM_1_INCONSISTENT_EXPRESSION_WILDCARDS_WITHOUT_LIKE = MisconceptionDetails(
         id=43,
         description='Wildcards used without LIKE',
     )
 
-    # TODO SEM 44
     SEM_1_INCONSISTENT_EXPRESSION_INCORRECT_WILDCARD_USING_UNDERSCORE_INSTEAD_OF_PERCENT = MisconceptionDetails(
         id=44,
-        description='Incorrect wildcard: underscore instead of percent sign',
+        description='Incorrect wildcard: "_" instead of "%" or using not supported characters, e.g. "*"',
+        requirements=[
+            [
+                'Wildcard requires at least one "%"',
+                'Wildcard requires at least one "_"',
+                'Wildcard requires at least one "%" and at least one "_"',
+            ]
+        ]
     )
 
     # TODO SEM 45
