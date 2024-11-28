@@ -2,6 +2,7 @@
 Automated generation of SQL assignments based on misconceptions.
 
 # Misconceptions - To Do List
+Misconceptions are based on [Taipalus' error categorization](https://dl.acm.org/doi/pdf/10.1145/3231712).
 
 ## Syntax errors
 
