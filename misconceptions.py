@@ -336,9 +336,18 @@ class Misconceptions(Enum):
     )
 
     # TODO SEM 46
-    SEM_2_INCONSISTENT_JOIN_NULL_IN_SUBQUERY = MisconceptionDetails(
+    SEM_2_INCONSISTENT_JOIN_NULL_IN_IN_ANY_ALL_SUBQUERY = MisconceptionDetails(
         id=46,
-        description='NULL used improperly in subquery',
+        description='NULL values present in IN/ANY/ALL subquery',
+        requirements=[
+            'The subquery can evaluate to NULL',
+            'The subquery has a simple condition',
+            [
+                'The WHERE condition in the main query uses IN (...)',
+                'The WHERE condition in the main query uses ANY (...)',
+                'The WHERE condition in the main query uses ALL (...)',
+            ]
+        ],
     )
 
     # TODO SEM 47

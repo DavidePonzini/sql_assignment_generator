@@ -76,7 +76,7 @@ Misconceptions are based on [Taipalus' error categorization](https://dl.acm.org/
 
 ### Inconsistent Join
 
-46. [ ] **SEM_2_INCONSISTENT_JOIN_NULL_IN_SUBQUERY**
+46. [ ] **SEM_2_INCONSISTENT_JOIN_NULL_IN_IN_ANY_ALL_SUBQUERY**
 47. [ ] **SEM_2_INCONSISTENT_JOIN_JOIN_ON_INCORRECT_COLUMN**
 
 ### Missing Join
