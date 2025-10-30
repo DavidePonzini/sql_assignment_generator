@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sql_assignment_generator"
+version = "0.1.0"
+authors = [
+  { name="Davide Ponzini", email="davide.ponzini95@gmail.com" },
+]
+description = "This project generates SQL assignments based on common mistakes made by learners."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "psycopg2",
+    "pyyaml",
+    "sqlparse",
+    "sqlglot",
+]
+
+[project.urls]
+"Repository" = "https://github.com/DavidePonzini/sql_assignment_generator"
+"Documentation" = "https://sql_assignment_generator.readthedocs.io/en/latest/index.html"
+"Bug Tracker" = "https://github.com/DavidePonzini/sql_assignment_generator/issues"

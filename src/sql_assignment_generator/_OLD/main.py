@@ -3,7 +3,7 @@
 
 from dav_tools import argument_parser, messages
 
-from assignment import Assignment
+from assignments import Assignment
 from misconceptions import Misconceptions
 
 

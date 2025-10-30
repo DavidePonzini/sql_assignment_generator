@@ -1,3 +1,13 @@
 dav_tools>=0.4.3
 progress>=1.6
 pydantic>=2.10.4
+
+# Dependencies for development
+ipython
+
+# Dependencies for building
+build
+autoapi
+pytest
+pytest-cov
+sphinx-autoapi
