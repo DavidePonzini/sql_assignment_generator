@@ -3,8 +3,8 @@
 
 from dav_tools import argument_parser, messages
 
-from .assignment import Assignment
-from .misconceptions import Misconceptions
+from assignment import Assignment
+from misconceptions import Misconceptions
 
 
 if __name__ == '__main__':
