@@ -4,167 +4,124 @@ Automated generation of SQL assignments based on misconceptions.
 # Misconceptions - To Do List
 Misconceptions are based on [Taipalus' error categorization](https://dl.acm.org/doi/pdf/10.1145/3231712).
 
-## Syntax errors
-
-### Ambiguous Database Object
-
-1. [ ] **SYN_1_AMBIGUOUS_DATABASE_OBJECT_OMITTING_CORRELATION_NAMES**
-2. [ ] **SYN_1_AMBIGUOUS_DATABASE_OBJECT_AMBIGUOUS_COLUMN**
-3. [ ] **SYN_1_AMBIGUOUS_DATABASE_OBJECT_AMBIGUOUS_FUNCTION**
-
-### Undefined Database Object
-
-4. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_UNDEFINED_COLUMN**
-5. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_UNDEFINED_FUNCTION**
-6. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_UNDEFINED_PARAMETER**
-7. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_UNDEFINED_OBJECT**
-8. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_INVALID_SCHEMA_NAME**
-9. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_MISSPELLINGS**
-10. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_SYNONYMS**
-11. [ ] **SYN_2_UNDEFINED_DATABASE_OBJECT_OMITTING_QUOTES_AROUND_CHARACTER_DATA**
-
-### Data Type Mismatch
-
-12. [ ] **SYN_3_DATA_TYPE_MISMATCH_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE**
-13. [ ] **SYN_3_DATA_TYPE_MISMATCH**
-
-### Illegal Aggregate Function Placement
-
-14. [ ] **SYN_4_ILLEGAL_AGGREGATE_FUNCTION_PLACEMENT_USING_AGGREGATE_FUNCTION_OUTSIDE_SELECT_OR_HAVING**
-15. [ ] **SYN_4_ILLEGAL_AGGREGATE_FUNCTION_PLACEMENT_GROUPING_ERROR_AGGREGATE_FUNCTIONS_CANNOT_BE_NESTED**
-
-### Illegal Or Insufficient Grouping
-
-16. [ ] **SYN_5_ILLEGAL_OR_INSUFFICIENT_GROUPING_GROUPING_ERROR_EXTRANEOUS_OR_OMITTED_GROUPING_COLUMN**
-17. [ ] **SYN_5_ILLEGAL_OR_INSUFFICIENT_GROUPING_STRANGE_HAVING_HAVING_WITHOUT_GROUP_BY**
-
-### Common Syntax Error
-
-18. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CONFUSING_FUNCTION_WITH_FUNCTION_PARAMETER**
-19. [ ] **SYN_6_COMMON_SYNTAX_ERROR_USING_WHERE_TWICE**
-20. [ ] **SYN_6_COMMON_SYNTAX_ERROR_OMITTING_THE_FROM_CLAUSE**
-21. [ ] **SYN_6_COMMON_SYNTAX_ERROR_COMPARISON_WITH_NULL**
-22. [ ] **SYN_6_COMMON_SYNTAX_ERROR_OMITTING_THE_SEMICOLON**
-23. [ ] **SYN_6_COMMON_SYNTAX_ERROR_DATE_TIME_FIELD_OVERFLOW**
-24. [ ] **SYN_6_COMMON_SYNTAX_ERROR_DUPLICATE_CLAUSE**
-25. [ ] **SYN_6_COMMON_SYNTAX_ERROR_USING_AN_UNDEFINED_CORRELATION_NAME**
-26. [ ] **SYN_6_COMMON_SYNTAX_ERROR_TOO_MANY_COLUMNS_IN_SUBQUERY**
-27. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CONFUSING_TABLE_NAMES_WITH_COLUMN_NAMES**
-28. [ ] **SYN_6_COMMON_SYNTAX_ERROR_RESTRICTION_IN_SELECT_CLAUSE**
-29. [ ] **SYN_6_COMMON_SYNTAX_ERROR_PROJECTION_IN_WHERE_CLAUSE**
-30. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CONFUSING_THE_ORDER_OF_KEYWORDS**
-31. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CONFUSING_THE_LOGIC_OF_KEYWORDS**
-32. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CONFUSING_THE_SYNTAX_OF_KEYWORDS**
-33. [ ] **SYN_6_COMMON_SYNTAX_ERROR_OMITTING_COMMAS**
-34. [ ] **SYN_6_COMMON_SYNTAX_ERROR_CURLY_SQUARE_OR_UNMATCHED_BRACKETS**
-35. [ ] **SYN_6_COMMON_SYNTAX_ERROR_IS_WHERE_NOT_APPLICABLE**
-36. [ ] **SYN_6_COMMON_SYNTAX_ERROR_NONSTANDARD_KEYWORDS_OR_STANDARD_KEYWORDS_IN_WRONG_CONTEXT**
-37. [ ] **SYN_6_COMMON_SYNTAX_ERROR_NONSTANDARD_OPERATORS**
-38. [ ] **SYN_6_COMMON_SYNTAX_ERROR_ADDITIONAL_SEMICOLON**
+# SQL Errors TODO List
+## Syntax Errors
+| ID    | Category  | Name                                  | Description                                                           | Implemented |
+| :---: | :-------: | :------------------------------------ | --------------------------------------------------------------------- | :---------: |
+| 1     | SYN-1     | Ambiguous database object             | Omitting correlation names                                            | Not planned |
+| 2     | SYN-1     | Ambiguous database object             | Ambiguous column                                                      |             |
+| 3     | SYN-1     | Ambiguous database object             | Ambiguous function                                                    | Not planned |
+| 4     | SYN-2     | Undefined database object             | Undefined column                                                      |             |
+| 5     | SYN-2     | Undefined database object             | Undefined function                                                    | Not planned |
+| 6     | SYN-2     | Undefined database object             | Undefined parameter                                                   | Not planned |
+| 7     | SYN-2     | Undefined database object             | Undefined object                                                      |             |
+| 8     | SYN-2     | Undefined database object             | Invalid schema name                                                   |             |
+| 9     | SYN-2     | Undefined database object             | Misspellings                                                          |             |
+| 10    | SYN-2     | Undefined database object             | Synonyms                                                              |             |
+| 11    | SYN-2     | Undefined database object             | Omitting quotes around character data                                 |             |
+| 12    | SYN-3     | Data type mismatch                    | Failure to specify column name twice                                  |             |
+| 13    | SYN-3     | Data type mismatch                    | Data type mismatch                                                    | Not planned |
+| 14    | SYN-4     | Illegal aggregate function placement  | Using aggregate function outside SELECT or HAVING                     | Not planned |
+| 15    | SYN-4     | Illegal aggregate function placement  | Grouping error: aggregate functions cannot be nested                  |             |
+| 16    | SYN-5     | Illegal or insufficient grouping      | Grouping error: extraneous or omitted grouping column                 | Not planned |
+| 17    | SYN-5     | Illegal or insufficient grouping      | Strange HAVING: HAVING without GROUP BY                               | Not planned |
+| 18    | SYN-6     | Common syntax error                   | Confusing function with function                                      | Not planned |
+| 19    | SYN-6     | Common syntax error                   | Using WHERE twice                                                     |             |
+| 20    | SYN-6     | Common syntax error                   | Omitting the FROM clause                                              | Not planned |
+| 21    | SYN-6     | Common syntax error                   | Comparison with NULL                                                  |             |
+| 22    | SYN-6     | Common syntax error                   | Omitting the semicolon                                                | Not planned |
+| 23    | SYN-6     | Common syntax error                   | Date time field overflow                                              | Not planned |
+| 24    | SYN-6     | Common syntax error                   | Duplicate clause                                                      | Not planned |
+| 25    | SYN-6     | Common syntax error                   | Using an undefined correlation name                                   | Not planned |
+| 26    | SYN-6     | Common syntax error                   | Too many columns in subquery                                          |             |
+| 27    | SYN-6     | Common syntax error                   | Confusing table names with column names                               | Not planned |
+| 28    | SYN-6     | Common syntax error                   | Restriction in SELECT clause (e.g., SELECT fee > 10)                  | Not planned |
+| 29    | SYN-6     | Common syntax error                   | Projection in WHERE clause (e.g., WHERE firstname, surname)           | Not planned |
+| 30    | SYN-6     | Common syntax error                   | Confusing the order of keywords (e.g., FROM customer SELECT fee)      | Not planned |
+| 31    | SYN-6     | Common syntax error                   | Confusing the logic of keywords (e.g., grouping instead of ordering)  | Not planned |
+| 32    | SYN-6     | Common syntax error                   | Confusing the syntax of keywords (e.g., LIKE (‘A’, ‘B’))              | Not planned |
+| 33    | SYN-6     | Common syntax error                   | Omitting commas                                                       | Not planned |
+| 34    | SYN-6     | Common syntax error                   | Curly, square or unmatched brackets                                   | Not planned |
+| 35    | SYN-6     | Common syntax error                   | IS where not applicable                                               |             |
+| 36    | SYN-6     | Common syntax error                   | Nonstandard keywords or standard keywords in wrong context            | Not planned |
+| 37    | SYN-6     | Common syntax error                   | Nonstandard operators (e.g., &&, \|\| or ==)                          | Not planned |
+| 38    | SYN-6     | Common syntax error                   | Additional semicolon                                                  | Not planned |
 
 ## Semantic Errors
-
-### Inconsistent Expression
-
-39. [X] **SEM_1_INCONSISTENT_EXPRESSION_AND_INSTEAD_OF_OR**
-40. [ ] **SEM_1_INCONSISTENT_EXPRESSION_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION**
-41. [X] **SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_IN_SUM_OR_AVG**
-42. [X] **SEM_1_INCONSISTENT_EXPRESSION_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES**
-43. [X] **SEM_1_INCONSISTENT_EXPRESSION_WILDCARDS_WITHOUT_LIKE**
-44. [X] **SEM_1_INCONSISTENT_EXPRESSION_INCORRECT_WILDCARD_USING_UNDERSCORE_INSTEAD_OF_PERCENT**
-45. [ ] **SEM_1_INCONSISTENT_EXPRESSION_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL**
-
-### Inconsistent Join
-
-46. [ ] **SEM_2_INCONSISTENT_JOIN_NULL_IN_IN_ANY_ALL_SUBQUERY**
-47. [ ] **SEM_2_INCONSISTENT_JOIN_JOIN_ON_INCORRECT_COLUMN**
-
-### Missing Join
-
-48. [ ] **SEM_3_MISSING_JOIN_OMITTING_A_JOIN**
-
-### Duplicate Rows
-
-49. [ ] **SEM_4_DUPLICATE_ROWS_MANY_DUPLICATES**
-
-### Redundant Column Output
-
-50. [ ] **SEM_5_REDUNDANT_COLUMN_OUTPUT_CONSTANT_COLUMN_OUTPUT**
-51. [ ] **SEM_5_REDUNDANT_COLUMN_OUTPUT_DUPLICATE_COLUMN_OUTPUT**
+| ID    | Category  | Name                                  | Description                                                           | Implemented |  
+| :---: | :-------: | :------------------------------------ | --------------------------------------------------------------------- | :---------: |
+| 39    | SEM-1     | Inconsistent expression               | AND instead of OR (empty result table)                                |             |
+| 40    | SEM-1     | Inconsistent expression               | Implied, tautological or inconsistent expression                      |             |
+| 41    | SEM-1     | Inconsistent expression               | DISTINCT in SUM or AVG                                                |             |
+| 42    | SEM-1     | Inconsistent expression               | DISTINCT that might remove important duplicates                       |             |
+| 43    | SEM-1     | Inconsistent expression               | Wildcards without LIKE                                                |             |
+| 44    | SEM-1     | Inconsistent expression               | Incorrect wildcard: using _ instead of % or using, e.g., *            |             |
+| 45    | SEM-1     | Inconsistent expression               | Mixing a > 0 with IS NOT NULL or empty string with NULL               |             |
+| 46    | SEM-2     | Inconsistent join                     | NULL in IN/ANY/ALL subquery                                           |             |
+| 47    | SEM-2     | Inconsistent join                     | Join on incorrect column (matches impossible)                         | Not planned |
+| 48    | SEM-3     | Missing join                          | Omitting a join                                                       | Not planned |
+| 49    | SEM-4     | Duplicate rows                        | Many duplicates                                                       |             |
+| 50    | SEM-5     | Redundant column output               | Constant column output                                                |             |
+| 51    | SEM-5     | Redundant column output               | Duplicate column output                                               | Not planned |
 
 ## Logical Errors
+| ID    | Category  | Name                                  | Description                                                           | Implemented |  
+| :---: | :-------: | :------------------------------------ | --------------------------------------------------------------------- | :---------: |
+| 52    | LOG-1     | Operator error                        | OR instead of AND                                                     |             |
+| 53    | LOG-1     | Operator error                        | Extraneous NOT operator                                               |             |
+| 54    | LOG-1     | Operator error                        | Missing NOT operator                                                  |             |
+| 55    | LOG-1     | Operator error                        | Substituting existence negation with <>                               |             |
+| 56    | LOG-1     | Operator error                        | Putting NOT in front of incorrect IN/EXISTS                           |             |
+| 57    | LOG-1     | Operator error                        | Incorrect comparison operator or incorrect value compared             |             |
+| 58    | LOG-2     | Join error                            | Join on incorrect table                                               |             |
+| 59    | LOG-2     | Join error                            | Join when join needs to be omitted                                    |             |
+| 60    | LOG-2     | Join error                            | Join on incorrect column (matches possible)                           |             |
+| 61    | LOG-2     | Join error                            | Join with incorrect comparison operator                               | Not planned |
+| 62    | LOG-2     | Join error                            | Missing join                                                          |             |
+| 63    | LOG-3     | Nesting error                         | Improper nesting of expressions                                       |             |
+| 64    | LOG-3     | Nesting error                         | Improper nesting of subqueries                                        |             |
+| 65    | LOG-4     | Expression error                      | Extraneous quotes                                                     | Not planned |
+| 66    | LOG-4     | Expression error                      | Missing expression                                                    |             |
+| 67    | LOG-4     | Expression error                      | Expression on incorrect column                                        |             |
+| 68    | LOG-4     | Expression error                      | Extraneous expression                                                 |             |
+| 69    | LOG-4     | Expression error                      | Expression in incorrect clause                                        |             |
+| 70    | LOG-5     | Projection error                      | Extraneous column in SELECT                                           |             |
+| 71    | LOG-5     | Projection error                      | Missing column from SELECT                                            |             |
+| 72    | LOG-5     | Projection error                      | Missing DISTINCT from SELECT                                          |             |
+| 73    | LOG-5     | Projection error                      | Missing AS from SELECT                                                |             |
+| 74    | LOG-5     | Projection error                      | Missing column from ORDER BY clause                                   |             |
+| 75    | LOG-5     | Projection error                      | Incorrect column in ORDER BY clause                                   |             |
+| 76    | LOG-5     | Projection error                      | Extraneous ORDER BY clause                                            |             |
+| 77    | LOG-5     | Projection error                      | Incorrect ordering of rows                                            |             |
+| 78    | LOG-6     | Function error                        | DISTINCT as function parameter where not applicable                   |             |
+| 79    | LOG-6     | Function error                        | Missing DISTINCT from function parameter                              |             |
+| 80    | LOG-6     | Function error                        | Incorrect function                                                    |             |
+| 81    | LOG-6     | Function error                        | Incorrect column as function parameter                                |             |
 
-### Operator Error
-
-52. [ ] **LOG_1_OPERATOR_ERROR_OR_INSTEAD_OF_AND**
-53. [ ] **LOG_1_OPERATOR_ERROR_EXTRANEOUS_NOT_OPERATOR**
-54. [ ] **LOG_1_OPERATOR_ERROR_MISSING_NOT_OPERATOR**
-55. [ ] **LOG_1_OPERATOR_ERROR_SUBSTITUTING_EXISTENCE_NEGATION_WITH_NOT_EQUAL_TO**
-56. [ ] **LOG_1_OPERATOR_ERROR_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS**
-57. [ ] **LOG_1_OPERATOR_ERROR_INCORRECT_COMPARISON_OPERATOR_OR_VALUE**
-
-### Join Error
-
-58. [ ] **LOG_2_JOIN_ERROR_JOIN_ON_INCORRECT_TABLE**
-59. [ ] **LOG_2_JOIN_ERROR_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED**
-60. [ ] **LOG_2_JOIN_ERROR_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE**
-61. [ ] **LOG_2_JOIN_ERROR_JOIN_WITH_INCORRECT_COMPARISON_OPERATOR**
-62. [ ] **LOG_2_JOIN_ERROR_MISSING_JOIN**
-
-### Nesting Error
-
-63. [ ] **LOG_3_NESTING_ERROR_IMPROPER_NESTING_OF_EXPRESSIONS**
-64. [ ] **LOG_3_NESTING_ERROR_IMPROPER_NESTING_OF_SUBQUERIES**
-
-### Expression Error
-
-65. [ ] **LOG_4_EXPRESSION_ERROR_EXTRANEOUS_QUOTES**
-66. [ ] **LOG_4_EXPRESSION_ERROR_MISSING_EXPRESSION**
-67. [ ] **LOG_4_EXPRESSION_ERROR_EXPRESSION_ON_INCORRECT_COLUMN**
-68. [ ] **LOG_4_EXPRESSION_ERROR_EXTRANEOUS_EXPRESSION**
-69. [ ] **LOG_4_EXPRESSION_ERROR_EXPRESSION_IN_INCORRECT_CLAUSE**
-
-### Projection Error
-
-70. [ ] **LOG_5_PROJECTION_ERROR_EXTRANEOUS_COLUMN_IN_SELECT**
-71. [ ] **LOG_5_PROJECTION_ERROR_MISSING_COLUMN_FROM_SELECT**
-72. [ ] **LOG_5_PROJECTION_ERROR_MISSING_DISTINCT_FROM_SELECT**
-73. [ ] **LOG_5_PROJECTION_ERROR_MISSING_AS_FROM_SELECT**
-74. [ ] **LOG_5_PROJECTION_ERROR_MISSING_COLUMN_FROM_ORDER_BY**
-75. [ ] **LOG_5_PROJECTION_ERROR_INCORRECT_COLUMN_IN_ORDER_BY**
-76. [ ] **LOG_5_PROJECTION_ERROR_EXTRANEOUS_ORDER_BY_CLAUSE**
-77. [ ] **LOG_5_PROJECTION_ERROR_INCORRECT_ORDERING_OF_ROWS**
-
-### Function Error
-
-78. [ ] **LOG_6_FUNCTION_ERROR_DISTINCT_AS_FUNCTION_PARAMETER_WHERE_NOT_APPLICABLE**
-79. [ ] **LOG_6_FUNCTION_ERROR_MISSING_DISTINCT_FROM_FUNCTION_PARAMETER**
-80. [ ] **LOG_6_FUNCTION_ERROR_INCORRECT_FUNCTION**
-81. [ ] **LOG_6_FUNCTION_ERROR_INCORRECT_COLUMN_AS_FUNCTION_PARAMETER**
-
-## Complications
-
-82. [ ] **COM_1_COMPLICATION_UNNECESSARY_COMPLICATION**
-83. [ ] **COM_1_COMPLICATION_UNNECESSARY_DISTINCT_IN_SELECT_CLAUSE**
-84. [ ] **COM_1_COMPLICATION_UNNECESSARY_JOIN**
-85. [ ] **COM_1_COMPLICATION_UNUSED_CORRELATION_NAME**
-86. [ ] **COM_1_COMPLICATION_CORRELATION_NAMES_ARE_ALWAYS_IDENTICAL**
-87. [ ] **COM_1_COMPLICATION_UNNECESSARILY_GENERAL_COMPARISON_OPERATOR**
-88. [ ] **COM_1_COMPLICATION_LIKE_WITHOUT_WILDCARDS**
-89. [ ] **COM_1_COMPLICATION_UNNECESSARILY_COMPLICATED_SELECT_IN_EXISTS_SUBQUERY**
-90. [ ] **COM_1_COMPLICATION_IN_EXISTS_CAN_BE_REPLACED_BY_COMPARISON**
-91. [ ] **COM_1_COMPLICATION_UNNECESSARY_AGGREGATE_FUNCTION**
-92. [ ] **COM_1_COMPLICATION_UNNECESSARY_DISTINCT_IN_AGGREGATE_FUNCTION**
-93. [ ] **COM_1_COMPLICATION_UNNECESSARY_ARGUMENT_OF_COUNT**
-94. [ ] **COM_1_COMPLICATION_UNNECESSARY_GROUP_BY_IN_EXISTS_SUBQUERY**
-95. [ ] **COM_1_COMPLICATION_GROUP_BY_WITH_SINGLETON_GROUPS**
-96. [ ] **COM_1_COMPLICATION_GROUP_BY_CAN_BE_REPLACED_WITH_DISTINCT**
-97. [ ] **COM_1_COMPLICATION_UNION_CAN_BE_REPLACED_BY_OR**
-98. [ ] **COM_1_COMPLICATION_UNNECESSARY_COLUMN_IN_ORDER_BY_CLAUSE**
-99. [ ] **COM_1_COMPLICATION_ORDER_BY_IN_SUBQUERY**
-100. [ ] **COM_1_COMPLICATION_INEFFICIENT_HAVING**
-101. [ ] **COM_1_COMPLICATION_INEFFICIENT_UNION**
-102. [ ] **COM_1_COMPLICATION_CONDITION_IN_SUBQUERY_CAN_BE_MOVED_UP**
-103. [ ] **COM_1_COMPLICATION_CONDITION_ON_LEFT_TABLE_IN_LEFT_OUTER_JOIN**
-104. [ ] **COM_1_COMPLICATION_OUTER_JOIN_CAN_BE_REPLACED_BY_INNER_JOIN**
-105. [ ] **COM_X_COMPLICATION_JOIN_CONDITION_IN_WHERE_CLAUSE**
+# Complications
+| ID    | Category  | Name                                  | Description                                                           | Implemented |  
+| :---: | :-------: | :------------------------------------ | --------------------------------------------------------------------- | :---------: |
+| 82    | COM       | Complication                          | Unnecessary complication                                              |             |
+| 83    | COM       | Complication                          | Unnecessary DISTINCT in SELECT clause                                 | Not planned |
+| 84    | COM       | Complication                          | Unnecessary join                                                      |             |
+| 85    | COM       | Complication                          | Unused correlation name                                               | Not planned |
+| 86    | COM       | Complication                          | Correlation names are always identical                                |             |
+| 87    | COM       | Complication                          | Unnecessarily general comparison operator                             | Not planned |
+| 88    | COM       | Complication                          | LIKE without wildcards                                                |             |
+| 89    | COM       | Complication                          | Unnecessarily complicated SELECT in EXISTS subquery                   |             |
+| 90    | COM       | Complication                          | IN/EXISTS can be replaced by comparison                               | Not planned |
+| 91    | COM       | Complication                          | Unnecessary aggregate function                                        |             |
+| 92    | COM       | Complication                          | Unnecessary DISTINCT in aggregate function                            | Not planned |
+| 93    | COM       | Complication                          | Unnecessary argument of COUNT                                         |             |
+| 94    | COM       | Complication                          | Unnecessary GROUP BY in EXISTS subquery                               | Not planned |
+| 95    | COM       | Complication                          | GROUP BY with singleton groups                                        |             |
+| 96    | COM       | Complication                          | GROUP BY with only a single group                                     |             |
+| 97    | COM       | Complication                          | GROUP BY can be replaced with DISTINCT                                |             |
+| 98    | COM       | Complication                          | UNION can be replaced by OR                                           |             |
+| 99    | COM       | Complication                          | Unnecessary column in ORDER BY clause                                 |             |
+| 100   | COM       | Complication                          | ORDER BY in subquery                                                  |             |
+| 101   | COM       | Complication                          | Inefficient HAVING                                                    | Not planned |
+| 102   | COM       | Complication                          | Inefficient UNION                                                     | Not planned |
+| 103   | COM       | Complication                          | Condition in the subquery can be moved up                             |             |
+| 104   | COM       | Complication                          | Condition on left table in LEFT OUTER JOIN                            | Not planned |
+| 105   | COM       | Complication                          | OUTER JOIN can be replaced by INNER JOIN                              |             |
