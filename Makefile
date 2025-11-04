@@ -12,7 +12,7 @@ else
 	VENV_BIN=$(VENV)/bin
 endif
 
-.PHONY: install build uninstall documentation upload download clean
+.PHONY: install build uninstall documentation upload download clean ipython
 
 $(VENV):
 	python -m venv --clear $(VENV)
@@ -29,11 +29,11 @@ $(VENV)_upgrade: $(VENV)
 install: uninstall build
 	$(VENV_BIN)/python -m pip install ./dist/*.whl
 
-build: venv .env
+build: $(VENV) .env
 	rm -rf dist/
 	$(VENV_BIN)/python -m build
 
-uninstall:
+uninstall: $(VENV)
 	$(VENV_BIN)/python -m pip uninstall -y $(NAME)
 
 documentation:
@@ -49,5 +49,8 @@ download: uninstall
 clean:
 	find . -type d -name '__pycache__' -print0 | xargs -0 rm -r || true
 	rm -rf dist docs/_build .pytest_cache .coverage tests/htmlcov
+
+ipython: $(VENV)
+	$(VENV_BIN)/ipython
 
 ########## Makefile end ##########

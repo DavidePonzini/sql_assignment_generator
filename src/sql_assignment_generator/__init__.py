@@ -1,6 +1,6 @@
-from .sql_errors import SqlErrors
 from .assignments import Assignment
 from .difficulty_level import DifficultyLevel
+from sql_error_categorizer import SqlErrors
 
 
 def generate_assignment(error: SqlErrors, difficulty: DifficultyLevel) -> Assignment:
