@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sql_error_categorizer.sql_errors import SqlErrors
-
 from .difficulty_level import DifficultyLevel
 from . import generate_assignment
 
@@ -16,7 +15,8 @@ def main():
     domain= None
 
     my_assignment = generate_assignment(domain, example_error, example_difficulty)
-    my_assignment.print_assignment()
+    #my_assignment.print_assignment()
+    print(my_assignment)
 
 
 if __name__ == "__main__":

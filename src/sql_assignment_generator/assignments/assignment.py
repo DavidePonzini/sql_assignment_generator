@@ -1,8 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from dav_tools import messages, chatgpt
-# La funzione è importata correttamente qui
-from .assignment_answer_format import SchemaResponse, RequestResponse, SolutionResponse, _generate_json_part
+from dav_tools import chatgpt
+from .assignment_answer_format import AssignmentFormat
 
 @dataclass
 class Assignment:
@@ -10,54 +9,37 @@ class Assignment:
     solution: str
     schema: str
 
-    def print_assignment(self):
-        messages.message(f'\n{self.schema}', icon='Schema', icon_options=[messages.TextFormat.Color.RED])
-        messages.message(f'\n{self.request}', icon='Request', icon_options=[messages.TextFormat.Color.RED])
-        messages.message(f'\n{self.solution}',icon='Solution', icon_options=[messages.TextFormat.Color.RED])
-
     @classmethod
-    def generate_from_ai_json(cls, domain, error_details, difficulty) -> Assignment:
+    def generate_from_ai_html(cls, domain, error_details, difficulty) -> AssignmentFormat:
 
         constraints_list = error_details.constraints[difficulty]
         formatted_constraints = "\n".join(f"- {item}" for item in constraints_list)
-        
+
         assignment_text = f"""
             Progetta un esercizio SQL completo che tratta di un dominio di tipo {domain}. Che insegna a risolvere query che potrebbero
             causare errori come {error_details.description} che deve avere le seguenti caratteristiche: {error_details.characteristics}.
             In oltre si DEVONO rispettare i seguenti vincoli:
             {formatted_constraints}
+
+            Segui ESATTAMENTE questa struttura JSON per la tua risposta:
+            {{
+                "schema": ["CREATE TABLE comando 1...", "CREATE TABLE comando 2..."],
+                "request": "La richiesta per lo studente in linguaggio naturale.",
+                "solution": "La singola query SQL corretta come soluzione."
+            }}
             """ 
 
         chat = chatgpt.Message()
         chat.add_message(chatgpt.MessageRole.USER, assignment_text)
-        exercise_concept = chat.generate_answer(model=chatgpt.AIModel.GPT4o_mini)
-
-        schema_part_list = _generate_json_part(
-            base_context=exercise_concept,
-            instruction="Genera SOLO lo schema SQL (istruzioni CREATE TABLE). La tua risposta DEVE essere un oggetto JSON con una singola chiave 'schema' che contiene una lista di stringhe.",
-            response_model=SchemaResponse
-        )
-        # Unisci la lista di comandi in una singola stringa, separati da un a capo.
-        schema_part = "\n".join(schema_part_list)
-
-        request_part = _generate_json_part(
-            base_context=exercise_concept,
-            instruction="Genera SOLO la richiesta per lo studente in linguaggio naturale. La tua risposta DEVE essere un oggetto JSON con una singola chiave 'request'.",
-            response_model=RequestResponse
+        answer = chat.generate_answer(
+            model=chatgpt.AIModel.GPT4o_mini,
+            json_format=AssignmentFormat
         )
 
-        solution_part = _generate_json_part(
-            base_context=exercise_concept,
-            instruction="Genera SOLO la query SQL corretta che risolve l'esercizio. La tua risposta DEVE essere un oggetto JSON con una singola chiave 'solution'.",
-            response_model=SolutionResponse
-        )
-        # --- FINE MODIFICHE ---
+        if not isinstance(answer, AssignmentFormat):
+            raise TypeError(f"La risposta dell'AI non è stata convertita in un oggetto AssignmentFormat. Controllare la libreria dav_tools. Risposta ricevuta: {type(answer)}")
 
-        return cls(
-            schema=schema_part,
-            request=request_part,
-            solution=solution_part
-        )
+        return answer
     
 
 
@@ -69,7 +51,17 @@ class Assignment:
 
 
 
+# from __future__ import annotations
+# from dataclasses import dataclass
+# from dav_tools import chatgpt, messages
 
+# from .assignment_answer_format import AssignmentFormat
+
+# @dataclass
+# class Assignment:
+#     request: str
+#     solution: str
+#     schema: str
 
     # @classmethod
     # def generate_from_ai_text(cls, domain, error_details, difficulty) -> Assignment:
@@ -82,17 +74,6 @@ class Assignment:
     #         - Error to learn to solve: {error_details.description}
     #         - Characteristics of exercise: {error_details.characteristics}
     #         - Constraints to must be respect in exercise: {error_details.constraints[difficulty]}
-
-    #         Please format your response EXACTLY as follows, using the specified separators:
-
-    #         ---SCHEMA---
-    #         [Return only the table schema to use in the format: CREATE TABLE 'tableName' ('TableField');]
-
-    #         ---REQUEST---
-    #         [Return only a clear natural language query describing the data to retrieve, without mentioning errors or hint]
-
-    #         ---SOLUTION---
-    #         [Return only the correct resulting query. The query must be executable without error.]
     #         """
 
     #     # print("----------------------------------------------------------------------------------------------------------------")
@@ -103,15 +84,37 @@ class Assignment:
     #     #IA call
     #     chat = chatgpt.Message()
     #     chat.add_message(chatgpt.MessageRole.USER, assignment_text)
-    #     full_response = chat.generate_answer(model=chatgpt.AIModel.GPT4o_mini) #json_format dopo model
+    #     full_response = chat.generate_answer(model=chatgpt.AIModel.GPT4o_mini)
 
-    #     #divide the response in elment
-    #     try:
-    #         schema_part = full_response.split("---SCHEMA---")[1].split("---REQUEST---")[0].strip()
-    #         request_part = full_response.split("---REQUEST---")[1].split("---SOLUTION---")[0].strip()
-    #         solution_part = full_response.split("---SOLUTION---")[1].strip()
-    #     except IndexError:
-    #         raise ValueError("La risposta dell'AI non ha il formato atteso con i separatori. Risposta ricevuta:\n" + full_response)
+
+        # #RETURN SCHEMA
+        # chat_schema = chatgpt.Message()
+        # schema_prompt = (
+        #     f"Basandoti su questo scenario di esercizio:\n---\n{full_response}\n---\n"
+        #     "Estrai e restituisci SOLO i comandi 'CREATE TABLE'"
+        # )
+        # chat_schema.add_message(chatgpt.MessageRole.USER, schema_prompt)
+        # schema_part = chat_schema.generate_answer(model=chatgpt.AIModel.GPT4o_mini)
+
+
+        # #RETURN REQUEST
+        # chat_request = chatgpt.Message()
+        # request_prompt = (
+        #     f"Basandoti su questo scenario di esercizio:\n---\n{full_response}\n---\n"
+        #     "Estrai e restituisci SOLO la richiesta per lo studente in linguaggio naturale."
+        # )
+        # chat_request.add_message(chatgpt.MessageRole.USER, request_prompt)
+        # request_part = chat_request.generate_answer(model=chatgpt.AIModel.GPT4o_mini).strip()
+
+
+        # #RETURN SOLUTION
+        # chat_solution = chatgpt.Message()
+        # solution_prompt = (
+        #     f"Basandoti su questo scenario di esercizio:\n---\n{full_response}\n---\n"
+        #     "Estrai e restituisci SOLO la query SQL di soluzione corretta."
+        # )
+        # chat_solution.add_message(chatgpt.MessageRole.USER, solution_prompt)
+        # solution_part = chat_solution.generate_answer(model=chatgpt.AIModel.GPT4o_mini).strip()
 
     #     #return element
     #     return cls(
@@ -119,3 +122,8 @@ class Assignment:
     #         request=request_part,
     #         solution=solution_part
     #     )
+
+    # def print_assignment(self):
+    #     messages.message(f'\n{self.schema}', icon='Schema', icon_options=[messages.TextFormat.Color.RED])
+    #     messages.message(f'\n{self.request}', icon='Request', icon_options=[messages.TextFormat.Color.RED])
+    #     messages.message(f'\n{self.solution}',icon='Solution', icon_options=[messages.TextFormat.Color.RED])
