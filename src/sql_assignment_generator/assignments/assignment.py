@@ -10,24 +10,24 @@ class Assignment:
     schema: str
 
     @classmethod
-    def generate_from_ai_html(cls, domain, error_details, difficulty) -> AssignmentFormat:
+    def generate_from_ai_text(cls, domain, error_details, difficulty) -> AssignmentFormat:
 
         constraints_list = error_details.constraints[difficulty]
         formatted_constraints = "\n".join(f"- {item}" for item in constraints_list)
 
         assignment_text = f"""
-            Progetta un esercizio SQL completo che tratta di un dominio di tipo {domain}. Che insegna a risolvere query che potrebbero
-            causare errori come {error_details.description} che deve avere le seguenti caratteristiche: {error_details.characteristics}.
-            In oltre si DEVONO rispettare i seguenti vincoli:
-            {formatted_constraints}
-
-            Segui ESATTAMENTE questa struttura JSON per la tua risposta:
-            {{
-                "schema": ["CREATE TABLE comando 1...", "CREATE TABLE comando 2..."],
-                "request": "La richiesta per lo studente in linguaggio naturale.",
-                "solution": "La singola query SQL corretta come soluzione."
-            }}
-            """ 
+        Design a complete SQL exercise that deals with a domain of type {domain}. It should teach how to solve queries that might
+        cause errors like {error_details.description} and must have the following characteristics: {error_details.characteristics}.
+        Furthermore, the following constraints MUST be respected:
+        {formatted_constraints}
+        
+        Follow EXACTLY this JSON structure for your response:
+        {{
+            "schema": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."],
+            "request": "The request for the student in natural language.",
+            "solution": "The single correct SQL query as the solution."
+        }}
+        """ 
 
         chat = chatgpt.Message()
         chat.add_message(chatgpt.MessageRole.USER, assignment_text)
@@ -37,7 +37,7 @@ class Assignment:
         )
 
         if not isinstance(answer, AssignmentFormat):
-            raise TypeError(f"La risposta dell'AI non è stata convertita in un oggetto AssignmentFormat. Controllare la libreria dav_tools. Risposta ricevuta: {type(answer)}")
+            raise TypeError(f"The answer is not type format AssignmentFormat: {type(answer)}")
 
         return answer
     
@@ -49,7 +49,7 @@ class Assignment:
 
 
 
-
+#multy answer 
 
 # from __future__ import annotations
 # from dataclasses import dataclass

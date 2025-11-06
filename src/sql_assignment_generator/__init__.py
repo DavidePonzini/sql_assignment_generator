@@ -30,5 +30,4 @@ def generate_assignment(domain: str, error: SqlErrors, difficulty: DifficultyLev
     print(f"Domain: {domain}")
 
     #return Assignment.generate_from_ai_text(domain, error_details, difficulty)
-    assignment_object = Assignment.generate_from_ai_html(domain, error_details, difficulty)
-    return str(assignment_object)
+    return str(Assignment.generate_from_ai_text(domain, error_details, difficulty))

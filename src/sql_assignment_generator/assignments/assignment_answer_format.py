@@ -5,20 +5,11 @@ import html
 
 
 class AssignmentFormat(BaseModel):
-    """
-    Modello Pydantic che definisce la struttura JSON di un esercizio
-    e sa come formattarsi in HTML.
-    """
     schema: List[str]
     request: str
     solution: str
 
     def __str__(self) -> str:
-        """
-        Genera una rappresentazione HTML dell'esercizio quando si chiama str(oggetto).
-        Lo schema viene mostrato in un blocco di codice per una migliore leggibilità.
-        """
-
         # request_html = html.escape(self.request).replace('\n', '<br>')
         # solution_html = html.escape(self.solution).replace('\n', '<br>')
 
@@ -37,10 +28,12 @@ class AssignmentFormat(BaseModel):
         # '''
 
         return f''' 
-        Schema
-        {"\n".join(f"- {item}" for item in self.schema)}
-        Request
-        {self.request}
-        Solution
-        {self.solution}
+Schema
+{"\n".join(f"- {item}" for item in self.schema)}
+
+Request
+{self.request}
+
+Solution
+{self.solution}
         '''
