@@ -4,23 +4,23 @@ from dataclasses import dataclass
 from .difficulty_level import DifficultyLevel
 from sql_error_categorizer.sql_errors import SqlErrors
 
-
+#inner query gli fa schifo a chatgpt
 @dataclass
 class SqlErrorDetails:
     description: str
     characteristics: str
     constraints: Dict[DifficultyLevel, List[str]]
     
-
 ERROR_DETAILS_MAP ={
     SqlErrors.SYN_2_AMBIGUOUS_COLUMN: SqlErrorDetails(
         description="Ambiguous column",
         characteristics ="the student must make a mistake that triggers SQL error code 42702, " \
-            "which occurs when using multiple tables without specifying the table (or table alias) for a column that exists in both.",
+            "which occurs when using multiple tables without specifying the table (or table alias)" \
+            " for a column that exists in both.",
         constraints={
-            DifficultyLevel.EASY: ["min 2 table", "min 2 columns", "min 1 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 2 table", "2-4 columns", "min 1 grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 2 table", "must have 2 columns x table", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 2 table", "must have 2-4 columns x table", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns x table ", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_4_UNDEFINED_COLUMN: SqlErrorDetails(  #similar to 9
@@ -28,9 +28,9 @@ ERROR_DETAILS_MAP ={
         characteristics = "the student must make a mistake that triggers SQL error code 42703; to cause this, " \
             "it is necessary to make the column name more complex or longer.",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 1 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 2 WHERE condition", "min 1 grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 3 WHERE condition", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 1 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 2-4 columns  x table", "must have 2 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have 3 WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_7_UNDEFINED_OBJECT: SqlErrorDetails(  #similar to 9
@@ -38,18 +38,20 @@ ERROR_DETAILS_MAP ={
         characteristics ="the student must make a mistake that triggers SQL error code 42704, " \
             "to cause this, it is necessary to make the table name more complex or longer.",
         constraints={
-            DifficultyLevel.EASY: ["min 2 table", "min 2 columns"],
-            DifficultyLevel.MEDIUM: ["min 2 table", "min 2-4 columns", "min 2 WHERE condition"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 2 WHERE condition", "min 1 grouping"]
+            DifficultyLevel.EASY: ["must use 2 table", "must have 2 columns x table"],
+            DifficultyLevel.MEDIUM: ["must use 2 table", "must have 2-4 columns x table", "must have 2 WHERE condition"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have2-6 columns x table", "must have 2 WHERE condition", "must have SUB-QUERY","must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_8_INVALID_SCHEMA_NAME: SqlErrorDetails(
         description="Invalid schema name",
-        characteristics = "be sure to include the schema name when creating the table in order to produce a student mistake that triggers SQL error code 3F000.",
+        characteristics = "be sure to include the schema name when creating the table in order to produce" \
+            " a student mistake that triggers SQL error code 3F000. " \
+            "Create different table of different schema (more than 2 schema)",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 1 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 2 table", "2-4 columns", "min 1 grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 2 table", "must have 2 columns x table", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 3 table", "must have 2-4 columns x table", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns x table", "must have SUB-QUERY"]
         }
     ),
     SqlErrors.SYN_9_MISSPELLINGS: SqlErrorDetails(  #similar to 4 and 7
@@ -57,9 +59,9 @@ ERROR_DETAILS_MAP ={
         characteristics ="a query that can cause errors possibly due to typos — for example, " \
             "by generating tables and columns with complex names (students may mistype them) or with very similar names (e.g., name and names).",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 1 column", "min 1 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 2 WHERE condition", "min 2 similar column"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 4 similar column", "min 2 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 1 columns x table", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 2-4 columns x table", "must have 2 WHERE condition", "must have 2 similar column"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns x table", "must have 4 similar column", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_10_SYNONYMS: SqlErrorDetails(
@@ -67,9 +69,9 @@ ERROR_DETAILS_MAP ={
         characteristics ="a query that can cause errors because students may misremember the correct name — for example, " \
             "by creating tables and columns with similar names (like competition and competitor) or similar meanings (like monster and zombie).",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 2 similar column"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "3-5 columns", "min 3 similar column", "min 2 WHERE condition"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 2 table with similar meaning", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns x table", "must have 2 similar column"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 3-5 columns x table", "must have 3 similar column", "must have 2 WHERE condition"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns x table", "must have 2 table with similar meaning", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_11_OMITTING_QUOTES_AROUND_CHARACTER_DATA: SqlErrorDetails(
@@ -77,48 +79,48 @@ ERROR_DETAILS_MAP ={
         characteristics ="a query that can cause errors of the type “strings not quoted,” " \
             "requiring string operations in the WHERE clause involving many string variables.",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 1 WHERE string condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 2 WHERE string condition", "min 1 grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 3 WHERE string condition", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 1 WHERE string condition"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 2-4 columns  x table", "must have 2 WHERE string condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have 3 WHERE string condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails(
         description="Failure to specify column name twice",
         characteristics ="a query that can cause “strings not quoted” errors; therefore, the query should include multiple conditions on the same column.",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 1 multiple WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 2 multiple WHERE condition", "min 1 grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 3 multiple WHERE condition", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 1 multiple WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have2-4 columns  x table", "must have 2 multiple WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have 3 multiple WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_15_AGGREGATE_FUNCTIONS_CANNOT_BE_NESTED: SqlErrorDetails(
         description="Grouping error: aggregate functions cannot be nested",
         characteristics ="The student must make a mistake that triggers SQL error code 42803 " \
-            "by generating a query in natural language that seems to involve one aggregation inside another " \
+            "by generating a query in natural language that seems to involve one AGGREGATION inside another " \
             "(e.g. “the book that has the maximum number of sales,” and in database doesn't store the sales count).",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 1 aggregation"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 2 aggregation"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 2 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 1 AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 2-4 columns  x table", "must have 2 AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have SUB-QUERY", "must have 2 AGGREGATION"]
         }
     ),
     SqlErrors.SYN_19_USING_WHERE_TWICE: SqlErrorDetails(
         description="Using WHERE twice",
         characteristics ="The student must make a mistake that triggers use of multiple WHERE",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 2 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 3 WHERE condition", "grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 3 WHERE condition", "min 1 aggregation"]
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use table", "must have 2-4 columns  x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have 3 WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SYN_21_COMPARISON_WITH_NULL: SqlErrorDetails(
         description="Comparison with NULL",
         characteristics ="The student must make a mistake that triggers use of equal (=) in presence of NULL, some column must be nullable",
         constraints={
-            DifficultyLevel.EASY: ["min 1 table", "min 2 columns", "min 2 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["min 1 table", "2-4 columns", "min 3 WHERE condition", "grouping"],
-            DifficultyLevel.HARD: ["3-5 tables", "2-6 columns", "min 3 WHERE condition", "min 2 aggregation"]
-        }# tabelle non usate necessariamente tutte + subquery
+            DifficultyLevel.EASY: ["must use 1 table", "must have 2 columns  x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must use 1 table", "must have 2-4 columns  x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must use 3-5 tables", "must have 2-6 columns  x table", "must have 3 WHERE condition", "must have SUB-QUERY", "must have 2 AGGREGATION"]
+        }
     )
 
     # SYN_26_TOO_MANY_COLUMNS_IN_SUBQUERY

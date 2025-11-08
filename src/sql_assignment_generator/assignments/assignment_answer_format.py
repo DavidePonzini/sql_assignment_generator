@@ -5,7 +5,7 @@ import html
 
 
 class AssignmentFormat(BaseModel):
-    schema: List[str]
+    schemas: List[str]
     request: str
     solution: str
 
@@ -13,7 +13,7 @@ class AssignmentFormat(BaseModel):
         # request_html = html.escape(self.request).replace('\n', '<br>')
         # solution_html = html.escape(self.solution).replace('\n', '<br>')
 
-        # schema_full_string = "\n".join(self.schema)
+        # schema_full_string = "\n".join(self.schemas)
         # schema_html = f'<pre><code>{html.escape(schema_full_string)}</code></pre>'
 
         # return f'''
@@ -28,12 +28,12 @@ class AssignmentFormat(BaseModel):
         # '''
 
         return f''' 
-Schema
-{"\n".join(f"- {item}" for item in self.schema)}
+SCHEMA
+{"\n".join(f"- {item}" for item in self.schemas)}
 
-Request
+REQUEST
 {self.request}
 
-Solution
+SOLUTION
 {self.solution}
         '''
