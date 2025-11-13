@@ -10,7 +10,7 @@ def main():
     """
     Funzione principale per generare e stampare un esercizio.
     """
-    example_error = SqlErrors.SYN_4_UNDEFINED_COLUMN
+    example_error = SqlErrors.SEM_41_DISTINCT_IN_SUM_OR_AVG
     example_difficulty = DifficultyLevel.HARD
     domain= None
 
