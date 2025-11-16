@@ -100,7 +100,7 @@ class Assignment:
         {{
             "schema": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."] can create more table than the students need,
             "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake.",
-            "solution": "Only a single, correct, and executable SQL query following the ASSIGNED CONNSTRAINTS. The query must be well-formatted."
+            "solution": "Only a single, correct, and executable SQL query following the ASSIGNED CONNSTRAINTS. The query must be well-formatted and match with request."
         }}
         """
 
@@ -115,6 +115,8 @@ class Assignment:
                 json_format=AssignmentFormat,
                 add_to_messages=False
             )
+
+            print(answer)
 
             if not isinstance(answer, AssignmentFormat):
                 raise TypeError(f"The answer is not type format AssignmentFormat: {type(answer)}")

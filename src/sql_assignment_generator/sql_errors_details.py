@@ -18,7 +18,7 @@ ERROR_DETAILS_MAP ={
             "it is necessary to make some column names from different tables the same.",
         constraints={
             DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table ", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
@@ -75,21 +75,22 @@ ERROR_DETAILS_MAP ={
     SqlErrors.SYN_11_OMITTING_QUOTES_AROUND_CHARACTER_DATA: SqlErrorDetails(
         description="Omitting quotes around character data",
         characteristics ="exercise should naturally tempts student to make a mistake of the type “strings not quoted,” " \
-            "requiring string operations in the WHERE clause involving many string variables.",
+            "It is mandatory use WHERE clause involving in many condition with STRING variables (e.g. name = 'value').",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 WHERE string condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE string condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE string condition", "must have SUB-QUERY", "must have AGGREGATION"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 WHERE STRING condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE STRING condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE STRING condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
-    SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails(
+    SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails( #non sempre al 3 tentativo per HARD
         description="Failure to specify column name twice",
-        characteristics ="exercise should naturally tempts student to make a mistake that can cause “strings not quoted” errors; " \
-            "therefore, the query should include multiple conditions on the same column.",
+        characteristics = "Solution query must have MULTIPLE CONDITION on the SAME COLUMN (e.g. p.city='Rome' OR p.city='Genoa' this represent one column with MULTIPLE CONDITION). " \
+            "Solution must not have IN format like 'position IN ('Manager', 'Supervisor')' but I want  this format 'position ='Manager' OR position = 'Supervisor''" \
+            "exercise should naturally tempts student to make a mistake that can cause “miss column name” errors (e.g. WHERE city='Boston' OR 'Chicago').",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 multiple WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have2-4 COLUMNS x table", "must have 2 multiple WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 multiple WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 MULTIPLE WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 column with MULTIPLE WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 column with MULTIPLE WHERE condition", "must have SUB-QUERY"]
         }
     ),
     SqlErrors.SYN_15_AGGREGATE_FUNCTIONS_CANNOT_BE_NESTED: SqlErrorDetails(
@@ -152,15 +153,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION: SqlErrorDetails(##########################################
-        description="Implied, tautological or inconsistent expression",
-        characteristics ="",
-        constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", ""],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "", ""],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", ""]
-        }
-    ),
+    #SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION
     SqlErrors.SEM_41_DISTINCT_IN_SUM_OR_AVG: SqlErrorDetails(
         description="Use DISTINCT into SUM or AVG",
         characteristics ="the exercise should naturally lead the student to make a mistake which consists in use DISTINCT inside AVG or SUM. " \
@@ -171,10 +164,37 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 AVG or SUM AGGREGATION", "must have SUB-QUERY"]
         }
     ),
-    # SEM_41_DISTINCT_IN_SUM_OR_AVG                                       
-    # SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES              
-    # SEM_43_WILDCARDS_WITHOUT_LIKE                                        
-    # SEM_44_INCORRECT_WILDCARD                                           
+    #SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES
+    SqlErrors.SEM_43_WILDCARDS_WITHOUT_LIKE: SqlErrorDetails(
+        description="Wildcards without LIKE",
+        characteristics ="the exercise should naturally lead the student to make a mistake which consists in forget to use LIKE (ex. name = 'M%'). " \
+            "The query in solution is mandatory that have many WHERE condition with use of many WILDCARDS",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition with WILDCARDS"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition with WILDCARDS", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.SEM_44_INCORRECT_WILDCARD: SqlErrorDetails(
+        description="Incorrect wildcard",
+        characteristics ="the exercise should naturally lead the student to make a mistake which consists in using incorrect wildcard: using _ instead of %." \
+        "Creates queries that must include some symbols used in wildcard like +, *, (), [], {}, ^, %, _",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition with WILDCARDS"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition with WILDCARDS", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL: SqlErrorDetails(
+        description="Mixing a > 0 with IS NOT NULL or empty string with NULL",
+        characteristics ="the exercise should naturally lead the student to make a mistake which consists in Mixing a '> 0' with 'IS NOT NULL' or empty string with 'NULL'. " \
+        "In the WHERE must have condition that are NULL or empty string",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
+        }
+    ),           
     # SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL                     
     # SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY 
     # SEM_49_MANY_DUPLICATES                                              
