@@ -14,15 +14,15 @@ class SqlErrorDetails:
 ERROR_DETAILS_MAP ={
     SqlErrors.SYN_2_AMBIGUOUS_COLUMN: SqlErrorDetails(
         description="Ambiguous column",
-        characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42702, to cause this, " \
-            "it is necessary to make some column names from different tables the same.",
+        characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42702. " \
+            "In table creation must make some column names from different tables the same.",
         constraints={
             DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition"],
             DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table ", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
-    SqlErrors.SYN_4_UNDEFINED_COLUMN: SqlErrorDetails(  #similar to 9
+    SqlErrors.SYN_4_UNDEFINED_COLUMN: SqlErrorDetails(
         description="Undefined column",
         characteristics = "exercise should naturally tempts student to make a mistake that triggers SQL error code 42703; to cause this, " \
             "it is necessary to make the column name more complex or longer.",
@@ -32,7 +32,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
-    SqlErrors.SYN_7_UNDEFINED_OBJECT: SqlErrorDetails(  #similar to 9
+    SqlErrors.SYN_7_UNDEFINED_OBJECT: SqlErrorDetails(
         description="Undefined object",
         characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42704, " \
             "to cause this, it is necessary to make the table name more complex or longer.",
@@ -52,7 +52,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.SYN_9_MISSPELLINGS: SqlErrorDetails(  #similar to 4 and 7
+    SqlErrors.SYN_9_MISSPELLINGS: SqlErrorDetails(
         description="Misspellings",
         characteristics ="a query that can cause errors possibly due to typos — for example, " \
             "by generating tables and COLUMNS with complex names (students may mistype them) or with very similar names (e.g., name and names).",
@@ -82,15 +82,15 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE STRING condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
-    SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails( #non sempre al 3 tentativo per HARD
+    SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails( #non funziona sempre se metto da 3 in poi multiple cond.
         description="Failure to specify column name twice",
-        characteristics = "Solution query must have MULTIPLE CONDITION on the SAME COLUMN (e.g. p.city='Rome' OR p.city='Genoa' this represent one column with MULTIPLE CONDITION). " \
+        characteristics = "Solution query must have MULTIPLE CONDITION on the SAME COLUMN (e.g. p.film='Alien' OR/AND p.film='Superman' this represent one column with MULTIPLE CONDITION). " \
             "Solution must not have IN format like 'position IN ('Manager', 'Supervisor')' but I want  this format 'position ='Manager' OR position = 'Supervisor''" \
             "exercise should naturally tempts student to make a mistake that can cause “miss column name” errors (e.g. WHERE city='Boston' OR 'Chicago').",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 MULTIPLE WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 column with MULTIPLE WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 column with MULTIPLE WHERE condition", "must have SUB-QUERY"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have column with MULTIPLE WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have column with MULTIPLE WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 column with MULTIPLE WHERE condition", "must have SUB-QUERY"]
         }
     ),
     SqlErrors.SYN_15_AGGREGATE_FUNCTIONS_CANNOT_BE_NESTED: SqlErrorDetails(
@@ -142,15 +142,15 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.SEM_39_AND_INSTEAD_OF_OR: SqlErrorDetails(
+    SqlErrors.SEM_39_AND_INSTEAD_OF_OR: SqlErrorDetails( #non funziona sempre se metto da 3 in poi multiple cond.
         description="AND instead of OR",
-        characteristics ="the exercise should naturally lead the student to make a mistake which consists in use AND respect to OR. " \
-            "The query in solution is mandatory that have many WHERE condition which using AND with two conditions that are mutually exclusive, " \
-            "resulting always in an empty result set (ex. p.city='Genova' AND p.city='Rome' )",
+        characteristics ="Solution query must have OR MULTIPLE CONDITION on the SAME COLUMN (e.g. p.bornCity='Rome' OR p.bornCity='Genoa' this represent one column with MULTIPLE CONDITION). " \
+            "The exercise should naturally lead the student to make a mistake which consists in use AND respect to OR " \
+            "(e.g. WHERE bornCity='Boston' AND bornCity='Chicago' bornCity must be only one).",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table","must have column with OR in MULTIPLE WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have column with OR in MULTIPLE WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 column with OR in MULTIPLE WHERE condition", "must have SUB-QUERY"]
         }
     ),
     #SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION
@@ -186,7 +186,7 @@ ERROR_DETAILS_MAP ={
         }
     ),
     SqlErrors.SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL: SqlErrorDetails(
-        description="Mixing a > 0 with IS NOT NULL or empty string with NULL",
+        description="Mixing a '> 0' with IS NOT NULL or empty string with NULL",
         characteristics ="the exercise should naturally lead the student to make a mistake which consists in Mixing a '> 0' with 'IS NOT NULL' or empty string with 'NULL'. " \
         "In the WHERE must have condition that are NULL or empty string",
         constraints={
@@ -194,12 +194,50 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
-    ),           
-    # SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL                     
-    # SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY 
-    # SEM_49_MANY_DUPLICATES                                              
-    # SEM_50_CONSTANT_COLUMN_OUTPUT 
-    # LOG_52_OR_INSTEAD_OF_AND                                            
+    ),
+    SqlErrors.SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY: SqlErrorDetails(#da vedere sulla parte return NULL
+        description="NULL in IN/ANY/ALL subquery",
+        characteristics ="the exercise should naturally lead the student to make a mistake which consists in return NULL when using IN/ANY/ALL." \
+            "In the WHERE must be conditions that use some IN/ANY/ALL key with INSIDE nullable return value.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
+        }
+    ),
+    SqlErrors.SEM_49_MANY_DUPLICATES: SqlErrorDetails(
+        description="Many duplicates",
+        characteristics ="the exercise should naturally lead the student to make a mistake which consists in query that returns (or can return) many times the same values " \
+        "i.e. a query that doesn't select at least a primary or unique key. The solution must not have UNIQUE KEY IN SELECT, AGGREGATION or GROUP BY",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have DISTINCT", "must have 1 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have DISTINCT", "must have 3 WHERE condition"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have DISTINCT", "must have 3 WHERE condition", "must have SUB-QUERY"]
+        }
+    ),
+    # SEM_50_CONSTANT_COLUMN_OUTPUT
+    SqlErrors.LOG_52_OR_INSTEAD_OF_AND: SqlErrorDetails(
+        description="OR instead of AND",
+        characteristics ="Solution query must have more AND CONDITION (e.g. p.film='Alien' AND p.film='Eragon' -> I want both film information from same person id). " \
+            "Solution must not have IN format like 'position IN ('Manager', 'Supervisor')' but I want this format 'position ='Manager' AND position = 'Supervisor''" \
+            "The exercise should naturally lead the student to make a mistake which consists in use OR respect to AND "
+            "(e.g. WHERE p.film='Alien' OR p.film='Eragon' ERROR because I want both information).",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_53_EXTRANEOUS_NOT_OPERATOR: SqlErrorDetails(
+        description="Extraneous NOT operator",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in using NOT where it should have not been used." \
+        "In the solution must have more NOT to improuve the learning of its use",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 NOT in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 NOT in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 NOT in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ), 
     # LOG_53_EXTRANEOUS_NOT_OPERATOR                                      
     # LOG_54_MISSING_NOT_OPERATOR                                         
     # LOG_55_SUBSTITUTING_EXISTENCE_NEGATION_WITH_NOT_EQUAL_TO            

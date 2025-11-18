@@ -19,19 +19,46 @@ def _check_where_wildcards(solution_upper, min_required, max_required) -> bool:
     return min_required <= count <= max_required
     
 def _check_where_multiple(solution_upper, min_required, max_required) -> bool:
-    column_pattern = r'(\b[A-Z0-9_]+\b(?:\.\b[A-Z0-9_]+\b)?)\s*(?:[=<>!]|>=|<=|\bNOT\s+LIKE\b|\bLIKE\b|\bIN\b)'
-    columns_used = re.findall(column_pattern, solution_upper)
+    where_match = re.search(r'\bWHERE\b(.*?)(?=\bGROUP BY|\bORDER BY|\bLIMIT|$)', solution_upper, re.DOTALL | re.IGNORECASE)
+    
+    if not where_match:
+        return min_required <= 0 <= max_required
 
-    column_counts = Counter(columns_used)
-
+    where_content = where_match.group(1)
+    major_conditions = re.split(r'\s+AND\s+(?![^()]*\))', where_content.strip())
+    
     total_multiple_conditions = 0
-    for column in column_counts:
-        count = column_counts[column]
-        total_multiple_conditions += count // 2
-        
-    return min_required <= total_multiple_conditions <= max_required
- 
+    column_pattern = r'(\b[A-Z0-9_]+\b(?:\.\b[A-Z0-9_]+\b)?)\s*(?:[=<>!]|>=|<=|\bNOT\s+LIKE\b|\bLIKE\b|\bIN\b)'
 
+    for condition in major_conditions:
+        columns_in_condition = re.findall(column_pattern, condition)
+        if not columns_in_condition:
+            continue
+
+        column_counts = Counter(columns_in_condition)
+        if any(count >= 2 for count in column_counts.values()):
+            total_multiple_conditions += 1
+            
+    return min_required <= total_multiple_conditions <= max_required
+
+def _check_where_in_any_all(solution_upper, min_required, max_required) -> bool:
+    pattern = r'\b(IN|ANY|ALL)\b'
+    
+    matches = re.findall(pattern, solution_upper)
+    count = len(matches)
+
+    return min_required <= count <= max_required
+
+def _check_where_not(solution_upper, min_required, max_required) -> bool:
+    #Found word "NOT".
+    pattern = r'\bNOT\b'
+    
+    #Found corrispondence in query and count it
+    matches = re.findall(pattern, solution_upper)
+    count = len(matches)
+    
+    #Its correct number?
+    return min_required <= count <= max_required
 
 
 def is_solution_valid(schema: list[str], solution: str, constraints: list[str]) -> tuple[bool, list[str]]:
@@ -51,22 +78,36 @@ def is_solution_valid(schema: list[str], solution: str, constraints: list[str]) 
 
 
 def _check_tables(schema: list[str], solution: str, constraint: str) -> bool:
+    if not schema:
+        return False
+    
+    constraint_upper = constraint.upper()
+    if 'CREATE TABLE' in constraint_upper:
+        return True
+    
     numbers = [int(n) for n in re.findall(r'\d+', constraint)] # extract number in constraint ( must have 2-6 CREATE TABLE -> [2,6])
     if not numbers:
         return True
     min_required = numbers[0]
-    max_required = numbers[1] if len(numbers) > 1 else min_required  # if there are 2 number we have min and max, otherwise only min value
+    max_required = numbers[1] if len(numbers) > 1 else float('inf')  # if there are 2 number we have min and max, otherwise only min value
 
     tables_created = len(schema) #number of table
     
     return min_required <= tables_created <= max_required #controll if it is valid number
 
 def _check_columns(schema: list[str], solution: str, constraint: str) -> bool:
+    if not schema:
+        return False
+    
+    constraint_upper = constraint.upper()
+    if 'COLUMNS' not in constraint_upper:
+        return True
+    
     numbers = [int(n) for n in re.findall(r'\d+', constraint)]
     if not numbers:
         return True
     min_required = numbers[0]
-    max_required = numbers[1] if len(numbers) > 1 else min_required
+    max_required = numbers[1] if len(numbers) > 1 else float('inf')
     if not schema:
         return False
     
@@ -86,7 +127,6 @@ def _check_columns(schema: list[str], solution: str, constraint: str) -> bool:
         column_count = len(column_lines) #remaining elements are the column number
         
         if not (min_required <= column_count <= max_required): return False
-    return True
 
 def _check_aggregation(schema: list[str], solution: str, constraint: str) -> bool:
     #extract constraints number
@@ -131,9 +171,12 @@ def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
     max_required = numbers[1] if len(numbers) > 1 else float('inf')
     constraint_upper = constraint.upper()
 
+    #all type of WHERE condition used
     if 'MULTIPLE' in constraint_upper: return _check_where_multiple(solution_upper, min_required, max_required)
     elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required)
     elif 'STRING' in constraint_upper: return _check_where_string(solution_upper, min_required, max_required)
+    elif 'NOT' in constraint_upper: return _check_where_not(solution_upper, min_required, max_required)
+    elif 'IN' in constraint_upper or 'ANY' in constraint_upper or 'ALL' in constraint_upper: return _check_where_in_any_all(solution_upper, min_required, max_required)
     else:
         operators = re.findall(r'\bWHERE\b|\bHAVING\b|\bAND\b|\bOR\b', solution_upper)
         count = len(operators)
@@ -143,11 +186,28 @@ def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
              max_required = numbers[1]
         return min_required <= count <= max_required
 
+def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
+    #extract number of occurence
+    numbers = [int(n) for n in re.findall(r'\d+', constraint)]
+    min_required = numbers[0] if numbers else 1
+    max_required = numbers[1] if len(numbers) > 1 else float('inf')
+
+    #look for all distinct occurrence in solution
+    solution_upper = solution.upper()
+    pattern = r'\bDISTINCT\b'
+    distincts_found = re.findall(pattern, solution_upper)
+    
+    #count occurence
+    count = len(distincts_found)
+    
+    return min_required <= count <= max_required
+
 
 CONSTRAINT_CHECKERS = {
-    "COLUMNS X TABLE": _check_columns,
     "TABLE": _check_tables,
+    "COLUMNS X TABLE": _check_columns,
     "WHERE": _check_where,
+    "DISTINCT": _check_distinct,
     "AGGREGATION": _check_aggregation,
     "SUB-QUERY": _check_subquery
 }
