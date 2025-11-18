@@ -27,9 +27,11 @@ class AssignmentFormat(BaseModel):
         #     <div>{solution_html}</div>
         # '''
 
+
+        schema = "\n".join(f"- {item}" for item in self.schemas)
         return f''' 
 SCHEMA
-{"\n".join(f"- {item}" for item in self.schemas)}
+{schema}
 
 REQUEST
 {self.request}
