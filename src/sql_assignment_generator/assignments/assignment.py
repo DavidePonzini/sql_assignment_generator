@@ -100,7 +100,7 @@ class Assignment:
         {{
             "schema": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."] can create more table than the students need,
             "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake.",
-            "solution": "Only a single, correct, and EXECUTABLE SQL query following the ASSIGNED CONNSTRAINTS. The query must be well-formatted and match with request."
+            "solution": "Only a single and SINTATTICAL corret (executable) SQL query following the ASSIGNED CONNSTRAINTS. The query must be well-formatted and match with request."
         }}
         """
 

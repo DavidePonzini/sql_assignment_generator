@@ -60,22 +60,63 @@ def _check_where_not(solution_upper, min_required, max_required) -> bool:
     #Its correct number?
     return min_required <= count <= max_required
 
+def _check_where_exists(solution_upper, min_required, max_required, exist) -> bool:
+    # look for word "EXISTS".
+    if exist:
+        pattern = r'\bEXISTS\b'
+    else:
+        pattern = r'\bNOT EXISTS\b'
+    
+    matches = re.findall(pattern, solution_upper)
+    count = len(matches)
+    return min_required <= count <= max_required
 
-def is_solution_valid(schema: list[str], solution: str, constraints: list[str]) -> tuple[bool, list[str]]:
-    """
-    Function to verify if generated exercise (schema and solution) respect all costraints.
-    """
-    missing_constraints = []
-    for constraint in constraints:
-        for keyword, checker_func in CONSTRAINT_CHECKERS.items():
-            if keyword in constraint.upper():
-                if not checker_func(schema, solution, constraint):
-                    missing_constraints.append(constraint)
-                break
-        
-    return len(missing_constraints) == 0, list(set(missing_constraints))
+def _check_where_comparison(solution_upper, min_required, max_required) -> bool:
+    where_match = re.search(r'\bWHERE\b(.*?)(?=\bGROUP BY|\bORDER BY|\bLIMIT|$)', solution_upper, re.DOTALL | re.IGNORECASE)
+   
+    if not where_match:
+        return min_required <= 0 <= max_required
+
+    where_content = where_match.group(1)
+    where_content_clean = re.sub(r"'[^']*'", '', where_content)
+    pattern = r'(>=|<=|<>|!=|=|>|<|\+|\-|\*|\/|%)'
+    
+    matches = re.findall(pattern, where_content_clean)
+    count = len(matches)
+
+    return min_required <= count <= max_required
 
 
+def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
+    solution_upper = solution.upper()
+    
+    if "WHERE" in constraint.upper() and 'WHERE' not in solution_upper:
+        return False
+    if 'WHERE' not in solution_upper:
+        return True
+
+    numbers = [int(n) for n in re.findall(r'\d+', constraint)]
+    min_required = numbers[0] if numbers else 1
+    max_required = numbers[1] if len(numbers) > 1 else float('inf')
+    constraint_upper = constraint.upper()
+
+    #all type of WHERE condition used
+    if 'MULTIPLE' in constraint_upper: return _check_where_multiple(solution_upper, min_required, max_required)
+    elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required)
+    elif 'STRING' in constraint_upper: return _check_where_string(solution_upper, min_required, max_required)
+    elif 'NOT EXIST' in constraint_upper: return _check_where_exists(solution_upper, min_required, max_required, False)
+    elif 'EXIST' in constraint_upper: return _check_where_exists(solution_upper, min_required, max_required, True)
+    elif 'NOT' in constraint_upper: return _check_where_not(solution_upper, min_required, max_required)
+    elif 'COMPARISON OPERATOR' in constraint_upper: return _check_where_comparison(solution_upper, min_required, max_required)
+    elif 'IN' in constraint_upper or 'ANY' in constraint_upper or 'ALL' in constraint_upper: return _check_where_in_any_all(solution_upper, min_required, max_required)
+    else:
+        operators = re.findall(r'\bWHERE\b|\bHAVING\b|\bAND\b|\bOR\b', solution_upper)
+        count = len(operators)
+        if len(numbers) <= 1:
+             max_required = float('inf')
+        else:
+             max_required = numbers[1]
+        return min_required <= count <= max_required
 
 def _check_tables(schema: list[str], solution: str, constraint: str) -> bool:
     if not schema:
@@ -93,6 +134,16 @@ def _check_tables(schema: list[str], solution: str, constraint: str) -> bool:
 
     tables_created = len(schema) #number of table
     
+    if 'CHECK' in constraint_upper: #try to find if there is CHECK as ask in condition
+        check_found = False
+        for table_sql in schema: 
+            if re.search(r'\bCHECK\b', table_sql, re.IGNORECASE):
+                check_found = True
+                break
+        
+        if not check_found:
+            return False
+
     return min_required <= tables_created <= max_required #controll if it is valid number
 
 def _check_columns(schema: list[str], solution: str, constraint: str) -> bool:
@@ -158,34 +209,6 @@ def _check_aggregation(schema: list[str], solution: str, constraint: str) -> boo
 def _check_subquery(schema: list[str], solution: str, constraint: str) -> bool:
     return solution.upper().count('SELECT') > 1
 
-def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
-    solution_upper = solution.upper()
-    
-    if "WHERE" in constraint.upper() and 'WHERE' not in solution_upper:
-        return False
-    if 'WHERE' not in solution_upper:
-        return True
-
-    numbers = [int(n) for n in re.findall(r'\d+', constraint)]
-    min_required = numbers[0] if numbers else 1
-    max_required = numbers[1] if len(numbers) > 1 else float('inf')
-    constraint_upper = constraint.upper()
-
-    #all type of WHERE condition used
-    if 'MULTIPLE' in constraint_upper: return _check_where_multiple(solution_upper, min_required, max_required)
-    elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required)
-    elif 'STRING' in constraint_upper: return _check_where_string(solution_upper, min_required, max_required)
-    elif 'NOT' in constraint_upper: return _check_where_not(solution_upper, min_required, max_required)
-    elif 'IN' in constraint_upper or 'ANY' in constraint_upper or 'ALL' in constraint_upper: return _check_where_in_any_all(solution_upper, min_required, max_required)
-    else:
-        operators = re.findall(r'\bWHERE\b|\bHAVING\b|\bAND\b|\bOR\b', solution_upper)
-        count = len(operators)
-        if len(numbers) <= 1:
-             max_required = float('inf')
-        else:
-             max_required = numbers[1]
-        return min_required <= count <= max_required
-
 def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
     #extract number of occurence
     numbers = [int(n) for n in re.findall(r'\d+', constraint)]
@@ -202,6 +225,21 @@ def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
     
     return min_required <= count <= max_required
 
+
+
+def is_solution_valid(schema: list[str], solution: str, constraints: list[str]) -> tuple[bool, list[str]]:
+    """
+    Function to verify if generated exercise (schema and solution) respect all costraints.
+    """
+    missing_constraints = []
+    for constraint in constraints:
+        for keyword, checker_func in CONSTRAINT_CHECKERS.items():
+            if keyword in constraint.upper():
+                if not checker_func(schema, solution, constraint):
+                    missing_constraints.append(constraint)
+                break
+        
+    return len(missing_constraints) == 0, list(set(missing_constraints))
 
 CONSTRAINT_CHECKERS = {
     "TABLE": _check_tables,

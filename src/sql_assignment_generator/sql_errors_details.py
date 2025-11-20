@@ -153,14 +153,24 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 column with OR in MULTIPLE WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    #SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION
+    SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION: SqlErrorDetails(#puo essere migliorata?
+        description="Tautological or inconsistent expression",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in tautological or inconsistent expression (e.g. start_date > end_date). " \
+        "Ask the student to solve a query that has many conditions with operators made on the same variable e.g. price > 10 AND price < 100, age > 18 OR age >= 0, to improuve the learning " \
+        "add CHECK at table.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE with CHECK", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
     SqlErrors.SEM_41_DISTINCT_IN_SUM_OR_AVG: SqlErrorDetails(
         description="Use DISTINCT into SUM or AVG",
         characteristics ="the exercise should naturally lead the student to make a mistake which consists in use DISTINCT inside AVG or SUM. " \
             "The query in solution is mandatory that have many AGGREGATION of type AVG or SUM",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have AVG or SUM AGGREGATION", "must have WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 AVG or SUM AGGREGATION", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 AVG or SUM AGGREGATION", "must have 2 WHERE condition"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 AVG or SUM AGGREGATION", "must have SUB-QUERY"]
         }
     ),
@@ -171,7 +181,7 @@ ERROR_DETAILS_MAP ={
             "The query in solution is mandatory that have many WHERE condition with use of many WILDCARDS",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition with WILDCARDS"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition with WILDCARDS", "must have SUB-QUERY"]
         }
     ),
@@ -181,7 +191,7 @@ ERROR_DETAILS_MAP ={
         "Creates queries that must include some symbols used in wildcard like +, *, (), [], {}, ^, %, _",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition with WILDCARDS"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition with WILDCARDS", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition with WILDCARDS", "must have SUB-QUERY"]
         }
     ),
@@ -191,7 +201,7 @@ ERROR_DETAILS_MAP ={
         "In the WHERE must have condition that are NULL or empty string",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
@@ -201,7 +211,7 @@ ERROR_DETAILS_MAP ={
             "In the WHERE must be conditions that use some IN/ANY/ALL key with INSIDE nullable return value.",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
@@ -211,7 +221,7 @@ ERROR_DETAILS_MAP ={
         "i.e. a query that doesn't select at least a primary or unique key. The solution must not have UNIQUE KEY IN SELECT, AGGREGATION or GROUP BY",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have DISTINCT", "must have 1 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have DISTINCT", "must have 3 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have DISTINCT", "must have 3 WHERE condition"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have DISTINCT", "must have 3 WHERE condition", "must have SUB-QUERY"]
         }
     ),
@@ -224,27 +234,65 @@ ERROR_DETAILS_MAP ={
             "(e.g. WHERE p.film='Alien' OR p.film='Eragon' ERROR because I want both information).",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.LOG_53_EXTRANEOUS_NOT_OPERATOR: SqlErrorDetails(
+    SqlErrors.LOG_53_EXTRANEOUS_NOT_OPERATOR: SqlErrorDetails( #questo e il successivo sono molto simili
         description="Extraneous NOT operator",
         characteristics ="The exercise should naturally lead the student to make a mistake which consists in using NOT where it should have not been used." \
         "In the solution must have more NOT to improuve the learning of its use",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 NOT in WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 NOT in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 NOT in WHERE condition", "must have AGGREGATION"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 NOT in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
         }
-    ), 
-    # LOG_53_EXTRANEOUS_NOT_OPERATOR                                      
-    # LOG_54_MISSING_NOT_OPERATOR                                         
-    # LOG_55_SUBSTITUTING_EXISTENCE_NEGATION_WITH_NOT_EQUAL_TO            
+    ),
+    SqlErrors.LOG_54_MISSING_NOT_OPERATOR: SqlErrorDetails(#questo e il precedente sono molto simili
+        description="Missing NOT operator",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in not using NOT where it should have been used." \
+        "In the solution must have more NOT to improuve the learning of its use",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 NOT in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 NOT in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 NOT in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_55_SUBSTITUTING_EXISTENCE_NEGATION_WITH_NOT_EQUAL_TO: SqlErrorDetails(#puo essere migliorata?
+        description="Substituting existence negation with <>",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in asking for a value being " \
+        "different or NULL instead of checking if it do NOT EXIST (e.g. if we want: list the names of actors who have acted in a movie released in 2015 " \
+        "but we do this wrong: list the names of actors who have acted in at least one movie not released in 2015)",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have NOT EXIST in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have NOT EXIST in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 NOT EXIST in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_56_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS: SqlErrorDetails(#puo essere migliorata?
+        description="Putting NOT in front of incorrect IN/EXISTS",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in when multiple IN/EXISTS are present, putting NOT on the wrong one " \
+        "(e.g. if we want: list the names of actors who have acted in a movie released in 2015; " \
+        "but we do this wrong: list the names of actors who have acted in at least one movie but not in a movie that was released in 2015)",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have have EXIST in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have have EXIST in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have have 2 EXIST in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),            
     # LOG_56_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS               
-    # LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE                       
+    SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(#puo essere migliorata?
+        description="Incorrect comparison operator or incorrect value compared",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in using the incorrect comparison operator or " \
+        "using the correct operator on a wrong value. In query solution must be more operator usage",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have have 1 COMPARISON OPERATOR in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have have 2 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have have 3 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),                     
     # LOG_58_JOIN_ON_INCORRECT_TABLE                                      
-    # LOG_59_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED                           
+    # LOG_59_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED
     # LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE 
     # LOG_62_MISSING_JOIN                                                 
     # LOG_63_MPROPER_NESTING_OF_EXPRESSIONS                               
