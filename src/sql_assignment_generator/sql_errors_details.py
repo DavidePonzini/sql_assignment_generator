@@ -142,7 +142,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.SEM_39_AND_INSTEAD_OF_OR: SqlErrorDetails( #non funziona sempre se metto da 3 in poi multiple cond.
+    SqlErrors.SEM_39_AND_INSTEAD_OF_OR: SqlErrorDetails(
         description="AND instead of OR",
         characteristics ="Solution query must have OR MULTIPLE CONDITION on the SAME COLUMN (e.g. p.bornCity='Rome' OR p.bornCity='Genoa' this represent one column with MULTIPLE CONDITION). " \
             "The exercise should naturally lead the student to make a mistake which consists in use AND respect to OR " \
@@ -205,14 +205,14 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY: SqlErrorDetails(#da vedere sulla parte return NULL
+    SqlErrors.SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY: SqlErrorDetails(
         description="NULL in IN/ANY/ALL subquery",
         characteristics ="the exercise should naturally lead the student to make a mistake which consists in return NULL when using IN/ANY/ALL." \
-            "In the WHERE must be conditions that use some IN/ANY/ALL key with INSIDE nullable return value.",
+            "In the WHERE must be conditions that use some ANY/ALL/IN key with INSIDE nullable return value.",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
-            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 IN or ANY or ALL in WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 ANY or ALL or IN in WHERE condition", "must have SUB-QUERY"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 ANY or ALL or IN in WHERE condition", "must have SUB-QUERY"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 ANY or ALL or IN in WHERE condition", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
     SqlErrors.SEM_49_MANY_DUPLICATES: SqlErrorDetails(
@@ -275,57 +275,135 @@ ERROR_DETAILS_MAP ={
         "(e.g. if we want: list the names of actors who have acted in a movie released in 2015; " \
         "but we do this wrong: list the names of actors who have acted in at least one movie but not in a movie that was released in 2015)",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have have EXIST in WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have have EXIST in WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have have 2 EXIST in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have EXIST in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have EXIST in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 EXIST in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
         }
     ),            
     # LOG_56_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS               
-    SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(#puo essere migliorata?
+    SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(
         description="Incorrect comparison operator or incorrect value compared",
         characteristics ="The exercise should naturally lead the student to make a mistake which consists in using the incorrect comparison operator or " \
         "using the correct operator on a wrong value. In query solution must be more operator usage",
         constraints={
-            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have have 1 COMPARISON OPERATOR in WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have have 2 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have have 3 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 COMPARISON OPERATOR in WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 COMPARISON OPERATOR in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
         }
-    ),                     
-    # LOG_58_JOIN_ON_INCORRECT_TABLE                                      
-    # LOG_59_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED
-    # LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE 
-    # LOG_62_MISSING_JOIN                                                 
-    # LOG_63_MPROPER_NESTING_OF_EXPRESSIONS                               
-    # LOG_64_IMPROPER_NESTING_OF_SUBQUERIES 
+    ),
+    SqlErrors.LOG_58_JOIN_ON_INCORRECT_TABLE: SqlErrorDetails(
+        description="Join on incorrect table",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in make join operation performed on the correct number of tables, " \
+        "but with the wrong tables. In TABLE CREATION must be similar table (e.g. table student and table students_score ) and must have similar column with different meanings " \
+        "(e.g. users.name = products.name)",
+        constraints={
+            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have JOIN", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 3-4 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 JOIN", "must have 2 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 4-6 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 JOIN", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_59_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED: SqlErrorDetails(
+        description="Join when join needs to be omitted",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in performing the join operation on a table not required for the solution. " \
+        "In TABLE CREATION must be similar table (e.g. table student and table students_score) and more table that the solution need",
+        constraints={
+            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have JOIN", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 3-4 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 JOIN", "must have 2 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 4-6 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 JOIN", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE: SqlErrorDetails(
+        description="Join on incorrect column (matches possible)",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in performing the join operation on the correct table, " \
+        "but using the wrong column (values can still match). In TABLE CREATION must have equal column with different meanings (e.g. users.name = products.name)",
+        constraints={
+            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have JOIN", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 3-4 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 JOIN", "must have 2 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 4-6 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 JOIN", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_62_MISSING_JOIN: SqlErrorDetails(#puo essere migliorata?
+        description="Missing join",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in query does not use a table needed for the solution.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have JOIN", "must have WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 3-4 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 JOIN", "must have 2 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 4-6 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 JOIN", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_63_MPROPER_NESTING_OF_EXPRESSIONS: SqlErrorDetails(#non funziona sempre se metto da 3 in poi nested cond. e non gli piaciono le subquery
+        description="Improper nesting of expressions",
+        characteristics ="Solution query must have multiple condition (NO SUB-QUERY) that must require NESTING (e.g. (condizione1 OR condizione2) AND condizione3 -> " \
+        "NESTING are the condition inside parentesis which are mandatory). The exercise should naturally lead the student to make a mistake which consists in " \
+        "invalid logic due to parenthesis used in the wrong places (e.g. age > (price > 10) a number cant > of boolean).",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have NESTED WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have NESTED WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 NESTED WHERE condition", "must have AGGREGATION"] #, "must have SUB-QUERY"
+        }
+    ),
+    SqlErrors.LOG_64_IMPROPER_NESTING_OF_SUBQUERIES: SqlErrorDetails(
+        description="Improper nesting of subqueries",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in using nested subqueries but they are nested incorrectly." \
+        "The solution must have sub-query NOT NESTED",
+        constraints={
+            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS x table", "must have WHERE condition", "must have SUB-QUERY NOT NESTED"],
+            DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition", "must have SUB-QUERY NOT NESTED"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY NOT NESTED"]
+        }
+    ),                       
     # LOG_66_MISSING_EXPRESSION                                           
     # LOG_67_EXPRESSION_ON_INCORRECT_COLUMN                               
-    # LOG_68_EXTRANEOUS_EXPRESSION                                        
+    # LOG_68_EXTRANEOUS_EXPRESSION
+    # 25-11
+    #                                         
     # LOG_69_EXPRESSION_IN_INCORRECT_CLAUSE                               
     # LOG_70_EXTRANEOUS_COLUMN_IN_SELECT                                  
-    # LOG_71_MISSING_COLUMN_FROM_SELECT                                   
+    # LOG_71_MISSING_COLUMN_FROM_SELECT
+    # 27-11
+    #                                    
     # LOG_72_MISSING_DISTINCT_FROM_SELECT                                 
     # LOG_73_MISSING_AS_FROM_SELECT                                       
-    # LOG_74_MISSING_COLUMN_FROM_ORDER_BY                                 
+    # LOG_74_MISSING_COLUMN_FROM_ORDER_BY
+    # 28-11
+    #                                  
     # LOG_75_INCORRECT_COLUMN_IN_ORDER_BY                                 
     # LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE                                   
-    # LOG_77_INCORRECT_ORDERING_OF_ROWS                                   
+    # LOG_77_INCORRECT_ORDERING_OF_ROWS
+    # 2-12
+    #                                    
     # LOG_78_DISTINCT_AS_FUNCTION_PARAMETER_WHERE_NOT_APPLICABLE          
     # LOG_79_MISSING_DISTINCT_FROM_FUNCTION_PARAMETER                     
-    # LOG_80_INCORRECT_FUNCTION                                           
+    # LOG_80_INCORRECT_FUNCTION
+    # 3-12
+    #                                            
     # LOG_81_INCORRECT_COLUMN_AS_FUNCTION_PARAMETER
     # COM_83_UNNECESSARY_DISTINCT_IN_SELECT_CLAUSE                        
-    # COM_84_UNNECESSARY_JOIN 
+    # COM_84_UNNECESSARY_JOIN
+    # 4-12
+    #  
     # COM_86_CORRELATION_NAMES_ARE_ALWAYS_IDENTICAL
     # COM_88_LIKE_WITHOUT_WILDCARDS                                       
-    # COM_89_UNNECESSARILY_COMPLICATED_SELECT_IN_EXISTS_SUBQUERY 
+    # COM_89_UNNECESSARILY_COMPLICATED_SELECT_IN_EXISTS_SUBQUERY
+    # 5-12
+    #  
     # COM_91_UNNECESSARY_AGGREGATE_FUNCTION
     # COM_93_UNNECESSARY_ARGUMENT_OF_COUNT
-    # COM_95_GROUP_BY_WITH_SINGLETON_GROUPS                               
+    # COM_95_GROUP_BY_WITH_SINGLETON_GROUPS
+    # 6-12
+    #                                
     # COM_96_GROUP_BY_WITH_ONLY_A_SINGLE_GROUP                            
     # COM_97_GROUP_BY_CAN_BE_REPLACED_WITH_DISTINCT                       
-    # COM_98_UNION_CAN_BE_REPLACED_BY_OR                                  
+    # COM_98_UNION_CAN_BE_REPLACED_BY_OR
+    # 8-12
+    #                                   
     # COM_99_UNNECESSARY_COLUMN_IN_ORDER_BY_CLAUSE
     # COM_102_INEFFICIENT_UNION
+    # 9-12
+    #
     # COM_104_CONDITION_ON_LEFT_TABLE_IN_LEFT_OUTER_JOIN                 
     # COM_105_OUTER_JOIN_CAN_BE_REPLACED_BY_INNER_JOIN
+    # 10-12
+
+    # 11-12 fare i mancanti
 }

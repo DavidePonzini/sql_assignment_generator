@@ -86,6 +86,42 @@ def _check_where_comparison(solution_upper, min_required, max_required) -> bool:
 
     return min_required <= count <= max_required
 
+def _check_where_nested(solution_upper, min_required, max_required) -> bool:
+    """
+    Controlla la presenza di condizioni annidate tramite parentesi nella clausola WHERE.
+    Cerca pattern come (condizione1 OR condizione2) oppure (condizione1 AND condizione2).
+    """
+    # 1. Estrai il contenuto della clausola WHERE
+    where_match = re.search(r'\bWHERE\b(.*?)(?=\bGROUP BY|\bORDER BY|\bLIMIT|$)', solution_upper, re.DOTALL | re.IGNORECASE)
+    
+    if not where_match:
+        return min_required <= 0 <= max_required
+
+    where_content = where_match.group(1)
+
+    # 2. Pulizia: Rimuovi le stringhe tra apici per evitare falsi positivi nel testo
+    where_content_clean = re.sub(r"'[^']*'", '', where_content)
+
+    # 3. Pulizia: Rimuovi le subquery (SELECT ...) perché contano come SUB-QUERY, 
+    # non necessariamente come "parentesi logiche" di precedenza.
+    # Rimuoviamo pattern che iniziano con (SELECT
+    where_content_clean = re.sub(r'\(\s*SELECT.*?\)', '', where_content_clean, flags=re.DOTALL)
+
+    # 4. Cerca parentesi che contengono operatori logici (AND, OR).
+    # Regex: 
+    # \(       -> Parentesi aperta
+    # [^()]*   -> Qualsiasi cosa che non sia una parentesi (per trovare il livello più interno)
+    # \b(OR|AND)\b -> Operatore logico
+    # [^()]*   -> Qualsiasi cosa che non sia una parentesi
+    # \)       -> Parentesi chiusa
+    pattern = r'\([^()]*\b(OR|AND)\b[^()]*\)'
+    
+    matches = re.findall(pattern, where_content_clean)
+    count = len(matches)
+
+    return min_required <= count <= max_required
+
+
 
 def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
     solution_upper = solution.upper()
@@ -102,6 +138,7 @@ def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
 
     #all type of WHERE condition used
     if 'MULTIPLE' in constraint_upper: return _check_where_multiple(solution_upper, min_required, max_required)
+    elif 'NESTED' in constraint_upper: return _check_where_nested(solution_upper, min_required, max_required)
     elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required)
     elif 'STRING' in constraint_upper: return _check_where_string(solution_upper, min_required, max_required)
     elif 'NOT EXIST' in constraint_upper: return _check_where_exists(solution_upper, min_required, max_required, False)
@@ -178,6 +215,7 @@ def _check_columns(schema: list[str], solution: str, constraint: str) -> bool:
         column_count = len(column_lines) #remaining elements are the column number
         
         if not (min_required <= column_count <= max_required): return False
+    return True
 
 def _check_aggregation(schema: list[str], solution: str, constraint: str) -> bool:
     #extract constraints number
@@ -207,7 +245,46 @@ def _check_aggregation(schema: list[str], solution: str, constraint: str) -> boo
     return len(aggregations_found) >= num_required
 
 def _check_subquery(schema: list[str], solution: str, constraint: str) -> bool:
-    return solution.upper().count('SELECT') > 1
+    solution_upper = solution.upper()
+    constraint_upper = constraint.upper()
+
+    solution_clean = re.sub(r"'[^']*'", '', solution_upper)
+
+    #controll if sub-query exist
+    select_count = solution_clean.count('SELECT')
+    if select_count < 2:
+        return False
+
+    #analyze the nesting
+    tokens = re.finditer(r'\(|\)|\bSELECT\b', solution_clean)
+    
+    current_depth = 0
+    select_depths = []
+
+    for match in tokens:
+        token = match.group()
+        if token == '(':
+            current_depth += 1
+        elif token == ')':
+            current_depth -= 1
+        elif token == 'SELECT':
+            select_depths.append(current_depth)
+
+    if not select_depths: return False
+    base_depth = min(select_depths) 
+
+    #compute level related to main query
+    relative_depths = [d - base_depth for d in select_depths]
+    subquery_depths = [d for d in relative_depths if d > 0]
+    if not subquery_depths:
+        return False
+    
+    max_nesting_level = max(subquery_depths)
+
+    if 'NOT NESTED' in constraint_upper: return max_nesting_level == 1
+    elif 'NESTED' in constraint_upper: return max_nesting_level >= 2
+    else:
+        return True
 
 def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
     #extract number of occurence
@@ -222,6 +299,20 @@ def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
     
     #count occurence
     count = len(distincts_found)
+    
+    return min_required <= count <= max_required
+
+def _check_join(schema: list[str], solution: str, constraint: str) -> bool:
+    numbers = [int(n) for n in re.findall(r'\d+', constraint)]
+    min_required = numbers[0] if numbers else 1
+    max_required = numbers[1] if len(numbers) > 1 else float('inf')
+
+    #found word JOIN (INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL JOIN, CROSS JOIN)
+    solution_upper = solution.upper()
+    pattern = r'\bJOIN\b'
+    
+    matches = re.findall(pattern, solution_upper)
+    count = len(matches)
     
     return min_required <= count <= max_required
 
@@ -247,5 +338,6 @@ CONSTRAINT_CHECKERS = {
     "WHERE": _check_where,
     "DISTINCT": _check_distinct,
     "AGGREGATION": _check_aggregation,
-    "SUB-QUERY": _check_subquery
+    "SUB-QUERY": _check_subquery,
+    "JOIN": _check_join
 }
