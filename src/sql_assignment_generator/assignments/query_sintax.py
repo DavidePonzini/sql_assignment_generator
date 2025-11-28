@@ -87,19 +87,13 @@ def _check_where_comparison(solution_upper, min_required, max_required) -> bool:
     return min_required <= count <= max_required
 
 def _check_where_nested(solution_upper, min_required, max_required) -> bool:
-    """
-    Controlla la presenza di condizioni annidate tramite parentesi nella clausola WHERE.
-    Cerca pattern come (condizione1 OR condizione2) oppure (condizione1 AND condizione2).
-    """
-    # 1. Estrai il contenuto della clausola WHERE
+    #extract WHERE content
     where_match = re.search(r'\bWHERE\b(.*?)(?=\bGROUP BY|\bORDER BY|\bLIMIT|$)', solution_upper, re.DOTALL | re.IGNORECASE)
     
     if not where_match:
         return min_required <= 0 <= max_required
 
     where_content = where_match.group(1)
-
-    # 2. Pulizia: Rimuovi le stringhe tra apici per evitare falsi positivi nel testo
     where_content_clean = re.sub(r"'[^']*'", '', where_content)
 
     # 3. Pulizia: Rimuovi le subquery (SELECT ...) perché contano come SUB-QUERY, 
@@ -107,36 +101,50 @@ def _check_where_nested(solution_upper, min_required, max_required) -> bool:
     # Rimuoviamo pattern che iniziano con (SELECT
     where_content_clean = re.sub(r'\(\s*SELECT.*?\)', '', where_content_clean, flags=re.DOTALL)
 
-    # 4. Cerca parentesi che contengono operatori logici (AND, OR).
-    # Regex: 
-    # \(       -> Parentesi aperta
-    # [^()]*   -> Qualsiasi cosa che non sia una parentesi (per trovare il livello più interno)
-    # \b(OR|AND)\b -> Operatore logico
-    # [^()]*   -> Qualsiasi cosa che non sia una parentesi
-    # \)       -> Parentesi chiusa
+    #look for pattern as (condizione1 OR condizione2) or (condizione1 AND condizione2)
     pattern = r'\([^()]*\b(OR|AND)\b[^()]*\)'
-    
     matches = re.findall(pattern, where_content_clean)
     count = len(matches)
 
     return min_required <= count <= max_required
 
+def _check_where_having(solution_upper, min_required, max_required, constraint_upper) -> bool:
+    # 1. Verifica presenza delle clausole nella soluzione
+    has_where = bool(re.search(r'\bWHERE\b', solution_upper))
+    has_having = bool(re.search(r'\bHAVING\b', solution_upper))
+
+    #case AND both WHERE and HAVING must be present
+    if 'AND' in constraint_upper:
+        if not (has_where and has_having):
+            return False
+    #case OR at least one of WHERE or HAVING must be present
+    elif 'OR' in constraint_upper:
+        if not (has_where or has_having):
+            return False
+
+    #count how much condition we have in total (WHERE + HAVING + AND + OR)
+    operators = re.findall(r'\bWHERE\b|\bHAVING\b|\bAND\b|\bOR\b', solution_upper)
+    count = len(operators)
+
+    return min_required <= count <= max_required
+
+
 
 
 def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
     solution_upper = solution.upper()
+    constraint_upper = constraint.upper()
     
-    if "WHERE" in constraint.upper() and 'WHERE' not in solution_upper:
-        return False
-    if 'WHERE' not in solution_upper:
-        return True
+    if "WHERE" in constraint_upper and "HAVING" not in constraint_upper:
+        if 'WHERE' not in solution_upper:
+            return False
 
     numbers = [int(n) for n in re.findall(r'\d+', constraint)]
     min_required = numbers[0] if numbers else 1
     max_required = numbers[1] if len(numbers) > 1 else float('inf')
-    constraint_upper = constraint.upper()
 
     #all type of WHERE condition used
+    if 'HAVING' in constraint_upper: return _check_where_having(solution_upper, min_required, max_required, constraint_upper)
     if 'MULTIPLE' in constraint_upper: return _check_where_multiple(solution_upper, min_required, max_required)
     elif 'NESTED' in constraint_upper: return _check_where_nested(solution_upper, min_required, max_required)
     elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required)
@@ -230,8 +238,6 @@ def _check_aggregation(schema: list[str], solution: str, constraint: str) -> boo
         if agg_func in constraint.upper()
     ]
 
-    # --- 2. Costruzione Dinamica del Pattern di Ricerca ---
-    
     #generic function, look for all type of aggregate function
     if not specific_aggregations_in_constraint:
         search_pattern_core = '|'.join(possible_aggregations)
@@ -299,7 +305,6 @@ def _check_distinct(schema: list[str], solution: str, constraint: str) -> bool:
     
     #count occurence
     count = len(distincts_found)
-    
     return min_required <= count <= max_required
 
 def _check_join(schema: list[str], solution: str, constraint: str) -> bool:
@@ -315,6 +320,30 @@ def _check_join(schema: list[str], solution: str, constraint: str) -> bool:
     count = len(matches)
     
     return min_required <= count <= max_required
+
+def _check_order_by(schema: list[str], solution: str, constraint: str) -> bool:
+    constraint_upper = constraint.upper()
+    solution_upper = solution.upper()
+
+    if 'NO ORDER BY' in constraint_upper:
+        return len(re.findall(r'\bORDER\s+BY\b', solution_upper)) == 0
+
+    numbers = [int(n) for n in re.findall(r'\d+', constraint)]
+    min_columns = numbers[0] if numbers else 1
+    max_columns = numbers[1] if len(numbers) > 1 else float('inf')
+
+    pattern = r'\bORDER\s+BY\b(.*?)(?=\bLIMIT\b|\bOFFSET\b|$)'
+    matches = re.findall(pattern, solution_upper, re.DOTALL)
+
+    if len(matches) != 1:
+        return False
+
+    content = matches[0].strip()
+    columns = [col.strip() for col in content.split(',') if col.strip()]
+    column_count = len(columns)
+
+    return min_columns <= column_count <= max_columns
+
 
 
 
@@ -339,5 +368,6 @@ CONSTRAINT_CHECKERS = {
     "DISTINCT": _check_distinct,
     "AGGREGATION": _check_aggregation,
     "SUB-QUERY": _check_subquery,
-    "JOIN": _check_join
+    "JOIN": _check_join,
+    "ORDER BY": _check_order_by
 }

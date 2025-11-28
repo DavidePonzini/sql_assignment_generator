@@ -62,7 +62,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 similar column", "must have SUB-QUERY", "must have AGGREGATION"]
         }
     ),
-    SqlErrors.SYN_10_SYNONYMS: SqlErrorDetails(
+    SqlErrors.SYN_10_SYNONYMS: SqlErrorDetails( #una costraint senza possibilita di controllo della sintassi
         description="Synonyms",
         characteristics ="exercise should naturally tempts student to make a mistake because students may misremember the correct name — for example, " \
             "by creating tables and COLUMNS with similar names (like competition and competitor) or similar meanings (like monster and zombie).",
@@ -74,7 +74,7 @@ ERROR_DETAILS_MAP ={
     ),
     SqlErrors.SYN_11_OMITTING_QUOTES_AROUND_CHARACTER_DATA: SqlErrorDetails(
         description="Omitting quotes around character data",
-        characteristics ="exercise should naturally tempts student to make a mistake of the type “strings not quoted,” " \
+        characteristics ="exercise should naturally tempts student to make a mistake of the type 'strings not quoted' " \
             "It is mandatory use WHERE clause involving in many condition with STRING variables (e.g. name = 'value').",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 WHERE STRING condition"],
@@ -85,8 +85,8 @@ ERROR_DETAILS_MAP ={
     SqlErrors.SYN_12_FAILURE_TO_SPECIFY_COLUMN_NAME_TWICE: SqlErrorDetails( #non funziona sempre se metto da 3 in poi multiple cond.
         description="Failure to specify column name twice",
         characteristics = "Solution query must have MULTIPLE CONDITION on the SAME COLUMN (e.g. p.film='Alien' OR/AND p.film='Superman' this represent one column with MULTIPLE CONDITION). " \
-            "Solution must not have IN format like 'position IN ('Manager', 'Supervisor')' but I want  this format 'position ='Manager' OR position = 'Supervisor''" \
-            "exercise should naturally tempts student to make a mistake that can cause “miss column name” errors (e.g. WHERE city='Boston' OR 'Chicago').",
+            "Solution must not have IN format like 'position IN ('Manager', 'Supervisor')' but I want this format 'position ='Manager' OR position = 'Supervisor''" \
+            "exercise should naturally tempts student to make a mistake that can cause 'miss column name' errors (e.g. WHERE city='Boston' OR 'Chicago').",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have column with MULTIPLE WHERE condition"],
             DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have column with MULTIPLE WHERE condition", "must have AGGREGATION"],
@@ -97,7 +97,7 @@ ERROR_DETAILS_MAP ={
         description="Grouping error: aggregate functions cannot be nested",
         characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42803 " \
             "by generating a query in natural language that seems to involve one AGGREGATION inside another " \
-            "(e.g. “the book that has the maximum number of sales,” and in database doesn't store the sales count).",
+            "(e.g. 'the book that has the maximum number of sales' and in database doesn't store the sales count).",
         constraints={
             DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 1 AGGREGATION"],
             DifficultyLevel.MEDIUM: ["must have 1 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 AGGREGATION"],
@@ -280,7 +280,6 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 EXIST in WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
         }
     ),            
-    # LOG_56_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS               
     SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(
         description="Incorrect comparison operator or incorrect value compared",
         characteristics ="The exercise should naturally lead the student to make a mistake which consists in using the incorrect comparison operator or " \
@@ -331,7 +330,7 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.HARD: ["must have 4-6 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 2 JOIN", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
         }
     ),
-    SqlErrors.LOG_63_MPROPER_NESTING_OF_EXPRESSIONS: SqlErrorDetails(#non funziona sempre se metto da 3 in poi nested cond. e non gli piaciono le subquery
+    SqlErrors.LOG_63_MPROPER_NESTING_OF_EXPRESSIONS: SqlErrorDetails(#non funziona sempre se metto da 3 in poi nested cond. e non gli piaciono le subquery (NESTED WHERE)
         description="Improper nesting of expressions",
         characteristics ="Solution query must have multiple condition (NO SUB-QUERY) that must require NESTING (e.g. (condizione1 OR condizione2) AND condizione3 -> " \
         "NESTING are the condition inside parentesis which are mandatory). The exercise should naturally lead the student to make a mistake which consists in " \
@@ -351,59 +350,163 @@ ERROR_DETAILS_MAP ={
             DifficultyLevel.MEDIUM: ["must have 2-3 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 WHERE condition", "must have SUB-QUERY NOT NESTED"],
             DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY NOT NESTED"]
         }
-    ),                       
-    # LOG_66_MISSING_EXPRESSION                                           
-    # LOG_67_EXPRESSION_ON_INCORRECT_COLUMN                               
-    # LOG_68_EXTRANEOUS_EXPRESSION
-    # 25-11
-    #                                         
-    # LOG_69_EXPRESSION_IN_INCORRECT_CLAUSE                               
-    # LOG_70_EXTRANEOUS_COLUMN_IN_SELECT                                  
-    # LOG_71_MISSING_COLUMN_FROM_SELECT
-    # 27-11
-    #                                    
-    # LOG_72_MISSING_DISTINCT_FROM_SELECT                                 
-    # LOG_73_MISSING_AS_FROM_SELECT                                       
-    # LOG_74_MISSING_COLUMN_FROM_ORDER_BY
-    # 28-11
-    #                                  
-    # LOG_75_INCORRECT_COLUMN_IN_ORDER_BY                                 
-    # LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE                                   
-    # LOG_77_INCORRECT_ORDERING_OF_ROWS
-    # 2-12
+    ),
+    SqlErrors.LOG_66_MISSING_EXPRESSION: SqlErrorDetails(
+        description="Missing expression",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in miss a required expression altering the correct logic." \
+        "The request in natural language must contain ambiguity: some information required for the query should be left out or implied, so the student can easily misunderstand it.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_67_EXPRESSION_ON_INCORRECT_COLUMN: SqlErrorDetails(
+        description="Expression on incorrect column",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in a required expression which is present but on the wrong column." \
+        "Solution query must have similar condition e.g. SELECT * FROM store s1, store s2 WHERE s1.value = 100 AND s2.value <> 100" \
+        "The request in natural language must contain ambiguity: some information required for the query should be left out or implied, so the student can easily misunderstand it.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_68_EXTRANEOUS_EXPRESSION: SqlErrorDetails(
+        description="Extraneous expression",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in an extraneous expression which changes the correct logic." \
+        "The request in natural language must contain ambiguity: must include an over-detailed explanation with entity names that resemble table names, encouraging the student " \
+        "to think an additional condition or table is needed when in fact it is not.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_69_EXPRESSION_IN_INCORRECT_CLAUSE: SqlErrorDetails(
+        description="Expression in incorrect clause",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in insert an expression in incorrect clause "\
+        "(e.g. using HAVING clause instead of WHERE or WHERE instead HAVING). You need to create deliverables that appear to say one thing, but technically imply another "\
+        "(e.g. Show all products priced at more than €50 - price>50 inserted in HAVING and not in WHERE).",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE OR HAVING condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE OR HAVING condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE OR HAVING condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_70_EXTRANEOUS_COLUMN_IN_SELECT: SqlErrorDetails(
+        description="Extraneous column in SELECT",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in include in SELECT a column which has not been asked for. " \
+        "The natural language query must be ambiguous, so that some columns in the solution query's SELECT statement can be identified as required when they are not.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_71_MISSING_COLUMN_FROM_SELECT: SqlErrorDetails(
+        description="Missing column from SELECT",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in omit in SELECT a column which has been asked for. " \
+        "The natural language query must be ambiguous and must require returning many columns in SELECT statement, so that some columns may not be added by forgetfulness.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_72_MISSING_DISTINCT_FROM_SELECT: SqlErrorDetails(
+        description="Missing DISTINCT from SELECT",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in SELECT doesn't have DISTINCT when DISTINCT is required in the solution. " \
+        "The natural language query must require the use of DISTINCT for some column.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have DISTINCT","must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have DISTINCT","must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have DISTINCT","must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_73_MISSING_AS_FROM_SELECT: SqlErrorDetails(
+        description="Missing AS from SELECT",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in the correct column is selected but has not been renamed as asked. " \
+        "The natural language query must ask to rename all column in SELECT.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_74_MISSING_COLUMN_FROM_ORDER_BY: SqlErrorDetails(
+        description="Missing column from ORDER BY clause",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in results which have not ordered on a requested columns. " \
+        "The natural language query must INDIRECTLY define the order in which return the result table, that the student will insert into ORDER BY.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have ORDER BY", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have  2 columns ORDER BY", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 columns ORDER BY", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_75_INCORRECT_COLUMN_IN_ORDER_BY: SqlErrorDetails(
+        description="Incorrect column in ORDER BY clause",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in results have been ordered on the wrong colums. " \
+        "The natural language query must INDIRECTLY define the order in which return the result table, that the student will insert into ORDER BY.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have ORDER BY", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 columns ORDER BY", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 columns ORDER BY", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),
+    SqlErrors.LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE: SqlErrorDetails(
+        description="Extraneous ORDER BY clause",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in results have been ordered when they were not required to. " \
+        "The natural language query must make it appear that a column order in the resulting table is needed but it is not required.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have NO ORDER BY", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have NO ORDER BY", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have NO ORDER BY", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),     
+    SqlErrors.LOG_77_INCORRECT_ORDERING_OF_ROWS: SqlErrorDetails(
+        description="Incorrect ordering of rows",
+        characteristics ="The exercise should naturally lead the student to make a mistake which consists in results ordered in not requested way (e.g. ASC onstead of DESC). " \
+        "The natural language query must ambiguous, not making the order of the columns clear and simple.",
+        constraints={
+            DifficultyLevel.EASY: ["must have 1 CREATE TABLE", "must have 2 COLUMNS x table", "must have ORDER BY", "must have 2 WHERE condition"],
+            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS x table", "must have 2 columns ORDER BY", "must have 3 WHERE condition", "must have AGGREGATION"],
+            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS x table", "must have 3 columns ORDER BY", "must have 4 WHERE condition", "must have AGGREGATION", "must have SUB-QUERY"]
+        }
+    ),                           
     #                                    
     # LOG_78_DISTINCT_AS_FUNCTION_PARAMETER_WHERE_NOT_APPLICABLE          
     # LOG_79_MISSING_DISTINCT_FROM_FUNCTION_PARAMETER                     
     # LOG_80_INCORRECT_FUNCTION
-    # 3-12
+    # 2-12
     #                                            
     # LOG_81_INCORRECT_COLUMN_AS_FUNCTION_PARAMETER
     # COM_83_UNNECESSARY_DISTINCT_IN_SELECT_CLAUSE                        
     # COM_84_UNNECESSARY_JOIN
-    # 4-12
+    # 3-12
     #  
     # COM_86_CORRELATION_NAMES_ARE_ALWAYS_IDENTICAL
     # COM_88_LIKE_WITHOUT_WILDCARDS                                       
     # COM_89_UNNECESSARILY_COMPLICATED_SELECT_IN_EXISTS_SUBQUERY
-    # 5-12
+    # 4-12
     #  
     # COM_91_UNNECESSARY_AGGREGATE_FUNCTION
     # COM_93_UNNECESSARY_ARGUMENT_OF_COUNT
     # COM_95_GROUP_BY_WITH_SINGLETON_GROUPS
-    # 6-12
+    # 5-12
     #                                
     # COM_96_GROUP_BY_WITH_ONLY_A_SINGLE_GROUP                            
     # COM_97_GROUP_BY_CAN_BE_REPLACED_WITH_DISTINCT                       
     # COM_98_UNION_CAN_BE_REPLACED_BY_OR
-    # 8-12
+    # 6-12
     #                                   
     # COM_99_UNNECESSARY_COLUMN_IN_ORDER_BY_CLAUSE
     # COM_102_INEFFICIENT_UNION
-    # 9-12
+    # 8-12
     #
     # COM_104_CONDITION_ON_LEFT_TABLE_IN_LEFT_OUTER_JOIN                 
     # COM_105_OUTER_JOIN_CAN_BE_REPLACED_BY_INNER_JOIN
-    # 10-12
+    # 9-12
 
-    # 11-12 fare i mancanti
+    # 10-11 fare i mancanti
 }

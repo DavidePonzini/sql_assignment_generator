@@ -10,7 +10,7 @@ def main():
     """
     Funzione principale per generare e stampare un esercizio.
     """
-    example_error = SqlErrors.SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL
+    example_error = SqlErrors.LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE
     example_difficulty = DifficultyLevel.HARD
     domain= None
 
