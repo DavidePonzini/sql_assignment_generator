@@ -6,11 +6,12 @@ from .difficulty_level import DifficultyLevel
 from . import generate_assignment
 
 
+#source venv/bin/activate
 def main():
     """
     Funzione principale per generare e stampare un esercizio.
     """
-    example_error = SqlErrors.LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE
+    example_error = SqlErrors.SEM_50_CONSTANT_COLUMN_OUTPUT
     example_difficulty = DifficultyLevel.HARD
     domain= None
 
