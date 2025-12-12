@@ -2,23 +2,39 @@
 from dataclasses import dataclass
 from .difficulty_level import DifficultyLevel
 from sql_error_categorizer.sql_errors import SqlErrors
+from . import constraints
 
 #inner query gli fa schifo a chatgpt
 @dataclass
 class SqlErrorDetails:
     description: str
     characteristics: str
-    constraints: dict[DifficultyLevel, list[str]]
+    constraints: dict[DifficultyLevel, tuple[constraints.BaseConstraint, ...]]
     
-ERROR_DETAILS_MAP ={
+ERROR_DETAILS_MAP = {
     SqlErrors.SYN_2_AMBIGUOUS_COLUMN: SqlErrorDetails(
         description="Ambiguous column",
         characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42702. " \
             "In table creation must make some column names from different tables the same.",
         constraints={
-            DifficultyLevel.EASY: ["must have 2 CREATE TABLE", "must have 2 COLUMNS per table", "must have WHERE condition"],
-            DifficultyLevel.MEDIUM: ["must have 2 CREATE TABLE", "must have 2-4 COLUMNS per table", "must have WHERE condition", "must have AGGREGATION"],
-            DifficultyLevel.HARD: ["must have 3-5 CREATE TABLE", "must have 2-6 COLUMNS per table ", "must have SUB-QUERY", "must have AGGREGATION"]
+            DifficultyLevel.EASY: (
+                constraints.schema.TableAmountConstraint(2),
+                constraints.schema.ColumnAmountConstraint(2, 4),
+                constraints.query.HasWhereConstraint(),
+            ),
+            DifficultyLevel.MEDIUM: (
+                constraints.schema.TableAmountConstraint(2),
+                constraints.schema.ColumnAmountConstraint(2, 4),
+                constraints.query.HasWhereConstraint(),
+                constraints.query.HasAggregationConstraint(),
+            ),
+            DifficultyLevel.HARD: (
+                constraints.schema.TableAmountConstraint(3, 5),
+                constraints.schema.ColumnAmountConstraint(2, 6),
+                constraints.query.HasWhereConstraint(),
+                constraints.query.HasSubqueryConstraint(),
+                constraints.query.HasAggregationConstraint(),
+            )
         }
     ),
     SqlErrors.SYN_4_UNDEFINED_COLUMN: SqlErrorDetails(
