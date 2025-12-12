@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI()
 
-def generate_answer(message: Message, *, json_format: type[BaseModel], **kwargs) -> BaseModel:
+def generate_answer(message: Message, *, json_format: type[BaseModel], add_to_messages: bool = True, **kwargs) -> BaseModel:
     '''
     Generate an answer from the LLM using the provided message and tools.
     '''
@@ -30,7 +30,9 @@ def generate_answer(message: Message, *, json_format: type[BaseModel], **kwargs)
     )
 
     msg = response.choices[0].message
-    message.append(msg)
+
+    if add_to_messages:
+        message.add_message_assistant(msg.content)
 
     return json_format.model_validate_json(msg.content)
         

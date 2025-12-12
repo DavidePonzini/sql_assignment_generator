@@ -60,6 +60,9 @@ The exercise must have the following characteristics: {error_details.characteris
             messages,
             json_format=Assignment
         )
+
+        messages.print_chat()
+
         assert isinstance(answer, Assignment)
 
         is_valid, missing_requirements = is_solution_valid(answer.schema_tables, answer.solution, constraints_list)
@@ -74,7 +77,6 @@ The exercise must have the following characteristics: {error_details.characteris
             f'''Please regenerate the exercise with the same JSON format as the previous request. 
             The new SQL query must follows ALL the original mandatory requirements: {formatted_constraints}''')
         
-        messages.add_message_assistant(answer.model_dump_json())
         messages.add_message_user(feedback)
 
     raise Exception(f'Failed to generate a valid assignment after {3} attempts.')
