@@ -8,7 +8,7 @@ class Assignment(BaseModel):
     schema_tables: list[str]
 
     def __str__(self) -> str:
-        tables = '\n'.join(f'  - {item}' for item in self.schema_tables)
+        tables = '\n'.join(self.schema_tables)
 
         return f'''
 Schema Tables:
