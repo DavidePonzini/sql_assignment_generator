@@ -573,7 +573,7 @@ def is_solution_valid(schema: list[str], solution: str, constraints: list[str]) 
 CONSTRAINT_CHECKERS = {
     "SAME PK": _check_same_pk, 
     "TABLE": _check_tables,
-    "COLUMNS X TABLE": _check_columns,
+    "COLUMNS PER TABLE": _check_columns,
     "WHERE": _check_where,
     "DISTINCT": _check_distinct,
     "AGGREGATION": _check_aggregation,
