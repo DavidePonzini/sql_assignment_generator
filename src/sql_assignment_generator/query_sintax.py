@@ -52,13 +52,25 @@ def _check_where_multiple(solution_upper, min_required, max_required) -> bool:
             
     return min_required <= total_multiple_conditions <= max_required
 
-def _check_where_in_any_all(solution_upper, min_required, max_required) -> bool:
-    pattern = r'\b(IN|ANY|ALL)\b'
-    
-    matches = re.findall(pattern, solution_upper)
-    count = len(matches)
+def _check_where_in_any_all_exist(solution_upper, min_required, max_required, constraint_upper) -> bool:
+    current_count = 0
+    count_not_exists = len(re.findall(r'\bNOT\s+EXISTS\b', solution_upper)) #count NOT EXIST
+    count_total_exists = len(re.findall(r'\bEXISTS\b', solution_upper)) #count EXISTS
+    count_positive_exists = count_total_exists - count_not_exists
 
-    return min_required <= count <= max_required
+    # ---IN---
+    if re.search(r'\bIN\b(?!\s+WHERE)', constraint_upper): current_count += len(re.findall(r'\bIN\b', solution_upper))
+    # ---ANY---
+    if 'ANY' in constraint_upper: current_count += len(re.findall(r'\bANY\b', solution_upper))
+    # ---ALL---
+    if 'ALL' in constraint_upper: current_count += len(re.findall(r'\bALL\b', solution_upper))
+    # ---NOT EXIST---
+    if 'NOT EXIST' in constraint_upper: current_count += count_not_exists #count NOT EXIST
+    # ---EXIST---
+    constraint_temp = constraint_upper.replace("NOT EXIST", "") #remove NOT EXIST
+    if "EXIST" in constraint_temp: current_count += count_positive_exists #count EXIST
+
+    return min_required <= current_count <= max_required
 
 def _check_where_not(solution_upper, min_required, max_required) -> bool:
     #Found word "NOT".
@@ -69,17 +81,6 @@ def _check_where_not(solution_upper, min_required, max_required) -> bool:
     count = len(matches)
     
     #Its correct number?
-    return min_required <= count <= max_required
-
-def _check_where_exists(solution_upper, min_required, max_required, exist) -> bool:
-    # look for word "EXISTS".
-    if exist:
-        pattern = r'\bEXISTS\b'
-    else:
-        pattern = r'\bNOT EXISTS\b'
-    
-    matches = re.findall(pattern, solution_upper)
-    count = len(matches)
     return min_required <= count <= max_required
 
 def _check_where_comparison(solution_upper, min_required, max_required) -> bool:
@@ -203,11 +204,10 @@ def _check_where(schema: list[str], solution: str, constraint: str) -> bool:
     elif 'WITHOUT WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required, False)
     elif 'WILDCARDS' in constraint_upper: return _check_where_wildcards(solution_upper, min_required, max_required, True)
     elif 'STRING' in constraint_upper: return _check_where_string(solution_upper, min_required, max_required)
-    elif 'NOT EXIST' in constraint_upper: return _check_where_exists(solution_upper, min_required, max_required, False)
-    elif 'EXIST' in constraint_upper: return _check_where_exists(solution_upper, min_required, max_required, True)
+    elif 'IN' in constraint_upper or 'ANY' in constraint_upper or 'ALL' in constraint_upper or 'EXIST' in constraint_upper: 
+        return _check_where_in_any_all_exist(solution_upper, min_required, max_required, constraint_upper)
     elif 'NOT' in constraint_upper: return _check_where_not(solution_upper, min_required, max_required)
     elif 'COMPARISON OPERATOR' in constraint_upper: return _check_where_comparison(solution_upper, min_required, max_required)
-    elif 'IN' in constraint_upper or 'ANY' in constraint_upper or 'ALL' in constraint_upper: return _check_where_in_any_all(solution_upper, min_required, max_required)
     else:
         operators = re.findall(r'\bWHERE\b|\bHAVING\b|\bAND\b|\bOR\b', solution_upper)
         count = len(operators)
@@ -508,13 +508,7 @@ def _check_union(schema: list[str], solution: str, constraint: str) -> bool:
 
     return True
 
-#da finire con la 86
 def _check_same_pk(schema: list[str], solution: str, constraint: str) -> bool:
-    """
-    Controlla se ci sono tabelle che condividono lo STESSO nome di colonna come PRIMARY KEY.
-    Constraint esempio: "must have 2 CREATE TABLE with same PK"
-    """
-    # 1. Estrai il numero richiesto (default 2 perché "same" implica almeno una coppia)
     numbers = [int(n) for n in re.findall(r'\d+', constraint)]
     min_required = numbers[0] if numbers else 2
 
@@ -522,33 +516,26 @@ def _check_same_pk(schema: list[str], solution: str, constraint: str) -> bool:
 
     for create_statement in schema:
         stmt = create_statement.upper().replace('\n', ' ')
-        
-        # extract cntent from CREATE TABLE
         content_match = re.search(r'\((.*)\)', stmt, re.DOTALL)
         if not content_match:
             continue
         content = content_match.group(1)
 
-        
         #found primary key
         pk_constraint_match = re.search(r'PRIMARY\s+KEY\s*\(\s*([A-Z0-9_]+)\s*\)', content)
         
         if pk_constraint_match:
-            # Abbiamo trovato la PK nel formato "PRIMARY KEY (id)"
+            #found PK as PRIMARY KEY (id)
             pk_names.append(pk_constraint_match.group(1))
         else:
-            # Metodo B: Definizione Inline -> colonna tipo ... PRIMARY KEY
-            # Dobbiamo splittare per virgola per analizzare le righe, simile a _check_columns
+            #column as PRIMARY KEY
             lines = [line.strip() for line in content.split(',') if line.strip()]
             for line in lines:
-                # Cerchiamo una riga che contenga PRIMARY KEY ma NON sia un vincolo separato
                 if 'PRIMARY KEY' in line and 'FOREIGN KEY' not in line and not line.startswith('PRIMARY KEY') and not line.startswith('CONSTRAINT'):
-                    # Esempio: "REVIEW_ID INT PRIMARY KEY"
-                    # Prendiamo la prima parola della riga, che è il nome della colonna
                     parts = line.split()
                     if parts:
                         pk_names.append(parts[0])
-                        break # Trovata la PK per questa tabella, passiamo alla prossima
+                        break
 
     #count primary key occurrence
     pk_counts = Counter(pk_names)
