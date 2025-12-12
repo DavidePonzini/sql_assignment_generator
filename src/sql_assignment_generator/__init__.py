@@ -1,11 +1,14 @@
-from sql_error_categorizer.sql_errors import SqlErrors
-from .assignments import Assignment, random_domain
 from .difficulty_level import DifficultyLevel
-
+from .domains import random_domain
 from .sql_errors_details import ERROR_DETAILS_MAP
+from . import llm
+from .assignments import Assignment
+from .query_sintax import is_solution_valid
 
+import dav_tools
+from sql_error_categorizer.sql_errors import SqlErrors
 
-def generate_assignment(domain: str, error: SqlErrors, difficulty: DifficultyLevel) -> Assignment:
+def generate_assignment(error: SqlErrors, difficulty: DifficultyLevel, domain: str | None = None) -> Assignment:
     '''
     Generate an SQL assignment based on the given SQL error and difficulty level.
 
@@ -17,23 +20,62 @@ def generate_assignment(domain: str, error: SqlErrors, difficulty: DifficultyLev
         Assignment: The generated SQL assignment.
     '''
 
-    try:
-        error_details = ERROR_DETAILS_MAP[error]
-    except KeyError:
-        raise ValueError(f"SQL Error not found: {error.name}")
+    if error not in ERROR_DETAILS_MAP:
+        raise NotImplementedError(f'SQL Error not supported: {error.name}')
+
+    error_details = ERROR_DETAILS_MAP[error]
     
-    if not domain:
+    if domain is None:
         domain = random_domain()
 
-    print(f"Generazione esercizio per errore: {error.name}")
-    print(f"Difficulty: {difficulty.name}")
-    print(f"Domain: {domain}")
+    dav_tools.messages.info(f'Generazione esercizio per errore: {error.name}')
+    dav_tools.messages.info(f'Difficulty: {difficulty.name}')
+    dav_tools.messages.info(f'Domain: {domain}')
 
-    # assignment = Assignment.generate_text(domain, error_details, difficulty)
-    # assignment.print_assignment()
+    constraints_list = error_details.constraints[difficulty]
+    formatted_constraints = '\n'.join(f'- {item}' for item in constraints_list)
 
-    assignment = str(Assignment.generate_textFormat(domain, error_details, difficulty))
-    print(assignment)
-    
-    return assignment
-    
+    assignment_text =f'''
+### GUIDELINES ###
+Generate a SQL exercise on the following domain: {domain}. 
+The exercise should NATURALLY tempts student to write a query that fails due to {error_details.description}. 
+The exercise must have the following characteristics: {error_details.characteristics}.
+
+### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
+{formatted_constraints}
+
+#### JSON REQUIRED OUTPUT FORMAT ####
+{{
+    "schema_tables": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."] can create more tables than needed to solve the exercise,
+    "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake. Be concise and clear. Do NOT provide hints or explanations.",
+    "solution": "Only a single and SYNTACTICALLY correct (executable) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
+}}
+    '''
+
+    messages = llm.Message()
+    messages.add_message_user(assignment_text)
+
+    for attempt in range(3):
+        answer = llm.generate_answer(
+            messages,
+            json_format=Assignment
+        )
+        assert isinstance(answer, Assignment)
+
+        is_valid, missing_requirements = is_solution_valid(answer.schema_tables, answer.solution, constraints_list)
+
+        if is_valid:
+            return answer
+
+        dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.value}). Missing requirements: {", ".join(missing_requirements)}')
+        
+        feedback = (
+            f'The previously SQL solution was WRONG because it was MISSING: {", ".join(missing_requirements)}. '
+            f'''Please regenerate the exercise with the same JSON format as the previous request. 
+            The new SQL query must follows ALL the original mandatory requirements: {formatted_constraints}''')
+        
+        messages.add_message_assistant(answer.model_dump_json())
+        messages.add_message_user(feedback)
+
+    raise Exception(f'Failed to generate a valid assignment after {3} attempts.')
+
