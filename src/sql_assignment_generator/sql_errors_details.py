@@ -9,7 +9,7 @@ from . import constraints
 class SqlErrorDetails:
     description: str
     characteristics: str
-    constraints: dict[DifficultyLevel, tuple[constraints.BaseConstraint, ...]]
+    constraints: dict[DifficultyLevel, list[constraints.BaseConstraint]]
     
 ERROR_DETAILS_MAP = {
     SqlErrors.SYN_2_AMBIGUOUS_COLUMN: SqlErrorDetails(
@@ -17,24 +17,24 @@ ERROR_DETAILS_MAP = {
         characteristics ="exercise should naturally tempts student to make a mistake that triggers SQL error code 42702. " \
             "In table creation must make some column names from different tables the same.",
         constraints={
-            DifficultyLevel.EASY: (
+            DifficultyLevel.EASY: [
                 constraints.schema.TableAmountConstraint(2),
                 constraints.schema.ColumnAmountConstraint(2, 4),
                 constraints.query.HasWhereConstraint(),
-            ),
-            DifficultyLevel.MEDIUM: (
+            ],
+            DifficultyLevel.MEDIUM: [
                 constraints.schema.TableAmountConstraint(2),
                 constraints.schema.ColumnAmountConstraint(2, 4),
                 constraints.query.HasWhereConstraint(),
                 constraints.query.HasAggregationConstraint(),
-            ),
-            DifficultyLevel.HARD: (
+            ],
+            DifficultyLevel.HARD: [
                 constraints.schema.TableAmountConstraint(3, 5),
                 constraints.schema.ColumnAmountConstraint(2, 6),
                 constraints.query.HasWhereConstraint(),
                 constraints.query.HasSubqueryConstraint(),
                 constraints.query.HasAggregationConstraint(),
-            )
+            ]
         }
     ),
     SqlErrors.SYN_4_UNDEFINED_COLUMN: SqlErrorDetails(
