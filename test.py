@@ -4,7 +4,7 @@ from sql_assignment_generator.difficulty_level import DifficultyLevel
 from sql_error_categorizer import SqlErrors
 from sql_assignment_generator import generate_assignment
 from dotenv import load_dotenv
-
+import dav_tools
 
 
 if __name__ == '__main__':
@@ -19,21 +19,43 @@ if __name__ == '__main__':
         SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION: DifficultyLevel.MEDIUM,
     }
 
-    exercises_per_difficulty: dict[DifficultyLevel, int] = {}
-
     def name_exercise(error: SqlErrors, difficulty: DifficultyLevel) -> str:
-        '''Generate a name for the exercise based on its index, error, and difficulty level.'''
-        exercises_per_difficulty.setdefault(difficulty, 0)
-        exercises_per_difficulty[difficulty] += 1
-        index = exercises_per_difficulty[difficulty]
-
-        if difficulty == DifficultyLevel.EASY:
-            difficulty_str = 'A) Basic'
-        elif difficulty == DifficultyLevel.MEDIUM:
-            difficulty_str = 'B) Intermediate'
-        else:
-            difficulty_str = 'C) Advanced'
-        return f'{difficulty_str} exercise #{index}'
+        return f'{error.name} - {difficulty.name}'
 
     assignment = generate_assignment(errors=errors, domain=domain, shuffle_exercises=False, naming_func=name_exercise)
-    print(assignment)
+    
+    dav_tools.messages.message(
+        '-' * 50,
+        assignment.dataset.to_sql('dataset123'),
+        '-' * 50,
+        default_text_options=[dav_tools.messages.TextFormat.Color.CYAN],
+        sep='\n',
+        additional_text_options=[
+            [dav_tools.messages.TextFormat.Style.BOLD],
+            [],
+            [dav_tools.messages.TextFormat.Style.BOLD]
+        ]
+    )
+
+    dav_tools.messages.message()
+    
+    for exercise in assignment.exercises:
+        dav_tools.messages.message(
+            exercise.title,
+            default_text_options=[dav_tools.messages.TextFormat.Style.BOLD],
+        )
+
+        dav_tools.messages.message(
+            exercise.request,
+            icon_options=[dav_tools.messages.TextFormat.Color.BLUE, dav_tools.messages.TextFormat.Style.BOLD],
+            icon='REQ',
+        )
+        for solution in exercise.solutions:
+            dav_tools.messages.message(
+                solution,
+                default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
+                icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
+                icon='SOL',
+            )
+
+        dav_tools.messages.message()
