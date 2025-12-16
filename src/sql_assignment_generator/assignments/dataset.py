@@ -34,8 +34,6 @@ COMMIT;'''
     
     @staticmethod
     def generate(domain: str, errors: dict[SqlErrors, DifficultyLevel]) -> 'Dataset':
-        dav_tools.messages.info(f'Generating dataset for domain: {domain}')
-
         create_commands = []
         insert_commands = []
 
