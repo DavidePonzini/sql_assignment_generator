@@ -21,10 +21,7 @@ if __name__ == '__main__':
         (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.MEDIUM),
     ]
 
-    def name_exercise(error: SqlErrors, difficulty: DifficultyLevel) -> str:
-        return f'{error.name} - {difficulty.name}'
-
-    assignment = generate_assignment(errors=errors, domain=domain, shuffle_exercises=False, naming_func=name_exercise)
+    assignment = generate_assignment(errors, domain)
     
     dav_tools.messages.message(
         '-' * 50,

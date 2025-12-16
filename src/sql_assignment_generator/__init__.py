@@ -11,7 +11,7 @@ def generate_assignment(
         domain: str | None = None,
         *,
         shuffle_exercises: bool = False,
-        naming_func: Callable[[SqlErrors, DifficultyLevel], str] = lambda error, difficulty: f'Exercise on {error.name} ({difficulty.name})'
+        naming_func: Callable[[SqlErrors, DifficultyLevel], str] = lambda error, difficulty: f'{error.name} - {difficulty.name}'
     ) -> Assignment:
     '''
     Generate SQL assignments based on the given SQL errors and their corresponding difficulty levels.
