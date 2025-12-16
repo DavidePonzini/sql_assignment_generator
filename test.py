@@ -1,31 +1,39 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
-from sql_assignment_generator.sql_errors_details import ERROR_DETAILS_MAP
 from sql_assignment_generator.difficulty_level import DifficultyLevel
+from sql_error_categorizer import SqlErrors
 from sql_assignment_generator import generate_assignment
-import dav_tools
 from dotenv import load_dotenv
+
+
 
 if __name__ == '__main__':
     load_dotenv()
 
-    dav_tools.argument_parser.add_argument('error', type=int, help='SQL error to use.', choices=[e.value for e in ERROR_DETAILS_MAP.keys()])
-    dav_tools.argument_parser.add_argument('difficulty', type=int, help='Difficulty level.', choices=[1, 2, 3])
-    dav_tools.argument_parser.add_argument('domain', type=str, help='SQL error domain to use.', nargs='?', default=None)
-    dav_tools.argument_parser.parse_args()
+    # change these values as needed
+    domain = None
+    errors = {
+        SqlErrors.SYN_2_AMBIGUOUS_COLUMN: DifficultyLevel.HARD,
+        SqlErrors.SYN_4_UNDEFINED_COLUMN: DifficultyLevel.HARD,
+        SqlErrors.SYN_7_UNDEFINED_OBJECT: DifficultyLevel.HARD,
+        SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION: DifficultyLevel.MEDIUM,
+    }
 
-    error_id = dav_tools.argument_parser.args.error
-    error_enum = next((e for e in ERROR_DETAILS_MAP.keys() if e.value == error_id))
-    
-    if dav_tools.argument_parser.args.difficulty == 1:
-        difficulty_level = DifficultyLevel.EASY
-    elif dav_tools.argument_parser.args.difficulty == 2:
-        difficulty_level = DifficultyLevel.MEDIUM
-    else:
-        difficulty_level = DifficultyLevel.HARD
+    exercises_per_difficulty: dict[DifficultyLevel, int] = {}
 
-    domain = dav_tools.argument_parser.args.domain
+    def name_exercise(error: SqlErrors, difficulty: DifficultyLevel) -> str:
+        '''Generate a name for the exercise based on its index, error, and difficulty level.'''
+        exercises_per_difficulty.setdefault(difficulty, 0)
+        exercises_per_difficulty[difficulty] += 1
+        index = exercises_per_difficulty[difficulty]
 
-    assignment = generate_assignment(error=error_enum, difficulty=difficulty_level, domain=domain)
+        if difficulty == DifficultyLevel.EASY:
+            difficulty_str = 'A) Basic'
+        elif difficulty == DifficultyLevel.MEDIUM:
+            difficulty_str = 'B) Intermediate'
+        else:
+            difficulty_str = 'C) Advanced'
+        return f'{difficulty_str} exercise #{index}'
 
+    assignment = generate_assignment(errors=errors, domain=domain, shuffle_exercises=False, naming_func=name_exercise)
     print(assignment)

@@ -1,83 +1,116 @@
+from typing import Callable
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
-from .sql_errors_details import ERROR_DETAILS_MAP
-from . import llm
-from .assignments import Assignment
-from .query_sintax import is_solution_valid
+from .assignments import Assignment, Dataset, Exercise
+import random
 
-import dav_tools
 from sql_error_categorizer.sql_errors import SqlErrors
 
-def generate_assignment(error: SqlErrors, difficulty: DifficultyLevel, domain: str | None = None) -> Assignment:
+def generate_assignment(
+        errors: dict[SqlErrors, DifficultyLevel],
+        domain: str | None = None,
+        *,
+        shuffle_exercises: bool = False,
+        naming_func: Callable[[SqlErrors, DifficultyLevel], str] = lambda error, difficulty: f'Exercise on {error.name} ({difficulty.name})'
+    ) -> Assignment:
     '''
-    Generate an SQL assignment based on the given SQL error and difficulty level.
+    Generate SQL assignments based on the given SQL errors and their corresponding difficulty levels.
 
     Args:
-        error (SqlErrors): The SQL error to base the assignment on.
-        difficulty (DifficultyLevel): The difficulty level of the assignment.
+        errors (dict[SqlErrors, DifficultyLevel]): A dictionary mapping SQL errors to their difficulty levels.
+        domain (str | None): The domain for the assignments. If None, a random domain will be selected.
+        shuffle_exercises (bool): Whether to shuffle exercises to prevent ordering bias.
+        naming_func (Callable[[SqlErrors, DifficultyLevel], str]): A function to generate exercise titles based on error and difficulty.
 
     Returns:
-        Assignment: The generated SQL assignment.
+        list[Assignment]: A list of generated SQL assignments.
     '''
 
-    if error not in ERROR_DETAILS_MAP:
-        raise NotImplementedError(f'SQL Error not supported: {error.name}')
-
-    error_details = ERROR_DETAILS_MAP[error]
-    
     if domain is None:
         domain = random_domain()
 
-    dav_tools.messages.info(f'Generazione esercizio per errore: {error.name}')
-    dav_tools.messages.info(f'Difficulty: {difficulty.name}')
-    dav_tools.messages.info(f'Domain: {domain}')
+    dataset = Dataset.generate(domain, errors)
 
-    constraints_list = error_details.constraints[difficulty]
-    formatted_constraints = '\n'.join(f'- {item}' for item in constraints_list)
+    exercises: dict[DifficultyLevel, list[Exercise]] = {}
 
-    assignment_text =f'''
-### GUIDELINES ###
-Generate a SQL exercise on the following domain: {domain}. 
-The exercise should NATURALLY tempts student to write a query that fails due to {error_details.description}. 
-The exercise must have the following characteristics: {error_details.characteristics}.
+    
+    # Shuffle exercises to prevent ordering bias, if requested
+    error_list = list(errors.items())
+    if shuffle_exercises:
+        random.shuffle(error_list)
 
-### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
-{formatted_constraints}
+    for error, difficulty in error_list:
+        exercise = Exercise.generate(error, difficulty, dataset, title=naming_func(error, difficulty))
 
-#### JSON REQUIRED OUTPUT FORMAT ####
-{{
-    "schema_tables": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."] can create more tables than needed to solve the exercise,
-    "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake. Be concise and clear. Do NOT provide hints or explanations.",
-    "solution": "Only a single and SYNTACTICALLY correct (executable) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
-}}
-    '''
+        exercises.setdefault(difficulty, []).append(exercise)
 
-    messages = llm.Message()
-    messages.add_message_user(assignment_text)
+    all_exercises = [exercise for exercises_list in exercises.values() for exercise in exercises_list]
 
-    for attempt in range(3):
-        answer = llm.generate_answer(
-            messages,
-            json_format=Assignment
-        )
+    return Assignment(
+        dataset=dataset,
+        exercises=all_exercises
+    )
 
-        messages.print_chat()
+# TODO: refactor this function inside Exercise/Dataset classes
+# def generate_exercise(error: SqlErrors, difficulty: DifficultyLevel, dataset: Dataset) -> Exercise:
+#     if error not in ERROR_DETAILS_MAP:
+#         raise NotImplementedError(f'SQL Error not supported: {error.name}')
 
-        assert isinstance(answer, Assignment)
+#     error_details = ERROR_DETAILS_MAP[error]
+    
+#     dav_tools.messages.info(f'Generazione esercizio per errore: {error.name}')
+#     dav_tools.messages.info(f'Constaints: {constraints}')
+#     dav_tools.messages.info(f'Domain: {dataset.domain}')
 
-        is_valid, missing_requirements = is_solution_valid(answer.schema_tables, answer.solution, constraints_list)
+#     constraints_list = ERROR_DETAILS_MAP[error].constraints[difficulty]
 
-        if is_valid:
-            return answer
+#     formatted_constraints = '\n'.join(f'- {item}' for item in constraints_list)
 
-        dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.value}). Missing requirements: {", ".join(missing_requirements)}')
+
+#     # TODO: refactor dataset creation in separate function
+#     assignment_text =f'''
+# ### GUIDELINES ###
+# Generate a SQL exercise on the following domain: {domain}. 
+# The exercise should NATURALLY tempts student to write a query that fails due to {error_details.description}. 
+# The exercise must have the following characteristics: {error_details.characteristics}.
+
+# ### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
+# {formatted_constraints}
+
+# #### JSON REQUIRED OUTPUT FORMAT ####
+# {{
+#     "schema_tables": ["CREATE TABLE command 1...", "CREATE TABLE command 2..."] can create more tables than needed to solve the exercise,
+#     "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake. Be concise and clear. Do NOT provide hints or explanations.",
+#     "solution": "Only a single and SYNTACTICALLY correct (executable) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
+# }}
+#     '''
+
+#     messages = llm.Message()
+#     messages.add_message_user(assignment_text)
+
+#     for attempt in range(3):
+#         answer = llm.generate_answer(
+#             messages,
+#             json_format=llm.models.Assignment
+#         )
+
+#         messages.print_chat()
+
+#         assert isinstance(answer, llm.models.Assignment)
+
+#         is_valid, missing_requirements = is_solution_valid(answer.schema_tables, answer.solution, constraints_list)
+
+#         if is_valid:
+#             return answer
+
+#         dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.value}). Missing requirements: {", ".join(missing_requirements)}')
         
-        feedback = (
-            f'The previously SQL solution was WRONG because it was MISSING: {", ".join(missing_requirements)}. '
-            f'''Please regenerate the exercise with the same JSON format as the previous request. 
-            The new SQL query must follows ALL the original mandatory requirements: {formatted_constraints}''')
+#         feedback = (
+#             f'The previously SQL solution was WRONG because it was MISSING: {", ".join(missing_requirements)}. '
+#             f'''Please regenerate the exercise with the same JSON format as the previous request. 
+#             The new SQL query must follows ALL the original mandatory requirements: {formatted_constraints}''')
         
-        messages.add_message_user(feedback)
+#         messages.add_message_user(feedback)
 
-    raise Exception(f'Failed to generate a valid assignment after {3} attempts.')
+#     raise Exception(f'Failed to generate a valid assignment after {3} attempts.')
 
