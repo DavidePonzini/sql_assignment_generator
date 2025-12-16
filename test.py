@@ -12,12 +12,14 @@ if __name__ == '__main__':
 
     # change these values as needed
     domain = None
-    errors = {
-        SqlErrors.SYN_2_AMBIGUOUS_COLUMN: DifficultyLevel.HARD,
-        SqlErrors.SYN_4_UNDEFINED_COLUMN: DifficultyLevel.HARD,
-        SqlErrors.SYN_7_UNDEFINED_OBJECT: DifficultyLevel.HARD,
-        SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION: DifficultyLevel.MEDIUM,
-    }
+    errors = [
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.MEDIUM),
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
+        (SqlErrors.SYN_4_UNDEFINED_COLUMN, DifficultyLevel.HARD),
+        (SqlErrors.SYN_7_UNDEFINED_OBJECT, DifficultyLevel.HARD),
+        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.EASY),
+        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.MEDIUM),
+    ]
 
     def name_exercise(error: SqlErrors, difficulty: DifficultyLevel) -> str:
         return f'{error.name} - {difficulty.name}'

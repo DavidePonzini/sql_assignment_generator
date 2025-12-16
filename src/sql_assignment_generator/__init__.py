@@ -7,7 +7,7 @@ import random
 from sql_error_categorizer.sql_errors import SqlErrors
 
 def generate_assignment(
-        errors: dict[SqlErrors, DifficultyLevel],
+        errors: list[tuple[SqlErrors, DifficultyLevel]],
         domain: str | None = None,
         *,
         shuffle_exercises: bool = False,
@@ -31,24 +31,15 @@ def generate_assignment(
 
     dataset = Dataset.generate(domain, errors)
 
-    exercises: dict[DifficultyLevel, list[Exercise]] = {}
-
-    
     # Shuffle exercises to prevent ordering bias, if requested
-    error_list = list(errors.items())
     if shuffle_exercises:
-        random.shuffle(error_list)
+        random.shuffle(errors)
 
-    for error, difficulty in error_list:
-        exercise = Exercise.generate(error, difficulty, dataset, title=naming_func(error, difficulty))
-
-        exercises.setdefault(difficulty, []).append(exercise)
-
-    all_exercises = [exercise for exercises_list in exercises.values() for exercise in exercises_list]
+    exercises = [Exercise.generate(error, difficulty, dataset, title=naming_func(error, difficulty)) for error, difficulty in errors]
 
     return Assignment(
         dataset=dataset,
-        exercises=all_exercises
+        exercises=exercises
     )
 
 # TODO: refactor this function inside Exercise/Dataset classes

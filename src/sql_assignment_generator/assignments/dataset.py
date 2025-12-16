@@ -33,7 +33,7 @@ SET search_path TO {schema};
 COMMIT;'''
     
     @staticmethod
-    def generate(domain: str, errors: dict[SqlErrors, DifficultyLevel]) -> 'Dataset':
+    def generate(domain: str, errors: list[tuple[SqlErrors, DifficultyLevel]]) -> 'Dataset':
         create_commands = []
         insert_commands = []
 
