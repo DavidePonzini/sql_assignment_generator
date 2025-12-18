@@ -12,7 +12,7 @@ else
 	VENV_BIN=$(VENV)/bin
 endif
 
-.PHONY: install build uninstall documentation upload download clean ipython
+.PHONY: install build uninstall documentation upload download clean
 
 $(VENV):
 	python -m venv --clear $(VENV)
@@ -50,7 +50,5 @@ clean:
 	find . -type d -name '__pycache__' -print0 | xargs -0 rm -r || true
 	rm -rf dist docs/_build .pytest_cache .coverage tests/htmlcov
 
-ipython: $(VENV)
-	$(VENV_BIN)/ipython
 
 ########## Makefile end ##########
