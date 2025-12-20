@@ -1,14 +1,12 @@
-from .difficulty_level import DifficultyLevel
-from .domains import random_domain
-from .sql_errors_details import ERROR_DETAILS_MAP
-from . import llm
-from .assignments import Assignment
-#from .query_sintax import is_solution_valid
-import sqlglot
-from sqlglot import Expression 
 
+from .domains import random_domain
+import sqlglot
 import dav_tools
 from sql_error_categorizer.sql_errors import SqlErrors
+from . import llm
+from .difficulty_level import DifficultyLevel
+from .assignments import Assignment
+from .sql_errors_details import ERROR_DETAILS_MAP
 
 def generate_assignment(error: SqlErrors, difficulty: DifficultyLevel, domain: str | None = None) -> Assignment:
     '''
@@ -66,11 +64,6 @@ The exercise must have the following characteristics: {error_details.characteris
         messages.print_chat()
         assert isinstance(answer, Assignment)
 
-        # is_valid, missing_requirements = is_solution_valid(answer.schema_tables, answer.solution, constraints_list)
-
-        # if is_valid:
-        #     return answer
-
         parsed_tables = []
         try:
             for table_sql in answer.schema_tables:
@@ -98,9 +91,9 @@ The exercise must have the following characteristics: {error_details.characteris
         dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.value}). Missing requirements: {", ".join(missing_requirements)}')
         
         feedback = (
-            f'The previously SQL solution was WRONG because it was MISSING: {", ".join(missing_requirements)}. '
-            f'''Please regenerate the exercise with the same JSON format as the previous request. 
-            The new SQL query must follows ALL the original mandatory requirements: {formatted_constraints}''')
+            f'The previously SQL solution was WRONG because it was MISSING: {", ".join(missing_requirements)}. \n'
+            f'Please regenerate the exercise with the same JSON format as the previous request.' 
+            f'The new SQL query must follows ALL the original mandatory requirements: \n{formatted_constraints}')
         
         messages.add_message_user(feedback)
 
