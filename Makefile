@@ -12,7 +12,7 @@ else
 	VENV_BIN=$(VENV)/bin
 endif
 
-.PHONY: install build uninstall documentation upload download clean ipython
+.PHONY: install build uninstall documentation upload download clean
 
 $(VENV):
 	python -m venv --clear $(VENV)
@@ -37,7 +37,7 @@ uninstall: $(VENV)
 	$(VENV_BIN)/python -m pip uninstall -y $(NAME)
 
 documentation:
-	make html -C docs/
+	make html SPHINXBUILD="../$(VENV_BIN)/sphinx-build" -C docs/
 
 upload: documentation
 	$(VENV_BIN)/python -m pip install --upgrade twine
@@ -50,7 +50,5 @@ clean:
 	find . -type d -name '__pycache__' -print0 | xargs -0 rm -r || true
 	rm -rf dist docs/_build .pytest_cache .coverage tests/htmlcov
 
-ipython: $(VENV)
-	$(VENV_BIN)/ipython
 
 ########## Makefile end ##########
