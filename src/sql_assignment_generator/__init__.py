@@ -32,11 +32,11 @@ def generate_assignment(
     dataset = Dataset.generate(domain, errors)
 
     # Shuffle exercises to prevent ordering bias, if requested
-    if shuffle_exercises:
-        random.shuffle(errors)
+    # if shuffle_exercises:
+    #     random.shuffle(errors)
 
-    exercises = [Exercise.generate(error, difficulty, dataset, title=naming_func(error, difficulty)) for error, difficulty in errors]
-
+    # exercises = [Exercise.generate(error, difficulty, dataset, title=naming_func(error, difficulty)) for error, difficulty in errors]
+    exercises = []
     return Assignment(
         dataset=dataset,
         exercises=exercises

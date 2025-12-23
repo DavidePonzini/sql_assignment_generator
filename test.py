@@ -25,7 +25,7 @@ if __name__ == '__main__':
     
     dav_tools.messages.message(
         '-' * 50,
-        assignment.dataset.to_sql('dataset123'),
+        assignment.dataset.to_sql('datasetExercise'),
         '-' * 50,
         default_text_options=[dav_tools.messages.TextFormat.Color.CYAN],
         sep='\n',
