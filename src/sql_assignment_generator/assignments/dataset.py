@@ -94,7 +94,7 @@ COMMIT;'''
                 parsed_tables = []
                 try:
                     for cmd in json_risposta.schema_tables:
-                        parsed_tables.append(sqlglot.parse(cmd)[0]) #parse convert string into AST expression list
+                        parsed_tables.append(sqlglot.parse_one(cmd, read="postgres")) #parse convert string into AST expression list
                 except Exception as e:
                     raise ValueError(f"Syntax error in CREATE TABLE generated: {e}")
 
@@ -102,7 +102,7 @@ COMMIT;'''
                 parsed_inserts = []
                 try:
                     for cmd in json_risposta.insert_commands:
-                        parsed_inserts.append(sqlglot.parse_one(cmd)) #parse_one convert string into AST (single object)
+                        parsed_inserts.append(sqlglot.parse_one(cmd, read="postgres")) #parse_one convert string into AST (single object)
                 except Exception as e:
                     raise ValueError(f"Syntax error in INSERT COMMANDS generated: {e}")
 
