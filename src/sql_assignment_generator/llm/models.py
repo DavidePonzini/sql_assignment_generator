@@ -15,6 +15,8 @@ Solution:
 {self.solution}
 '''
 
+
+
 @dataclass
 class Schema(BaseModel):
     schema_tables: list[str]

@@ -7,7 +7,8 @@ from sqlglot import exp
 from sql_error_categorizer.sql_errors import SqlErrors
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
-from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, InsertAmountConstraint
+from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, InsertAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint
+
 
 @dataclass
 class Dataset:
@@ -36,11 +37,12 @@ SET search_path TO {schema};
 
 COMMIT;'''
     
+    
     @staticmethod
     def generate(domain: str, errors: list[tuple[SqlErrors, DifficultyLevel]]) -> 'Dataset':
         unique_schema_constraints_map = {}
         
-        #mandatory costraint
+        # mandatory constraints
         base_constraints = [
             TableAmountConstraint(5),
             ColumnAmountConstraint(3),
@@ -49,15 +51,16 @@ COMMIT;'''
         for c in base_constraints:
             unique_schema_constraints_map[c.description] = c
 
-        #take other costraint inside error
+        # take other schema constraints inside error
         for error, difficulty in errors:
             error_details = ERROR_DETAILS_MAP[error]
             all_constraints = error_details.constraints.get(difficulty, [])
             
-            for constraint in all_constraints: #controll if costraint are in schema module
+            for constraint in all_constraints: # control if constraint are in schema module
                 if 'schema' in constraint.__class__.__module__:
                     unique_schema_constraints_map[constraint.description] = constraint
 
+        #we have all constraint
         active_constraints = list(unique_schema_constraints_map.values())
         formatted_constraints = '\n'.join(f'- {c.description}' for c in active_constraints)
         
@@ -81,37 +84,45 @@ COMMIT;'''
         
         messages = llm.Message()
         messages.add_message_user(prompt_text)
-
-        # ------------------------------------------------------------------
-        # CICLO DI GENERAZIONE E VALIDAZIONE (Retry Loop)
-        # ------------------------------------------------------------------
-        max_attempts = 3
         
+        max_attempts = 3
         for attempt in range(max_attempts):
             try:
                 json_risposta = llm.generate_answer(messages, json_format=llm.models.Schema) 
-                print (json_risposta)
                 
+                #parsing CREATE TABLE
                 parsed_tables = []
                 try:
                     for cmd in json_risposta.schema_tables:
-                        parsed_tables.append(sqlglot.parse(cmd)[0]) 
+                        parsed_tables.append(sqlglot.parse(cmd)[0]) #parse convert string into AST expression list
                 except Exception as e:
                     raise ValueError(f"Syntax error in CREATE TABLE generated: {e}")
 
+                #parsing INSERT COMMANDS
+                parsed_inserts = []
                 try:
-                    all_inserts_sql = "BEGIN; " + "; ".join(json_risposta.insert_commands) + "; END;"
-                    inserts_block = sqlglot.parse_one(all_inserts_sql, read="postgres")
+                    for cmd in json_risposta.insert_commands:
+                        parsed_inserts.append(sqlglot.parse_one(cmd)) #parse_one convert string into AST (single object)
                 except Exception as e:
                     raise ValueError(f"Syntax error in INSERT COMMANDS generated: {e}")
 
-                #costraint validation
+                #constraint validation
                 missing_requirements = []
                 
                 for constraint in active_constraints:
-                    is_satisfied = constraint.validate(inserts_block, parsed_tables)
+                    is_satisfied = False
+
+                    if isinstance(constraint, InsertAmountConstraint):
+                        is_satisfied = constraint.validate(parsed_inserts, [])
+                    
+                    elif isinstance(constraint, (TableAmountConstraint, ColumnAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint)):
+                         is_satisfied = constraint.validate(None, parsed_tables)
+                    
+                    else:  is_satisfied = constraint.validate(parsed_inserts, parsed_tables)
+
                     if not is_satisfied: missing_requirements.append(constraint.description)
 
+                #if all ok the dataset was created
                 if not missing_requirements:
                     dav_tools.messages.success(f"Dataset generated and validated successfully at attempt {attempt + 1}.")
                     return Dataset(
@@ -130,4 +141,5 @@ COMMIT;'''
             except Exception as e:
                 dav_tools.messages.error(f"Error during generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid SQL.")
+        
         raise Exception(f'Failed to generate a valid dataset after {max_attempts} attempts.')
