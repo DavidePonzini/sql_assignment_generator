@@ -3,6 +3,7 @@ progress>=1.6
 pydantic>=2.10.4
 sql-error-categorizer
 dotenv
+openai
 
 # Dependencies for development
 ipython
