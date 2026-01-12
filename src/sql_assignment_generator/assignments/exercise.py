@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 import sqlglot
-from sqlglot import exp
-
 from sql_error_categorizer.sql_errors import SqlErrors
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
@@ -67,25 +65,16 @@ The exercise must have the following characteristics: {error_details.characteris
                     messages,
                     json_format=llm.models.Assignment
                 )
-
-                # dav_tools.messages.debug(f"LLM Answer Attempt {attempt+1}: {answer}")
-
                 assert isinstance(answer, llm.models.Assignment)
-
-                # 1. Parsing della soluzione generata
                 try:
                     solution_ast = sqlglot.parse_one(answer.solution)
                 except Exception as e:
                     raise ValueError(f"Generated SQL solution contains syntax errors: {e}")
 
-                # 2. Validazione dei vincoli
-                # Nota: Validiamo SOLO i vincoli di query, dato che lo schema è fisso.
+                #constraint validation
                 missing_requirements = []
                 
                 for constraint in query_constraints:
-                    # Chiamiamo validate passando:
-                    # - solution_ast: la query generata dall'LLM
-                    # - parsed_dataset_tables: le tabelle del dataset (contesto per chiavi, colonne, etc.)
                     if not constraint.validate(solution_ast, parsed_dataset_tables):
                         missing_requirements.append(constraint.description)
 

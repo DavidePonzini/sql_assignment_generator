@@ -2,8 +2,6 @@ from dataclasses import dataclass
 import dav_tools
 from .. import llm
 import sqlglot
-from sqlglot import exp
-
 from sql_error_categorizer.sql_errors import SqlErrors
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel

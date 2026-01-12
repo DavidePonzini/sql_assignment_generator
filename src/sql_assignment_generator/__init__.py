@@ -1,5 +1,3 @@
-import sqlglot
-import dav_tools
 from typing import Callable
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
@@ -7,10 +5,6 @@ from .assignments import Assignment, Dataset, Exercise
 import random
 
 from sql_error_categorizer.sql_errors import SqlErrors
-from . import llm
-from .difficulty_level import DifficultyLevel
-from .assignments import Assignment
-from .sql_errors_details import ERROR_DETAILS_MAP
 
 def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],

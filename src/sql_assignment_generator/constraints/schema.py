@@ -2,32 +2,25 @@ from collections import Counter
 from .base import BaseConstraint
 from sqlglot import Expression, exp 
 
+
 class TableAmountConstraint(BaseConstraint):
     '''Requires the schema to have a specific number of tables.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1) -> None:
+    def __init__(self, min_tables: int = 5) -> None:
         self.min_tables = min_tables
-        self.max_tables = max_tables if max_tables > min_tables else -1
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
         table_count = len(tables)
-        if self.max_tables < 0:
-            return table_count >= self.min_tables
-        return self.min_tables <= table_count <= self.max_tables
+        return self.min_tables <= table_count
     
     @property
     def description(self) -> str:
-        if self.max_tables < 0:
-            return f'Must have minimum {self.min_tables} TABLES'
-        elif self.min_tables == self.max_tables:
-            return f'Must have exactly {self.min_tables} TABLES'
-        else:
-            return f'Must have between {self.min_tables} and {self.max_tables} TABLES'
-        
+        return f'Must have minimum {self.min_tables} TABLES'
+       
 class ColumnAmountConstraint(BaseConstraint):
     '''Requires each table in the schema to have a specific number of columns.'''
 
-    def __init__(self, min_columns: int = 1) -> None:
+    def __init__(self, min_columns: int = 2) -> None:
         self.min_columns = min_columns
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
@@ -35,15 +28,11 @@ class ColumnAmountConstraint(BaseConstraint):
             return False
         
         for table in tables:
-            # In sqlglot, l'espressione CREATE TABLE (exp.Create) contiene un oggetto 
-            # 'Schema' (exp.Schema) nell'attributo .this
             schema = table.this
 
             if not isinstance(schema, exp.Schema):
                 continue
 
-            # Contiamo solo le definizioni di colonna (exp.ColumnDef).
-            # Questo esclude automaticamente PRIMARY KEY separate, CONSTRAINT, CHECK, etc.
             column_count = sum(1 for e in schema.expressions if isinstance(e, exp.ColumnDef))
             if column_count < self.min_columns:
                 return False
@@ -89,33 +78,6 @@ class InsertAmountConstraint(BaseConstraint):
     @property
     def description(self) -> str:
         return f'Must insert minimum {self.min_rows} rows of data for each table.'
-    
-class HasCheckConstraint(BaseConstraint):
-    '''Requires the schema to have a specific number of CHECK constraints.'''
-
-    def __init__(self, min_tables: int = 1, max_tables: int = -1) -> None:
-        self.min_checks = min_tables
-        self.max_checks = max_tables if max_tables > min_tables else -1
-
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        total_checks = 0
-        
-        for table in tables:
-            checks_found = list(table.find_all(exp.Check, exp.CheckColumnConstraint))
-            total_checks += len(checks_found)
-
-        if self.max_checks < 0:
-            return total_checks >= self.min_checks
-        return self.min_checks <= total_checks <= self.max_checks
-    
-    @property
-    def description(self) -> str:
-        if self.max_checks < 0: 
-            return f'Must have minimum {self.min_checks} CHECK constraints in schema'
-        elif self.min_checks == self.max_checks: 
-            return f'Must have exactly {self.min_checks} CHECK constraints in schema'
-        else: 
-            return f'Must have between {self.min_checks} and {self.max_checks} CHECK constraints in schema'
 
 class HasSamePrimaryKeyConstraint(BaseConstraint):
     '''
@@ -155,3 +117,30 @@ class HasSamePrimaryKeyConstraint(BaseConstraint):
     @property
     def description(self) -> str:
         return f'{self.min_tables} tables must have the same PRIMARY KEY column name'
+    
+class HasCheckConstraint(BaseConstraint):
+    '''Requires the schema to have a specific number of CHECK constraints.'''
+
+    def __init__(self, min_tables: int = 1, max_tables: int = -1) -> None:
+        self.min_checks = min_tables
+        self.max_checks = max_tables if max_tables > min_tables else -1
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        total_checks = 0
+        
+        for table in tables:
+            checks_found = list(table.find_all(exp.Check, exp.CheckColumnConstraint))
+            total_checks += len(checks_found)
+
+        if self.max_checks < 0:
+            return total_checks >= self.min_checks
+        return self.min_checks <= total_checks <= self.max_checks
+    
+    @property
+    def description(self) -> str:
+        if self.max_checks < 0: 
+            return f'Must have minimum {self.min_checks} CHECK constraints in schema'
+        elif self.min_checks == self.max_checks: 
+            return f'Must have exactly {self.min_checks} CHECK constraints in schema'
+        else: 
+            return f'Must have between {self.min_checks} and {self.max_checks} CHECK constraints in schema'

@@ -371,7 +371,7 @@ class HasUnionOrUnionAllConstraint(BaseConstraint):
         if not (self.min_tables <= count <= self.max_tables): return False
 
         for node in union_nodes:
-            #controllo se è UNION ALL o semplice UNION if kind == 'ALL' is UNION ALL
+            #controll if it is UNION ALL or UNION if kind == 'ALL' is UNION ALL
             is_union_all = (node.kind and node.kind.upper() == 'ALL')
             left_tables = set(t.this.output_name.upper() for t in node.this.find_all(exp.Table))
             right_tables = set(t.this.output_name.upper() for t in node.expression.find_all(exp.Table))
