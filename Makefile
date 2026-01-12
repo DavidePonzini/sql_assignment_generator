@@ -39,7 +39,7 @@ uninstall: $(VENV)
 documentation:
 	make html SPHINXBUILD="../$(VENV_BIN)/sphinx-build" -C docs/
 
-upload: documentation
+upload: build documentation
 	$(VENV_BIN)/python -m pip install --upgrade twine
 	$(VENV_BIN)/python -m twine upload --verbose dist/*
 
