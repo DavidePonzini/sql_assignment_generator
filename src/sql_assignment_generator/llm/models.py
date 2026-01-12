@@ -33,3 +33,7 @@ Schema Tables:
 Insert Value:
 {value}
 '''
+    
+@dataclass
+class RemoveHints(BaseModel):
+    request_without_hints: str
