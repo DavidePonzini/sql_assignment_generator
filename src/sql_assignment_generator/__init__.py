@@ -1,3 +1,5 @@
+'''Generate SQL assignments based on specified SQL errors and difficulty levels.'''
+
 from typing import Callable
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain

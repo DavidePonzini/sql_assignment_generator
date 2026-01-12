@@ -1,3 +1,5 @@
+'''Constraints related to database schema.'''
+
 from collections import Counter
 from .base import BaseConstraint
 from sqlglot import Expression, exp 

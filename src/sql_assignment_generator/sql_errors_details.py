@@ -1,3 +1,5 @@
+'''Descriptions and constraints for each supported SQL error.'''
+
 # In error_details.py
 from dataclasses import dataclass
 from .difficulty_level import DifficultyLevel
@@ -7,6 +9,7 @@ from . import constraints
 #inner query gli fa schifo a chatgpt
 @dataclass
 class SqlErrorDetails:
+    '''Details about a specific SQL error, including description, characteristics, and constraints.'''
     description: str
     characteristics: str
     constraints: dict[DifficultyLevel, list[constraints.BaseConstraint]]
@@ -1398,3 +1401,4 @@ ERROR_DETAILS_MAP = {
         }
     )
 }
+'''Mapping of SQL errors to their details.'''

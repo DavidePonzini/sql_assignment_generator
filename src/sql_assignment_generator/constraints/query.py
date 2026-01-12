@@ -1,3 +1,5 @@
+'''Constraints related to SQL queries.'''
+
 from collections import Counter
 from .base import BaseConstraint
 from sqlglot import Expression, exp
@@ -138,10 +140,7 @@ class HasDistinctOrUniqueKeyInSelectConstraint(BaseConstraint):
         min_tables: Min occurrences required.
         max_tables: Max occurrences required (-1 for no limit).
         state: If True, must be present. If False, must NOT be present.
-        type: 
-            - "DISTINCT": Checks for DISTINCT keyword.
-            - "UK": Checks for Primary OR Unique Keys in SELECT.
-            - "DISTINCT/UK": Checks for DISTINCT keyword OR Primary/Unique Keys in SELECT.
+        type: **DISTINCT**: Checks for DISTINCT keyword. **UK**: Checks for Primary OR Unique Keys in SELECT. **DISTINCT/UK**: Checks for DISTINCT keyword OR Primary/Unique Keys in SELECT.
     '''
 
     def __init__(self, min_tables: int = 1, max_tables: int = -1, state: bool = True, type: str = "DISTINCT") -> None:

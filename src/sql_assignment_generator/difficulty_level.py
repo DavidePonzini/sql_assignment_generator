@@ -1,6 +1,8 @@
 from enum import Enum
 
 class DifficultyLevel(Enum):
+    '''Difficulty levels for SQL assignments.'''
+    
     EASY = 1
     '''Minimal cognitive load, the assignments contains only elements related to triggering the error'''
 

@@ -10,12 +10,20 @@ import dav_tools
 
 @dataclass
 class Exercise:
+    '''A SQL exercise consisting of a title, request, and solutions.'''
+
     title: str
+    '''The title of the exercise.'''
+
     request: str
+    '''The natural language request or question for the exercise.'''
+
     solutions: list[str]
+    '''The list of SQL query solutions for the exercise.'''
 
     @staticmethod
     def generate(error: SqlErrors, difficulty: DifficultyLevel, dataset: Dataset, title: str) -> 'Exercise':
+        '''Generate a SQL exercise based on the specified parameters.'''
         if error not in ERROR_DETAILS_MAP:
             raise NotImplementedError(f'SQL Error not supported: {error.name}')
 

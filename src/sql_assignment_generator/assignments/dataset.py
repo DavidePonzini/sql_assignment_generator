@@ -10,9 +10,16 @@ from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, 
 
 @dataclass
 class Dataset:
+    '''A SQL dataset related to a specific domain, including schema creation and data insertion commands.'''
+
     create_commands: list[str]
+    '''SQL commands to create the database schema.'''
+
     insert_commands: list[str]
+    '''SQL commands to insert data into the database.'''
+
     domain: str
+    '''The domain associated with the dataset.'''
 
     def to_sql(self, schema: str) -> str:
         '''Generate the SQL commands to create and populate the dataset within the specified schema.'''
@@ -38,6 +45,7 @@ COMMIT;'''
     
     @staticmethod
     def generate(domain: str, errors: list[tuple[SqlErrors, DifficultyLevel]]) -> 'Dataset':
+        '''Generate a SQL dataset based on the specified parameters.'''
         unique_schema_constraints_map = {}
         
         # mandatory constraints
