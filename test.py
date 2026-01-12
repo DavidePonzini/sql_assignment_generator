@@ -1,31 +1,60 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
-from sql_assignment_generator.sql_errors_details import ERROR_DETAILS_MAP
 from sql_assignment_generator.difficulty_level import DifficultyLevel
+from sql_error_categorizer import SqlErrors
 from sql_assignment_generator import generate_assignment
-import dav_tools
 from dotenv import load_dotenv
+import dav_tools
+
 
 if __name__ == '__main__':
     load_dotenv()
 
-    dav_tools.argument_parser.add_argument('error', type=int, help='SQL error to use.', choices=[e.value for e in ERROR_DETAILS_MAP.keys()])
-    dav_tools.argument_parser.add_argument('difficulty', type=int, help='Difficulty level.', choices=[1, 2, 3])
-    dav_tools.argument_parser.add_argument('domain', type=str, help='SQL error domain to use.', nargs='?', default=None)
-    dav_tools.argument_parser.parse_args()
+    # change these values as needed
+    domain = None
+    errors = [
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.MEDIUM),
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
+        (SqlErrors.SYN_4_UNDEFINED_COLUMN, DifficultyLevel.HARD),
+        (SqlErrors.SYN_7_UNDEFINED_OBJECT, DifficultyLevel.HARD),
+        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.EASY),
+        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.MEDIUM),
+    ]
 
-    error_id = dav_tools.argument_parser.args.error
-    error_enum = next((e for e in ERROR_DETAILS_MAP.keys() if e.value == error_id))
+    assignment = generate_assignment(errors, domain)
     
-    if dav_tools.argument_parser.args.difficulty == 1:
-        difficulty_level = DifficultyLevel.EASY
-    elif dav_tools.argument_parser.args.difficulty == 2:
-        difficulty_level = DifficultyLevel.MEDIUM
-    else:
-        difficulty_level = DifficultyLevel.HARD
+    dav_tools.messages.message(
+        '-' * 50,
+        assignment.dataset.to_sql('datasetExercise'),
+        '-' * 50,
+        default_text_options=[dav_tools.messages.TextFormat.Color.CYAN],
+        sep='\n',
+        additional_text_options=[
+            [dav_tools.messages.TextFormat.Style.BOLD],
+            [],
+            [dav_tools.messages.TextFormat.Style.BOLD]
+        ]
+    )
 
-    domain = dav_tools.argument_parser.args.domain
+    dav_tools.messages.message()
+    
+    for exercise in assignment.exercises:
+        dav_tools.messages.message(
+            exercise.title,
+            default_text_options=[dav_tools.messages.TextFormat.Style.BOLD],
+        )
 
-    assignment = generate_assignment(error=error_enum, difficulty=difficulty_level, domain=domain)
+        dav_tools.messages.message(
+            exercise.request,
+            icon_options=[dav_tools.messages.TextFormat.Color.BLUE, dav_tools.messages.TextFormat.Style.BOLD],
+            icon='REQ',
+        )
+        for solution in exercise.solutions:
+            dav_tools.messages.message(
+                solution,
+                default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
+                icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
+                icon='SOL',
+            )
 
-    print(assignment)
+        dav_tools.messages.message()

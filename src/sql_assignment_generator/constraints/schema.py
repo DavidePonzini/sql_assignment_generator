@@ -17,9 +17,12 @@ class TableAmountConstraint(BaseConstraint):
     
     @property
     def description(self) -> str:
-        if self.max_tables < 0: return f'Must have minimum {self.min_tables} TABLES'
-        elif (self.min_tables == self.max_tables): return f'Must have exactly {self.min_tables} TABLES'
-        else: return f'Must have between {self.min_tables} and {self.max_tables} TABLES'
+        if self.max_tables < 0:
+            return f'Must have minimum {self.min_tables} TABLES'
+        elif self.min_tables == self.max_tables:
+            return f'Must have exactly {self.min_tables} TABLES'
+        else:
+            return f'Must have between {self.min_tables} and {self.max_tables} TABLES'
         
 class ColumnAmountConstraint(BaseConstraint):
     '''Requires each table in the schema to have a specific number of columns.'''
@@ -42,7 +45,6 @@ class ColumnAmountConstraint(BaseConstraint):
             # Contiamo solo le definizioni di colonna (exp.ColumnDef).
             # Questo esclude automaticamente PRIMARY KEY separate, CONSTRAINT, CHECK, etc.
             column_count = sum(1 for e in schema.expressions if isinstance(e, exp.ColumnDef))
-        
             if column_count < self.min_columns:
                 return False
         return True
@@ -51,6 +53,43 @@ class ColumnAmountConstraint(BaseConstraint):
     def description(self) -> str:
         return f'Each table must have minimum {self.min_columns} columns'
 
+class InsertAmountConstraint(BaseConstraint):
+    '''Requires that EACH table found in the insert list has a specific minimum number of rows inserted.'''
+
+    def __init__(self, min_rows: int = 3) -> None:
+        self.min_rows = min_rows
+
+    def validate(self, query_ast: list[Expression] | Expression, tables: list[Expression]) -> bool:
+        table_row_counts = Counter()
+        insert_nodes = []
+
+        if isinstance(query_ast, list): insert_nodes = query_ast
+        elif isinstance(query_ast, Expression): insert_nodes = list(query_ast.find_all(exp.Insert))
+
+        for insert_node in insert_nodes:
+            if not isinstance(insert_node, exp.Insert): continue
+            if not insert_node.this: continue
+                
+            table_name = insert_node.this.output_name.lower()
+            values_node = insert_node.expression
+
+            #verify the format INSERT INTO ... VALUES ...
+            if isinstance(values_node, exp.Values): #list of insert row: (val1), (val2)...
+                rows_in_statement = len(values_node.expressions)
+                table_row_counts[table_name] += rows_in_statement
+
+        #no inserted row
+        if not table_row_counts and self.min_rows > 0: return False
+
+        #quantity controll
+        for count in table_row_counts.values():
+            if count < self.min_rows: return False
+        return True
+    
+    @property
+    def description(self) -> str:
+        return f'Must insert minimum {self.min_rows} rows of data for each table.'
+    
 class HasCheckConstraint(BaseConstraint):
     '''Requires the schema to have a specific number of CHECK constraints.'''
 
