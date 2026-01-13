@@ -6,7 +6,7 @@ from sql_error_categorizer.sql_errors import SqlErrors
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
 from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, InsertAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint
-
+import sqlglot
 
 @dataclass
 class Dataset:
@@ -27,8 +27,8 @@ class Dataset:
         # Normalize schema name
         schema = schema.lower().replace(' ', '_')
 
-        create_cmds = '\n'.join(self.create_commands)
-        insert_cmds = '\n'.join(self.insert_commands)
+        create_cmds = '\n\n'.join(self.create_commands)
+        insert_cmds = '\n\n'.join(self.insert_commands)
 
         return f'''BEGIN;
 
@@ -96,6 +96,8 @@ COMMIT;'''
             try:
                 json_risposta = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 
+                assert isinstance(json_risposta, llm.models.Schema), "The response is not in the expected JSON format."
+
                 #parsing CREATE TABLE
                 parsed_tables = []
                 try:
@@ -124,7 +126,8 @@ COMMIT;'''
                     elif isinstance(constraint, (TableAmountConstraint, ColumnAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint)):
                          is_satisfied = constraint.validate(None, parsed_tables)
                     
-                    else:  is_satisfied = constraint.validate(parsed_inserts, parsed_tables)
+                    else:
+                        is_satisfied = constraint.validate(parsed_inserts, parsed_tables)
 
                     if not is_satisfied: missing_requirements.append(constraint.description)
 
@@ -132,8 +135,8 @@ COMMIT;'''
                 if not missing_requirements:
                     dav_tools.messages.success(f"Dataset generated and validated successfully at attempt {attempt + 1}.")
                     return Dataset(
-                        create_commands=json_risposta.schema_tables,
-                        insert_commands=json_risposta.insert_commands,
+                        create_commands=[cmd.sql(pretty=True, dialect='postgres') for cmd in parsed_tables],
+                        insert_commands=[cmd.sql(pretty=True, dialect='postgres') for cmd in parsed_inserts],
                         domain=domain
                     )
                 
