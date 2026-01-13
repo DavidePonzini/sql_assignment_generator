@@ -21,6 +21,9 @@ class Exercise:
     solutions: list[str]
     '''The list of SQL query solutions for the exercise.'''
 
+    difficulty: DifficultyLevel
+    '''The difficulty level of the exercise.'''
+
     @staticmethod
     def generate(error: SqlErrors, difficulty: DifficultyLevel, dataset: Dataset, title: str) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''
@@ -92,6 +95,7 @@ The exercise must have the following characteristics: {error_details.characteris
                         title=title,
                         request=answer.request,
                         solutions=[answer.solution],
+                        difficulty=difficulty
                     )
 
                 #validetion fail management
