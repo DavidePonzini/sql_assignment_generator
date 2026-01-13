@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import IntEnum
 
-class DifficultyLevel(Enum):
+class DifficultyLevel(IntEnum):
     '''Difficulty levels for SQL assignments.'''
     
     EASY = 1
@@ -11,3 +11,4 @@ class DifficultyLevel(Enum):
 
     HARD = 3
     '''High cognitive load, the assignments contains elements not related to triggering the error and may require complex reasoning'''
+
