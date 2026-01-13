@@ -73,6 +73,21 @@ The exercise must have the following characteristics: {error_details.characteris
                     messages,
                     json_format=llm.models.Assignment
                 )
+                
+                #refinement of the natural language request to remove hints
+                refinement_prompt = (
+                    "Review the text of the 'request' and eliminate any type of hint:" 
+                    "- It must not have a technical explanation." 
+                    "- You must not capitalize keywords (e.g. NOT NULL, PRIMARY KEY, etc.)."
+                    "- Specifies the columns to put in the SELECT but without making the list."
+                )
+
+                messages.add_message_user(refinement_prompt)
+                answer = llm.generate_answer(
+                    messages,
+                    json_format=llm.models.Assignment
+                )
+
                 assert isinstance(answer, llm.models.Assignment)
                 try:
                     solution_ast = sqlglot.parse_one(answer.solution)
