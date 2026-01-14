@@ -158,8 +158,8 @@ COMMIT;'''
                 if not missing_requirements:
                     dav_tools.messages.success(f"Dataset generated and validated successfully at attempt {attempt + 1}.")
                     return Dataset(
-                        create_commands=[cmd.sql(pretty=True, dialect='postgres') for cmd in parsed_tables],
-                        insert_commands=[cmd.sql(pretty=True, dialect='postgres') for cmd in parsed_inserts],
+                        create_commands=[f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_tables],
+                        insert_commands=[f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_inserts],
                         domain=domain
                     )
                 
