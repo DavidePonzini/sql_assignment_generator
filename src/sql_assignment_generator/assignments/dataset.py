@@ -48,12 +48,35 @@ COMMIT;'''
         '''Generate a SQL dataset based on the specified parameters.'''
         unique_schema_constraints_map = {}
         
+        difficulty_order = {
+            DifficultyLevel.EASY: 1,
+            DifficultyLevel.MEDIUM: 2,
+            DifficultyLevel.HARD: 3
+        }
+
+        # control the maximum difficulty of errors
+        max_difficulty = max((difficulty for _, difficulty in errors), key=lambda d: difficulty_order[d])
+
+        if max_difficulty == DifficultyLevel.EASY:
+            minNumberOfTables = 2
+            minNumberOfColumns = 2
+            minNumberOfInserts = 3
+        elif max_difficulty == DifficultyLevel.MEDIUM:
+            minNumberOfTables = 4
+            minNumberOfColumns = 4
+            minNumberOfInserts = 4
+        else:  # HARD
+            minNumberOfTables = 6
+            minNumberOfColumns = 5
+            minNumberOfInserts = 5
+
         # mandatory constraints
         base_constraints = [
-            TableAmountConstraint(5),
-            ColumnAmountConstraint(3),
-            InsertAmountConstraint(3)
+            TableAmountConstraint(minNumberOfTables),
+            ColumnAmountConstraint(minNumberOfColumns),
+            InsertAmountConstraint(minNumberOfInserts)
         ]
+        
         for c in base_constraints:
             unique_schema_constraints_map[c.description] = c
 
