@@ -20,29 +20,36 @@ class TableAmountConstraint(BaseConstraint):
         return f'Must have minimum {self.min_tables} TABLES'
        
 class ColumnAmountConstraint(BaseConstraint):
-    '''Requires each table in the schema to have a specific number of columns.'''
+    '''Requires that a specific number of tables in the schema have a minimum number of columns.'''
 
-    def __init__(self, min_columns: int = 2) -> None:
+    def __init__(self, min_tables: int = 1, min_columns: int = 2) -> None:
         self.min_columns = min_columns
+        self.min_tables = min_tables
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
         if not tables:
             return False
         
+        valid_tables_count = 0
+
         for table in tables:
             schema = table.this
 
             if not isinstance(schema, exp.Schema):
                 continue
 
+            # count columns in the table
             column_count = sum(1 for e in schema.expressions if isinstance(e, exp.ColumnDef))
-            if column_count < self.min_columns:
-                return False
-        return True
+            
+            # IF column count meets the minimum, increment valid table count
+            if column_count >= self.min_columns:
+                valid_tables_count += 1
+        
+        return valid_tables_count >= self.min_tables
 
     @property
     def description(self) -> str:
-        return f'Each table must have minimum {self.min_columns} columns'
+        return f'At least {self.min_tables} tables must have minimum {self.min_columns} columns'
 
 class InsertAmountConstraint(BaseConstraint):
     '''Requires that EACH table found in the insert list has a specific minimum number of rows inserted.'''
@@ -80,7 +87,7 @@ class InsertAmountConstraint(BaseConstraint):
     @property
     def description(self) -> str:
         return f'Must insert minimum {self.min_rows} rows of data for each table.'
-
+    
 class HasSamePrimaryKeyConstraint(BaseConstraint):
     '''
     Requires that a specific number of tables share the SAME Primary Key column name.
@@ -120,6 +127,58 @@ class HasSamePrimaryKeyConstraint(BaseConstraint):
     def description(self) -> str:
         return f'{self.min_tables} tables must have the same PRIMARY KEY column name'
     
+class HasSameColumnNameConstraint(BaseConstraint):
+    '''
+    Requires that a specific number of tables share the SAME column name, excluding Primary Keys (non-key columns).
+    '''
+
+    def __init__(self, min_tables: int = 2) -> None:
+        if min_tables < 2: min_tables = 2
+        self.min_tables = min_tables
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        tables_non_key_cols = []
+
+        for table in tables:
+            schema = table.this
+            if not isinstance(schema, exp.Schema):
+                continue
+
+            pk_cols = set()
+            all_cols = set()
+
+            # look for inline definitions (e.g. id INT PRIMARY KEY)
+            for col_def in schema.find_all(exp.ColumnDef):
+                col_name = col_def.this.output_name.lower()
+                all_cols.add(col_name)
+                
+                for constraint in col_def.args.get('constraints', []):
+                    if isinstance(constraint.kind, exp.PrimaryKeyColumnConstraint):
+                        pk_cols.add(col_name)
+
+            # look for table-level definitions (e.g. PRIMARY KEY (id))
+            for expression in schema.expressions:
+                if isinstance(expression, exp.PrimaryKey):
+                    for col in expression.expressions:
+                        pk_cols.add(col.output_name.lower())
+
+            # keep only non-key columns and add to the list
+            non_key_cols = all_cols - pk_cols
+            if non_key_cols:
+                tables_non_key_cols.append(non_key_cols)
+
+        # count occurrences across all tables
+        global_col_counter = Counter()
+        for col_set in tables_non_key_cols:
+            for col_name in col_set:
+                global_col_counter[col_name] += 1
+
+        return any(count >= self.min_tables for count in global_col_counter.values())
+
+    @property
+    def description(self) -> str:
+        return f'In CREATE TABLE must have at least {self.min_tables} tables with non-key columns with EQUAL name'
+
 class HasCheckConstraint(BaseConstraint):
     '''Requires the schema to have a specific number of CHECK constraints.'''
 
@@ -146,3 +205,36 @@ class HasCheckConstraint(BaseConstraint):
             return f'Must have exactly {self.min_checks} CHECK constraints in schema'
         else: 
             return f'Must have between {self.min_checks} and {self.max_checks} CHECK constraints in schema'
+
+class HasComplexColumnNameConstraint(BaseConstraint):
+    '''
+    Requires that the schema contains a specific minimum number of "complex" and "longer" columns.
+    A complex column is defined as having a name with length >= 15 characters 
+    and containing at least one underscore separator ('_').
+    '''
+
+    def __init__(self, min_complex_cols: int = 1) -> None:
+        self.min_complex_cols = min_complex_cols
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        complex_cols_found = 0
+
+        for table in tables:
+            schema = table.this
+            if not isinstance(schema, exp.Schema):
+                continue
+
+            # look for all column definitions
+            for col_def in schema.find_all(exp.ColumnDef):
+                col_name = col_def.this.output_name
+                
+                # complexity an longth criteria that I want use
+                if len(col_name) >= 15 and '_' in col_name:
+                    complex_cols_found += 1
+
+        return complex_cols_found >= self.min_complex_cols
+
+    @property
+    def description(self) -> str:
+        return f'Must have at least {self.min_complex_cols} columns with complex and longer names (length >= 15 and containing "_")'
+    

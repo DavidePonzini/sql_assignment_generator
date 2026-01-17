@@ -6,7 +6,7 @@ from sql_error_categorizer.sql_errors import SqlErrors
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
 from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, InsertAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint
-import sqlglot
+
 
 @dataclass
 class Dataset:
@@ -42,7 +42,6 @@ SET search_path TO {schema};
 
 COMMIT;'''
     
-    
     @staticmethod
     def generate(domain: str, errors: list[tuple[SqlErrors, DifficultyLevel]]) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
@@ -59,21 +58,24 @@ COMMIT;'''
 
         if max_difficulty == DifficultyLevel.EASY:
             minNumberOfTables = 2
+            minNumberOfColumnsXtables = 1
             minNumberOfColumns = 2
             minNumberOfInserts = 3
         elif max_difficulty == DifficultyLevel.MEDIUM:
             minNumberOfTables = 4
+            minNumberOfColumnsXtables = 2
             minNumberOfColumns = 4
             minNumberOfInserts = 4
         else:  # HARD
             minNumberOfTables = 6
+            minNumberOfColumnsXtables = 3
             minNumberOfColumns = 5
             minNumberOfInserts = 5
 
         # mandatory constraints
         base_constraints = [
             TableAmountConstraint(minNumberOfTables),
-            ColumnAmountConstraint(minNumberOfColumns),
+            ColumnAmountConstraint(minNumberOfColumnsXtables, minNumberOfColumns),
             InsertAmountConstraint(minNumberOfInserts)
         ]
         
@@ -93,9 +95,16 @@ COMMIT;'''
         active_constraints = list(unique_schema_constraints_map.values())
         formatted_constraints = '\n'.join(f'- {c.description}' for c in active_constraints)
         
+        #controll characteristics for dataset
+        characteristics_prompt = ""
+        if error_details.dataset_characteristics and error_details.dataset_characteristics.strip():
+            characteristics_prompt = f"The dataset must have the following characteristics: {error_details.dataset_characteristics}."
+
+        
         prompt_text = f'''
         Generate a SQL dataset using follow domain: "{domain}".
-        
+        {characteristics_prompt}
+
         MANDATORY CONSTRAINTS:
         {formatted_constraints}
         
@@ -118,7 +127,6 @@ COMMIT;'''
         for attempt in range(max_attempts):
             try:
                 json_risposta = llm.generate_answer(messages, json_format=llm.models.Schema) 
-                
                 assert isinstance(json_risposta, llm.models.Schema), "The response is not in the expected JSON format."
 
                 #parsing CREATE TABLE
@@ -145,13 +153,9 @@ COMMIT;'''
 
                     if isinstance(constraint, InsertAmountConstraint):
                         is_satisfied = constraint.validate(parsed_inserts, [])
-                    
                     elif isinstance(constraint, (TableAmountConstraint, ColumnAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint)):
                          is_satisfied = constraint.validate(None, parsed_tables)
-                    
-                    else:
-                        is_satisfied = constraint.validate(parsed_inserts, parsed_tables)
-
+                    else: is_satisfied = constraint.validate(parsed_inserts, parsed_tables)
                     if not is_satisfied: missing_requirements.append(constraint.description)
 
                 #if all ok the dataset was created

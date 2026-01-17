@@ -36,6 +36,11 @@ class Exercise:
         error_details = ERROR_DETAILS_MAP[error]
         constraints_list = ERROR_DETAILS_MAP[error].constraints[difficulty]
 
+        #prepare characteristics text (if contain funcion random we solve it first)
+        char_text = error_details.exercise_characteristics
+        if callable(char_text):
+            char_text = char_text()
+    
         #filter only query costraint
         query_constraints = [c for c in constraints_list if 'query' in c.__class__.__module__]
         formatted_constraints = '\n'.join(f'- {item.description}' for item in query_constraints)
@@ -43,14 +48,19 @@ class Exercise:
         #prepare DB for assignment text
         dataset_context = "\n".join(dataset.create_commands) + "\n\n" + "\n".join(dataset.insert_commands)
 
+        #controll characteristics for exercise
+        characteristics_prompt = "" 
+        if char_text and isinstance(char_text, str) and char_text.strip():
+            characteristics_prompt = f"The exercise must have the following characteristics: {char_text}."
+        
+
         assignment_text =f'''
 ### CONTEXT (DATABASE SCHEMA AND DATA) ###
 {dataset_context}
 
 ### GUIDELINES ###
 Generate a SQL exercise based on the dataset above.
-The exercise should NATURALLY tempts student to write a query that fails due to {error_details.description}. 
-The exercise must have the following characteristics: {error_details.characteristics}.
+{characteristics_prompt}.
 
 ### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
 {formatted_constraints}
@@ -58,7 +68,7 @@ The exercise must have the following characteristics: {error_details.characteris
 #### JSON REQUIRED OUTPUT FORMAT ####
 {{
     "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake. Be concise and clear. Do NOT provide hints or explanations.",
-    "solution": "Only a single and SYNTACTICALLY correct (executable) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
+    "solution": "Only a single and SYNTACTICALLY and SEMANTICALLY correct (executable with minimum 1 returned row) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
 }}
 '''
         messages = llm.Message()
@@ -79,24 +89,49 @@ The exercise must have the following characteristics: {error_details.characteris
                     messages,
                     json_format=llm.models.Assignment
                 )
-                
-                #refinement of the natural language request to remove hints
-                refinement_prompt = (
-                    "Review the text of the 'request' and eliminate any type of hint:" 
-                    "- It must not have a technical explanation." 
-                    "- You must not capitalize keywords (e.g. NOT NULL, PRIMARY KEY, etc.)."
-                    "- Specifies the columns to put in the SELECT but without making the list."
-                )
-
-                messages.add_message_user(refinement_prompt)
-                answer = llm.generate_answer(
-                    messages,
-                    json_format=llm.models.Assignment
-                )
 
                 assert isinstance(answer, llm.models.Assignment)
+                
+                #refinement of the natural language request to remove hints
+                messages_refinement = llm.Message()
+                refinement_prompt = (
+                    f'''
+For the following query solution:
+--- SOLUTION START ---
+{answer.solution}
+--- SOLUTION END ---
+
+Remove any kind of hints on how to write the query from its natural language request. 
+Keep it simple and straighforward
+Do not use generic phrases like "a certain amount"; instead specify exact terms.
+Avoids mentioning tables explicitly
+Removes any reference to joins or join keys
+Keeps the condition purely at the problem level, not the SQL level.
+Make it clear which columns should be selected. If any columns are aliased in the solution, make sure to reflect that in the request.
+Do not use any formatting on the answer
+The alias in select solution must be appear in natural language request.
+
+Natural Language Request:
+--- REQUEST START ---
+{answer.request}
+--- REQUEST END ---'''
+                )
+
+                messages_refinement.add_message_user(refinement_prompt)
+                answer_refinement = llm.generate_answer(
+                    messages_refinement,
+                    json_format=llm.models.RemoveHints
+                )
+
+                assert isinstance(answer_refinement, llm.models.RemoveHints)
+                dav_tools.messages.debug(f"Old Request: {answer.request}")
+                dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
+                answer.request = answer_refinement.request_without_hints
+
+                #check sintax correctness of solution
+                solution_ast = None
                 try:
-                    solution_ast = sqlglot.parse_one(answer.solution)
+                    solution_ast = sqlglot.parse_one(answer.solution, read="postgres")
                 except Exception as e:
                     raise ValueError(f"Generated SQL solution contains syntax errors: {e}")
 
@@ -130,4 +165,5 @@ The exercise must have the following characteristics: {error_details.characteris
                 dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.")
 
-        raise Exception(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')
+        #raise Exception(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')
+        return None

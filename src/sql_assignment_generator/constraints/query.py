@@ -3,12 +3,14 @@
 from collections import Counter
 from .base import BaseConstraint
 from sqlglot import Expression, exp
-     
+from .costraintType import WhereConstraintType, DistinctOrUKInSelectConstraintType, AggregationConstraintType
+
+
 class HasAggregationConstraint(BaseConstraint):
     '''Requires the presence (or absence) of an aggregation function in the SQL query. 
     It is possible chose the type of aggregation function present in solution.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, type: list[str] = [], state: bool = True) -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, type: list[AggregationConstraintType] = [AggregationConstraintType.COUNT], state: bool = True) -> None:
         self.min_tables = min_tables
         self.max_tables = max_tables if max_tables > min_tables else -1
 
@@ -17,20 +19,21 @@ class HasAggregationConstraint(BaseConstraint):
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
         type_map = {
-            "SUM": exp.Sum,
-            "AVG": exp.Avg,
-            "COUNT": exp.Count,
-            "MAX": exp.Max,
-            "MIN": exp.Min,
-            "EXTRACT": exp.Extract
+            AggregationConstraintType.SUM: exp.Sum,
+            AggregationConstraintType.AVG: exp.Avg,
+            AggregationConstraintType.COUNT: exp.Count,
+            AggregationConstraintType.MAX: exp.Max,
+            AggregationConstraintType.MIN: exp.Min,
+            AggregationConstraintType.EXTRACT: exp.Extract,
+            AggregationConstraintType.LENGTH: exp.Length
         }
 
         #if type is empty consider all aggregation functions
         if not self.type: target_types = tuple(type_map.values())
         else: #if type has value take only sqlglot needed
             target_types = tuple(
-                type_map[t.upper()] for t in self.type 
-                if t.upper() in type_map
+                type_map[t] for t in self.type 
+                if t in type_map
             )
 
             if not target_types:
@@ -49,7 +52,7 @@ class HasAggregationConstraint(BaseConstraint):
     def description(self) -> str:
         type_suffix = ""
         if self.type:
-            joined_types = " or ".join(t.upper() for t in self.type)
+            joined_types = " or ".join(t.value.upper() for t in self.type)
             type_suffix = f"of type {joined_types}"
         if self.state == False: return "Must NOT have AGGREGATION"
         if (self.min_tables > self.max_tables): return f'Must have minimum {self.min_tables} AGGREGATION {type_suffix}' 
@@ -60,14 +63,12 @@ class HasSubQueryConstraint(BaseConstraint):
     '''Requires the presence of a subquery in the SQL query. Function take in input min_tables and max_tables to specify number of subqueries required,
     state = True -> must have subquery or state = False -> must NOT have subquery and type to specify NESTED or NOT NESTED subquery.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, state: bool = True, type: str = "") -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, state: bool = True, typeNested: bool = True) -> None:
         self.min_tables = min_tables
         self.max_tables = max_tables if max_tables > min_tables else -1
         
         self.state = state
-        valid_types = ["", "NOT NESTED"] 
-        if type not in valid_types: raise ValueError(f"type must be one of {valid_types}")
-        else: self.type = type
+        self.typeNested = typeNested
 
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
@@ -113,7 +114,7 @@ class HasSubQueryConstraint(BaseConstraint):
             return False
 
         #type (NESTED / NON NESTED)
-        if self.type == "NOT NESTED": #"NOT NESTED": subquery exist Depth = 2 but not Depth < 3
+        if not self.typeNested: #"NOT NESTED": subquery exist Depth = 2 but not Depth < 3
             return max_depth == 2
         else: return True
     
@@ -125,9 +126,9 @@ class HasSubQueryConstraint(BaseConstraint):
         if self.max_tables < 0: qty_desc = f"minimum {self.min_tables}"
         elif self.min_tables == self.max_tables: qty_desc = f"exactly {self.min_tables}"
         else: qty_desc = f"between {self.min_tables} and {self.max_tables}"
-        
-        if self.type == "": type_desc = "SUB-QUERY"
-        elif self.type == "NOT NESTED": type_desc = "NOT NESTED SUB-QUERY"
+
+        if self.typeNested: type_desc = "SUB-QUERY"
+        elif not self.typeNested: type_desc = "NOT NESTED SUB-QUERY"
 
         return f"Must have {qty_desc} {type_desc}"
 
@@ -143,12 +144,12 @@ class HasDistinctOrUniqueKeyInSelectConstraint(BaseConstraint):
         type: **DISTINCT**: Checks for DISTINCT keyword. **UK**: Checks for Primary OR Unique Keys in SELECT. **DISTINCT/UK**: Checks for DISTINCT keyword OR Primary/Unique Keys in SELECT.
     '''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, state: bool = True, type: str = "DISTINCT") -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, state: bool = True, type: DistinctOrUKInSelectConstraintType = DistinctOrUKInSelectConstraintType.DISTINCT) -> None:
         self.min_tables = min_tables
         self.max_tables = max_tables if max_tables > min_tables else -1
         
         self.state = state
-        valid_types = ["DISTINCT", "UK", "DISTINCT/UK"]
+        valid_types = [DistinctOrUKInSelectConstraintType.DISTINCT, DistinctOrUKInSelectConstraintType.UK, DistinctOrUKInSelectConstraintType.DISTINCT_UK]
         if type not in valid_types: raise ValueError(f"type must be one of {valid_types}")
         self.type = type
 
@@ -157,12 +158,12 @@ class HasDistinctOrUniqueKeyInSelectConstraint(BaseConstraint):
         key_count = 0
 
         #DISTINCT case
-        if self.type in ["DISTINCT", "DISTINCT/UK"]:
+        if self.type in [DistinctOrUKInSelectConstraintType.DISTINCT, DistinctOrUKInSelectConstraintType.DISTINCT_UK]:
             distinct_nodes = list(query_ast.find_all(exp.Distinct))
             distinct_count = len(distinct_nodes)
 
         #PK/UK case
-        if self.type in ["UK", "DISTINCT/UK"]:
+        if self.type in [DistinctOrUKInSelectConstraintType.UK, DistinctOrUKInSelectConstraintType.DISTINCT_UK]:
             #identify primary keys and unique keys from tables
             pks = set()
             uks = set()
@@ -214,9 +215,9 @@ class HasDistinctOrUniqueKeyInSelectConstraint(BaseConstraint):
                             break
         
         #final count based on type
-        if self.type == "DISTINCT":
+        if self.type == DistinctOrUKInSelectConstraintType.DISTINCT:
             final_count = distinct_count
-        elif self.type == "UK":
+        elif self.type == DistinctOrUKInSelectConstraintType.UK:
             final_count = key_count
         else: # DISTINCT/UK - or DISTINCT or KEY
             final_count = distinct_count + key_count
@@ -226,10 +227,7 @@ class HasDistinctOrUniqueKeyInSelectConstraint(BaseConstraint):
     
     @property
     def description(self) -> str:
-        if self.type == "DISTINCT": elem_name = "DISTINCT"
-        elif self.type == "UK": elem_name = "PRIMARY or UNIQUE KEY in SELECT"
-        else: elem_name = "DISTINCT or UNIQUE KEY in SELECT"
-        
+        elem_name = self.type.value
         if not self.state: return f"Must NOT have {elem_name}"
         
         if self.max_tables < 0: return f'Must have minimum {self.min_tables} {elem_name}'
@@ -392,23 +390,55 @@ class HasUnionOrUnionAllConstraint(BaseConstraint):
         elif self.min_tables == self.max_tables: return f'Must have exactly {self.min_tables} UNION or UNION ALL'
         else: return f'Must have between {self.min_tables} and {self.max_tables} UNION or UNION ALL'
 
+class HasHavingConstraint(BaseConstraint):
+    '''Requires the presence (or absence) of a HAVING clause with a specific number of conditions.'''
+
+    def __init__(self, min_conditions: int = 1, max_conditions: int = -1, state: bool = True) -> None:
+        self.min_conditions = min_conditions
+        self.max_conditions = max_conditions if max_conditions > min_conditions else -1
+        self.state = state
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        # look for all node of HAVING in query
+        having_nodes = list(query_ast.find_all(exp.Having))
+        
+        if having_nodes: 
+            # take main HAVEING found
+            having_node = having_nodes[0]
+            conditions_count = 1
+            conditions_count += len(list(having_node.find_all(exp.And)))
+            conditions_count += len(list(having_node.find_all(exp.Or)))
+
+            if not self.state: # case must NOT have HAVING
+                return False
+            else: # case must have HAVEING 
+                if self.max_conditions < 0: return conditions_count >= self.min_conditions
+                else:  return self.min_conditions <= conditions_count <= self.max_conditions
+        else: # no HAVING found
+            if not self.state: return True
+            else: return False
+    
+    @property
+    def description(self) -> str:
+        if not self.state: return "Must NOT have HAVING clause"
+        if self.max_conditions < 0: return f'Must have minimum {self.min_conditions} conditions in HAVING clause'
+        elif self.min_conditions == self.max_conditions: return f'Must have exactly {self.min_conditions} conditions in HAVING clause'
+        else: return f'Must have between {self.min_conditions} and {self.max_conditions} conditions in HAVING clause'
+
 class HasWhereConstraint(BaseConstraint):
     '''Requires the presence of a WHERE clause in the SQL query with its specific characteristics.
     Function take in input: min_tables and max_tables to specify number of WHERE conditions required,
     type to specify the type of WHERE conditions required.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, type: str = "CLASSIC") -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, type:  WhereConstraintType = WhereConstraintType.CLASSIC) -> None:
         self.min_tables = min_tables
-        self.max_tables = max_tables if max_tables > min_tables else -1
+        self.max_tables = max_tables if max_tables >= min_tables else -1
 
-        valid_types = ["CLASSIC", "STRING", "NULL/EMPTY", "MULTIPLE", "NESTED", "WILDCARD", "NO WILDCARD", "EXIST", 
-                       "NOT EXIST", "EXIST/NOT EXIST or IN/NOT IN", "NOT", "COMPARISON OPERATORS", "ANY/ALL/IN", "HAVING"]
-        
-        if type not in valid_types: raise ValueError(f"type must be one of {valid_types}")
+        if type not in list(WhereConstraintType): raise ValueError(f"type must be one of {list(WhereConstraintType)}")
         else: self.type = type
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        if self.type == "CLASSIC": 
+        if self.type == WhereConstraintType.CLASSIC: 
             #find all Where clausole 
             where_nodes = list(query_ast.find_all(exp.Where))
             total_conditions = 0
@@ -422,7 +452,7 @@ class HasWhereConstraint(BaseConstraint):
                 total_conditions += current_count
             if self.max_tables < 0: return self.min_tables <= total_conditions
             return self.min_tables <= total_conditions <= self.max_tables 
-        elif self.type == "STRING": 
+        elif self.type == WhereConstraintType.STRING: 
             count = 0
             where_nodes = list(query_ast.find_all(exp.Where)) #look for all Where clausole
 
@@ -448,26 +478,35 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables 
-        elif self.type == "NULL/EMPTY": 
+        elif self.type == WhereConstraintType.EMPTY: 
             count = 0
-            where_nodes = list(query_ast.find_all(exp.Where)) #look for in all Where clausole
+            where_nodes = list(query_ast.find_all(exp.Where))
 
             for where_node in where_nodes:
-                #look for string (col = '' or col <> '')
+                # look for empty string (col = '' or col <> '')
                 for node in where_node.find_all(exp.EQ, exp.NEQ):
                     right_side = node.expression
-                    #controll if it is a literal and if it is an empty string
+                    # Ccontroll if string literal is empty
                     if isinstance(right_side, exp.Literal) and right_side.is_string and right_side.this == "":
                         count += 1
 
-                #look for IS NULL or IS NOT NULL
+            if self.max_tables < 0: return self.min_tables <= count
+            return self.min_tables <= count <= self.max_tables 
+        elif self.type == WhereConstraintType.NULL: 
+            count = 0
+            where_nodes = list(query_ast.find_all(exp.Where))
+
+            for where_node in where_nodes:
+                # look for IS NULL and IS NOT NULL
                 for node in where_node.find_all(exp.Is):
                     if isinstance(node.expression, exp.Null):
-                        count += 1
+                        # if parent isn't NOT
+                        if not isinstance(node.parent, exp.Not):
+                            count += 1
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "MULTIPLE":
+        elif self.type == WhereConstraintType.MULTIPLE:
             #if i have (A OR B) AND C AND (D OR E) return 3 element: [A OR B, C, D OR E]
             def get_and_chunks(node):
                 if isinstance(node, exp.And):
@@ -503,7 +542,7 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= total_multiple_conditions
             else: return self.min_tables <= total_multiple_conditions <= self.max_tables
-        elif self.type == "WILDCARD":
+        elif self.type == WhereConstraintType.WILDCARD:
             count = 0
             wildcard_symbols = ['%', '_', '[', ']', '^', '-', '*', '+', '?', '(', ')', '{', '}']
             #look for LIKE clause
@@ -518,12 +557,12 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "NO WILDCARD":
+        elif self.type == WhereConstraintType.NO_WILDCARD:
             #if there is a LIKE return False
             if any(query_ast.find_all(exp.Like)):
                 return False
             return True
-        elif self.type == "ANY/ALL/IN":
+        elif self.type == WhereConstraintType.ANY_ALL_IN:
             count = 0
             where_nodes = list(query_ast.find_all(exp.Where))
 
@@ -535,7 +574,7 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "NOT": 
+        elif self.type == WhereConstraintType.NOT: 
             count = 0
             #look for where clausole
             where_nodes = list(query_ast.find_all(exp.Where))
@@ -546,7 +585,7 @@ class HasWhereConstraint(BaseConstraint):
                 count += len(not_nodes)
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "NOT EXIST":
+        elif self.type == WhereConstraintType.NOT_EXIST:
             count = 0
             where_nodes = list(query_ast.find_all(exp.Where))
 
@@ -556,7 +595,7 @@ class HasWhereConstraint(BaseConstraint):
                         count += 1
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables            
-        elif self.type == "EXIST/NOT EXIST or IN/NOT IN":
+        elif self.type == WhereConstraintType.EXIST_OR_IN:
             pos_count = 0 #count: IN, EXISTS
             neg_count = 0 #count: NOT IN, NOT EXISTS
             
@@ -574,7 +613,7 @@ class HasWhereConstraint(BaseConstraint):
             if self.max_tables > 0: 
                 if (pos_count + neg_count) > self.max_tables: return False
             return True       
-        elif self.type == "COMPARISON OPERATORS":
+        elif self.type == WhereConstraintType.COMPARISON_OPERATORS:
             count = 0
             target_operators = (
                 exp.EQ,   # =
@@ -596,7 +635,7 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "NESTED":
+        elif self.type == WhereConstraintType.NESTED:
             count = 0
             where_nodes = list(query_ast.find_all(exp.Where))
             for where_node in where_nodes:
@@ -608,7 +647,7 @@ class HasWhereConstraint(BaseConstraint):
                         
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "HAVING":
+        elif self.type == WhereConstraintType.HAVING:
             count = 0
             has_where = False
             has_having = False
@@ -637,7 +676,7 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
-        elif self.type == "EXIST":
+        elif self.type == WhereConstraintType.EXIST:
             count = 0
             where_nodes = list(query_ast.find_all(exp.Where))
 
@@ -654,25 +693,8 @@ class HasWhereConstraint(BaseConstraint):
     
     @property
     def description(self) -> str:
-        type_descriptions = {
-            "CLASSIC": "WHERE conditions",
-            "STRING": "WHERE STRING conditions",
-            "NULL/EMPTY": "WHERE NULL or EMPTY conditions",
-            "MULTIPLE": "MULTIPLE WHERE conditions",
-            "NESTED": "NESTED WHERE conditions",
-            "WILDCARD": "WHERE conditions with WILDCARD",
-            "NO WILDCARD": "WHERE conditions without WILDCARD",
-            "EXIST": "EXIST in WHERE conditions",
-            "NOT EXIST": "NOT EXIST in WHERE conditions",
-            "EXIST/NOT EXIST or IN/NOT IN": "EXIST and NOT EXIST or IN and NOT IN into WHERE conditions",
-            "NOT": "NOT in WHERE conditions",
-            "COMPARISON OPERATORS": "COMPARISON OPERATORS in WHERE conditions",
-            "ANY/ALL/IN": "ANY or ALL or IN in WHERE conditions",
-            "HAVING": "WHERE or HAVING conditions",
-        }
-
-        suffix = type_descriptions.get(self.type, "WHERE conditions")
+        suffix = self.type.value
         if (self.min_tables > self.max_tables): count_str =  f"minimum {self.min_tables}" 
         elif (self.min_tables == self.max_tables): count_str = f"exactly {self.min_tables}"
         else: count_str = f"between {self.min_tables} and {self.max_tables}"
-        return f"Must have {count_str} {suffix}"
+        return f"Must have {count_str} {suffix}. It is mandatory that PK does NOT have comparison operator with a NUMBER"
