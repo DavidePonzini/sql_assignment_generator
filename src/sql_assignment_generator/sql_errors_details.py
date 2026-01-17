@@ -359,7 +359,7 @@ ERROR_DETAILS_MAP = {
         type {random.choice(["AVG", "SUM"])} but MUST NOT insert DISTINCT inside the function.''',
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasAggregationConstraint(2, type=[AggregationConstraintType.SUM, AggregationConstraintType.AVG], state=True),
+                constraints.query.HasAggregationConstraint(1, type=[AggregationConstraintType.SUM, AggregationConstraintType.AVG], state=True),
                 constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT),
                 constraints.query.HasHavingConstraint(state=False),
                 constraints.query.HasSubQueryConstraint(state=False)

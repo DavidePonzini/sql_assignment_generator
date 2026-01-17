@@ -46,6 +46,7 @@ COMMIT;'''
     def generate(domain: str, errors: list[tuple[SqlErrors, DifficultyLevel]]) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
         unique_schema_constraints_map = {}
+        constraint_ranks = {}
         
         difficulty_order = {
             DifficultyLevel.EASY: 1,
@@ -55,6 +56,7 @@ COMMIT;'''
 
         # control the maximum difficulty of errors
         max_difficulty = max((difficulty for _, difficulty in errors), key=lambda d: difficulty_order[d])
+        max_rank = difficulty_order[max_difficulty]
 
         if max_difficulty == DifficultyLevel.EASY:
             minNumberOfTables = 2
@@ -80,16 +82,25 @@ COMMIT;'''
         ]
         
         for c in base_constraints:
-            unique_schema_constraints_map[c.description] = c
+            c_type = c.__class__.__name__
+            unique_schema_constraints_map[c_type] = c
+            constraint_ranks[c_type] = max_rank
 
         # take other schema constraints inside error
         for error, difficulty in errors:
             error_details = ERROR_DETAILS_MAP[error]
             all_constraints = error_details.constraints.get(difficulty, [])
+            current_rank = difficulty_order[difficulty]
             
-            for constraint in all_constraints: # control if constraint are in schema module
+            # control if constraint are in schema module
+            for constraint in all_constraints: 
                 if 'schema' in constraint.__class__.__module__:
-                    unique_schema_constraints_map[constraint.description] = constraint
+                    c_type = constraint.__class__.__name__
+                    
+                    # add or update constraint based on rank
+                    if c_type not in constraint_ranks or current_rank > constraint_ranks[c_type]:
+                        unique_schema_constraints_map[c_type] = constraint
+                        constraint_ranks[c_type] = current_rank
 
         #we have all constraint
         active_constraints = list(unique_schema_constraints_map.values())
