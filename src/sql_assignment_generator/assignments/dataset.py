@@ -47,6 +47,7 @@ COMMIT;'''
         '''Generate a SQL dataset based on the specified parameters.'''
         unique_schema_constraints_map = {}
         constraint_ranks = {}
+        dataset_characteristics = []
         
         difficulty_order = {
             DifficultyLevel.EASY: 1,
@@ -92,7 +93,7 @@ COMMIT;'''
             all_constraints = error_details.constraints.get(difficulty, [])
             current_rank = difficulty_order[difficulty]
             
-            # control if constraint are in schema module
+            # check if constraints are in schema module
             for constraint in all_constraints: 
                 if 'schema' in constraint.__class__.__module__:
                     c_type = constraint.__class__.__name__
@@ -102,19 +103,25 @@ COMMIT;'''
                         unique_schema_constraints_map[c_type] = constraint
                         constraint_ranks[c_type] = current_rank
 
-        #we have all constraint
+            # check characteristics for dataset
+            if error_details.dataset_characteristics.strip():
+                dataset_characteristics.append(error_details.dataset_characteristics.strip())
+        
+        # we have all constraints
         active_constraints = list(unique_schema_constraints_map.values())
         formatted_constraints = '\n'.join(f'- {c.description}' for c in active_constraints)
         
-        #controll characteristics for dataset
-        characteristics_prompt = ""
-        if error_details.dataset_characteristics and error_details.dataset_characteristics.strip():
-            characteristics_prompt = f"The dataset must have the following characteristics: {error_details.dataset_characteristics}."
-
+        # dataset characteristics str
+        if len(dataset_characteristics) > 0:
+            dataset_characteristics_str = "The dataset must have the following characteristics:\n"
+            for characteristic in dataset_characteristics:
+                dataset_characteristics_str += f"- {characteristic}\n"
+        else:
+            dataset_characteristics_str = ''
         
         prompt_text = f'''
-        Generate a SQL dataset using follow domain: "{domain}".
-        {characteristics_prompt}
+        Generate a SQL dataset about the following domain: "{domain}".
+        {dataset_characteristics_str}
 
         MANDATORY CONSTRAINTS:
         {formatted_constraints}
