@@ -2,10 +2,11 @@
 
 from .aggregation import RequireAggregation, NoAggregation
 from .group_by import RequireGroupBy, NoGroupBy
-from .having import RequireHaving
-from .join import HasJoinConstraint
+from .having import RequireHaving, NoHaving
+from .join import RequireJoin, NoJoin
 from .order_by import HasOrderByConstraint
-from .select_unique import HasDistinctOrUniqueKeyInSelectConstraint
+from .unique_key import HasUniqueKeyConstraint
 from .subquery import HasSubQueryConstraint
 from .union import HasUnionOrUnionAllConstraint
 from .where import HasWhereConstraint
+from .distinct import HasDistinctConstraint

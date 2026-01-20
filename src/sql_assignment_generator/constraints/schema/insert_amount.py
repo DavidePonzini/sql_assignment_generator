@@ -1,4 +1,5 @@
 from collections import Counter
+from sql_assignment_generator.constraints.base import BaseConstraint
 from .base import SchemaConstraint
 from sqlglot import Expression, exp 
 
@@ -40,3 +41,8 @@ class InsertAmountConstraint(SchemaConstraint):
     def description(self) -> str:
         return f'Must insert minimum {self.min_rows} rows of data for each table.'
     
+    def merge(self, other: SchemaConstraint) -> 'InsertAmountConstraint':
+        if not isinstance(other, InsertAmountConstraint):
+            raise ValueError("Cannot merge constraints of different types.")
+        
+        return InsertAmountConstraint(min_rows=max(self.min_rows, other.min_rows))

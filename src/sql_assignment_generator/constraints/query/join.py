@@ -1,10 +1,22 @@
 from collections import Counter
 from .base import QueryConstraint
 from sqlglot import Expression, exp
-from ..costraintType import WhereConstraintType, DistinctOrUKInSelectConstraintType, AggregationConstraintType
 
+class NoJoin(QueryConstraint):
+    '''
+    Requires the ABSENCE of any JOIN clause in the SQL query.
+    '''
 
-class HasJoinConstraint(QueryConstraint):
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        # check if there are any JOIN clauses in the query AST
+        return not any(query_ast.find_all(exp.Join))
+    
+    @property
+    def description(self) -> str:
+        return "Must NOT have JOIN clause"
+    
+
+class RequireJoin(QueryConstraint):
     '''
     Requires the presence of JOINs.
     Can specify if strictly LEFT, RIGHT, or generic JOINs are required.
@@ -40,7 +52,7 @@ class HasJoinConstraint(QueryConstraint):
     
     @property
     def description(self) -> str:
-        # Determina il tipo di stringa da mostrare
+        # determine join type description
         if self.left and self.right: join_type = "LEFT or RIGHT JOIN"
         elif self.left: join_type = "LEFT JOIN"
         elif self.right: join_type = "RIGHT JOIN"

@@ -5,7 +5,7 @@ class NoGroupBy(QueryConstraint):
     '''Requires the absence of a GROUP BY clause.'''
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        #look for alla node GROUP BY in query
+        #look for node GROUP BY in query
         group_nodes = list(query_ast.find_all(exp.Group))
         return len(group_nodes) == 0
     
@@ -16,10 +16,7 @@ class NoGroupBy(QueryConstraint):
 class RequireGroupBy(QueryConstraint):
     '''Requires the presence (or absence) of a GROUP BY clause.'''
 
-    def __init__(self,
-                 min_: int = 1,
-                 max_: int | None = None
-        ) -> None:
+    def __init__(self, min_: int = 1, max_: int | None = None ) -> None:
         self.min = min_
         self.max = max_ if max_ is not None and max_ > min_ else None
 

@@ -1,4 +1,5 @@
 from collections import Counter
+from sql_assignment_generator.constraints.base import BaseConstraint
 from .base import SchemaConstraint
 from sqlglot import Expression, exp 
 
@@ -50,7 +51,13 @@ class HasSameColumnNameConstraint(SchemaConstraint):
                 global_col_counter[col_name] += 1
 
         return any(count >= self.min_tables for count in global_col_counter.values())
-
+    
     @property
     def description(self) -> str:
         return f'In CREATE TABLE must have at least {self.min_tables} tables with non-key columns with EQUAL name'
+
+    def merge(self, other: SchemaConstraint) -> 'HasSameColumnNameConstraint':
+        if not isinstance(other, HasSameColumnNameConstraint):
+            raise ValueError("Cannot merge constraints of different types.")
+        
+        return HasSameColumnNameConstraint(min_tables=max(self.min_tables, other.min_tables))

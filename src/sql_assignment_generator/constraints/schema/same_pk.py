@@ -1,4 +1,5 @@
 from collections import Counter
+from sql_assignment_generator.constraints.base import BaseConstraint
 from .base import SchemaConstraint
 from sqlglot import Expression, exp 
 
@@ -37,8 +38,13 @@ class HasSamePrimaryKeyConstraint(SchemaConstraint):
         pk_counts = Counter(pk_names)
 
         return any(count >= self.min_tables for count in pk_counts.values())
-
+    
     @property
     def description(self) -> str:
         return f'{self.min_tables} tables must have the same PRIMARY KEY column name'
     
+    def merge(self, other: SchemaConstraint) -> 'HasSamePrimaryKeyConstraint':
+        if not isinstance(other, HasSamePrimaryKeyConstraint):
+            raise ValueError("Cannot merge constraints of different types.")
+        
+        return HasSamePrimaryKeyConstraint(min_tables=max(self.min_tables, other.min_tables))

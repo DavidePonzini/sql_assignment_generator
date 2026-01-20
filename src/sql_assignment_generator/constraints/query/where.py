@@ -1,7 +1,11 @@
 from collections import Counter
 from .base import QueryConstraint
 from sqlglot import Expression, exp
-from ..costraintType import WhereConstraintType, DistinctOrUKInSelectConstraintType, AggregationConstraintType
+from ..costraintType import WhereConstraintType
+from .base import QueryConstraint
+from sqlglot import Expression, exp
+from ..costraintType import WhereConstraintType
+from collections import Counter
 
 
 class HasWhereConstraint(QueryConstraint):
@@ -9,7 +13,7 @@ class HasWhereConstraint(QueryConstraint):
     Function take in input: min_tables and max_tables to specify number of WHERE conditions required,
     type to specify the type of WHERE conditions required.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, type:  WhereConstraintType = WhereConstraintType.CLASSIC, state: bool=True) -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, type:  WhereConstraintType = WhereConstraintType.CLASSIC) -> None:
         self.min_tables = min_tables
         self.max_tables = max_tables if max_tables >= min_tables else -1
 
@@ -138,14 +142,23 @@ class HasWhereConstraint(QueryConstraint):
         elif self.type == WhereConstraintType.WILDCARD:
             count = 0
             wildcard_symbols = ['%', '_', '[', ']', '^', '-', '*', '+', '?', '(', ')', '{', '}']
-            #look for LIKE clause
+            
+            # look for LIKE clause
             for node in query_ast.find_all(exp.Like): 
                 pattern = node.expression
                 
-                #take right part (node.expression) and controll if it is a string and if contains wildcard symbols
+                # take right part and control if it is a string
                 if isinstance(pattern, exp.Literal) and pattern.is_string:
                     pattern_text = pattern.this
-                    if any(symbol in pattern_text for symbol in wildcard_symbols):
+                    
+                    # Check if contains ANY wildcard symbol
+                    has_wildcard = any(symbol in pattern_text for symbol in wildcard_symbols)
+                    
+                    # Check "real" letters count (at least 4) count characters that are NOT in the wildcard_symbols list
+                    real_char_count = sum(1 for char in pattern_text if char not in wildcard_symbols)
+
+                    # Both conditions must be true
+                    if has_wildcard and real_char_count >= 4:
                         count += 1
 
             if self.max_tables < 0: return self.min_tables <= count
@@ -155,18 +168,6 @@ class HasWhereConstraint(QueryConstraint):
             if any(query_ast.find_all(exp.Like)):
                 return False
             return True
-        # elif self.type == WhereConstraintType.ANY_ALL_IN:
-        #     count = 0
-        #     where_nodes = list(query_ast.find_all(exp.Where))
-
-        #     for where_node in where_nodes:
-        #         #look for ANY, ALL, IN
-        #         target_types = (exp.In, exp.Any, exp.All)
-        #         found_nodes = list(where_node.find_all(target_types))
-        #         count += len(found_nodes)
-
-        #     if self.max_tables < 0: return self.min_tables <= count
-        #     return self.min_tables <= count <= self.max_tables
         elif self.type == WhereConstraintType.NOT: 
             count = 0
             #look for where clausole

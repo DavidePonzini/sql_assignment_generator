@@ -1,6 +1,7 @@
 from .base import QueryConstraint
 from sqlglot import Expression, exp
 
+
 class NoAggregation(QueryConstraint):
     '''Requires the absence of aggregation functions in the SQL query.'''
 
@@ -22,12 +23,7 @@ class RequireAggregation(QueryConstraint):
         allowed_functions (list[str]): List of allowed aggregation function names (e.g., 'AVG', 'COUNT', 'SUM', 'MAX', 'MIN').
     '''
 
-    def __init__(self,
-                 min_: int = 1,
-                 max_: int | None = None,
-                 *,
-                 allowed_functions: list[str] = ['AVG', 'COUNT', 'SUM', 'MAX', 'MIN']
-        ) -> None:
+    def __init__(self, min_: int = 1, max_: int | None = None, *, allowed_functions: list[str] = ['AVG', 'COUNT', 'SUM', 'MAX', 'MIN'] ) -> None:
         self.min = min_
         self.max = max_ if max_ is not None and max_ > min_ else None
 

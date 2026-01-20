@@ -1,7 +1,6 @@
 from collections import Counter
 from .base import QueryConstraint
 from sqlglot import Expression, exp
-from ..costraintType import WhereConstraintType, DistinctOrUKInSelectConstraintType, AggregationConstraintType
 
 
 class HasSubQueryConstraint(QueryConstraint):
