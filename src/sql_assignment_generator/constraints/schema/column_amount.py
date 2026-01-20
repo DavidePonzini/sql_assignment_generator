@@ -34,3 +34,16 @@ class ColumnAmountConstraint(SchemaConstraint):
     @property
     def description(self) -> str:
         return f'At least {self.min_tables} tables must have minimum {self.min_columns} columns'
+
+    def merge(self, other: SchemaConstraint) -> 'ColumnAmountConstraint':
+        if not isinstance(other, ColumnAmountConstraint):
+            raise ValueError("Cannot merge constraints of different types.")
+        
+        # Merging by taking the maximum of min_tables and min_columns
+        merged_min_tables = max(self.min_tables, other.min_tables)
+        merged_min_columns = max(self.min_columns, other.min_columns)
+
+        return ColumnAmountConstraint(
+            min_tables=merged_min_tables,
+            min_columns=merged_min_columns
+        )
