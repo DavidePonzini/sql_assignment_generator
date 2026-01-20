@@ -1,0 +1,17 @@
+from collections import Counter
+from .base import SchemaConstraint
+from sqlglot import Expression, exp 
+
+class TableAmountConstraint(SchemaConstraint):
+    '''Requires the schema to have a specific number of tables.'''
+
+    def __init__(self, min_tables: int = 5) -> None:
+        self.min_tables = min_tables
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        table_count = len(tables)
+        return self.min_tables <= table_count
+    
+    @property
+    def description(self) -> str:
+        return f'Must have minimum {self.min_tables} TABLES'
