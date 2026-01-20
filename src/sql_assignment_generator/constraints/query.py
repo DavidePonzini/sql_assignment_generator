@@ -430,7 +430,7 @@ class HasWhereConstraint(BaseConstraint):
     Function take in input: min_tables and max_tables to specify number of WHERE conditions required,
     type to specify the type of WHERE conditions required.'''
 
-    def __init__(self, min_tables: int = 1, max_tables: int = -1, type:  WhereConstraintType = WhereConstraintType.CLASSIC) -> None:
+    def __init__(self, min_tables: int = 1, max_tables: int = -1, type:  WhereConstraintType = WhereConstraintType.CLASSIC, state: bool=True) -> None:
         self.min_tables = min_tables
         self.max_tables = max_tables if max_tables >= min_tables else -1
 
@@ -506,6 +506,20 @@ class HasWhereConstraint(BaseConstraint):
 
             if self.max_tables < 0: return self.min_tables <= count
             return self.min_tables <= count <= self.max_tables
+        elif self.type == WhereConstraintType.NOT_NULL: 
+            count = 0
+            where_nodes = list(query_ast.find_all(exp.Where))
+
+            for where_node in where_nodes:
+                # look for IS NULL and IS NOT NULL
+                for node in where_node.find_all(exp.Is):
+                    if isinstance(node.expression, exp.Null):
+                        # if parent is NOT
+                        if isinstance(node.parent, exp.Not):
+                            count += 1
+
+            if self.max_tables < 0: return self.min_tables <= count
+            return self.min_tables <= count <= self.max_tables
         elif self.type == WhereConstraintType.MULTIPLE:
             #if i have (A OR B) AND C AND (D OR E) return 3 element: [A OR B, C, D OR E]
             def get_and_chunks(node):
@@ -562,18 +576,18 @@ class HasWhereConstraint(BaseConstraint):
             if any(query_ast.find_all(exp.Like)):
                 return False
             return True
-        elif self.type == WhereConstraintType.ANY_ALL_IN:
-            count = 0
-            where_nodes = list(query_ast.find_all(exp.Where))
+        # elif self.type == WhereConstraintType.ANY_ALL_IN:
+        #     count = 0
+        #     where_nodes = list(query_ast.find_all(exp.Where))
 
-            for where_node in where_nodes:
-                #look for ANY, ALL, IN
-                target_types = (exp.In, exp.Any, exp.All)
-                found_nodes = list(where_node.find_all(target_types))
-                count += len(found_nodes)
+        #     for where_node in where_nodes:
+        #         #look for ANY, ALL, IN
+        #         target_types = (exp.In, exp.Any, exp.All)
+        #         found_nodes = list(where_node.find_all(target_types))
+        #         count += len(found_nodes)
 
-            if self.max_tables < 0: return self.min_tables <= count
-            return self.min_tables <= count <= self.max_tables
+        #     if self.max_tables < 0: return self.min_tables <= count
+        #     return self.min_tables <= count <= self.max_tables
         elif self.type == WhereConstraintType.NOT: 
             count = 0
             #look for where clausole

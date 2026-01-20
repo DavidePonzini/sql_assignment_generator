@@ -124,6 +124,7 @@ COMMIT;'''
         {dataset_characteristics_str}
 
         MANDATORY CONSTRAINTS:
+        -FOREIGN KEY attributes should have the REFERENCES keyword inline (e.g. Col TYPE REFERENCES table_name(column_name)).
         {formatted_constraints}
         
         MANDATORY OUTPUT (JSON):

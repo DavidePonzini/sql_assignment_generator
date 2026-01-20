@@ -354,9 +354,13 @@ ERROR_DETAILS_MAP = {
         }
     ),
     SqlErrors.SEM_41_DISTINCT_IN_SUM_OR_AVG: SqlErrorDetails(
-        description="Use DISTINCT into SUM or AVG",
-        exercise_characteristics = lambda: f''' The query in solution is mandatory that have DISTINCT and many AGGREGATION of 
-        type {random.choice(["AVG", "SUM"])} but MUST NOT insert DISTINCT inside the function.''',
+        description="NOT use DISTINCT into SUM or AVG",
+        exercise_characteristics = lambda: f''' The query in solution is mandatory that have DISTINCT and AGGREGATION of 
+        type {random.choice(["AVG", "SUM"])} but MUST NOT insert DISTINCT inside the aggregation function. The solution must use
+        DISTINCT outside the aggregation. The solution must not use any Key.
+        ''',
+        dataset_characteristics="The table must have non-key numeric attributes",
+        #"At least one table must have 10% duplicate rows. ",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasAggregationConstraint(1, type=[AggregationConstraintType.SUM, AggregationConstraintType.AVG], state=True),
@@ -378,10 +382,11 @@ ERROR_DETAILS_MAP = {
             ]
         }
     ),
-    SqlErrors.SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES: SqlErrorDetails(#provare piu volte
+    SqlErrors.SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES: SqlErrorDetails(
         description="DISTINCT that might remove important duplicates",
         exercise_characteristics ="The solution must not have DISTINCT, UNIQUE KEY, AGGREGATION in SELECT clause and " \
-        "must not have GROUP BY clause.",
+        "must not have GROUP BY clause. It is necessary select attributes that can cause duplicates such as cities, names, etc." \
+        "More specific attributes that can identify a record MUST NOT be selected (e.g. phone number, address, etc.).",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
@@ -413,8 +418,8 @@ ERROR_DETAILS_MAP = {
     SqlErrors.SEM_43_WILDCARDS_WITHOUT_LIKE: SqlErrorDetails(
         description="Wildcards without LIKE",
         exercise_characteristics ="The query in solution is mandatory that have WHERE condition with use of WILDCARDS," \
-        "in the WILDCARD insert whole words.",
-        #parola piu lunghe (anche in quello dopo)
+        "in the WILDCARD insert whole words longer than 5 characters.",
+        #parola piu lunghe (anche in quello dopo), mettere il check nel costraint
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.WILDCARD),
@@ -457,19 +462,25 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL: SqlErrorDetails(
         description="Mixing a '> 0' with IS NOT NULL or empty string with NULL",
-        exercise_characteristics =lambda: f'''In the WHERE must have condition that are {random.choice(["NULL", "EMPTY"])} string''',
+        exercise_characteristics =lambda: f'''In the WHERE must have condition that are {random.choice(["NULL", "NOT NULL","EMPTY"])} 
+        string''',
+        #num >0 (num is not null), string = is null (string ='')
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
-                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY)
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
+                constraints.query.HasHavingConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.HasAggregationConstraint(state=True)
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.HasAggregationConstraint(state=True)
@@ -478,65 +489,52 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.SEM_46_NULL_IN_IN_ANY_ALL_SUBQUERY: SqlErrorDetails(
         description="NULL in IN/ANY/ALL subquery",
-        exercise_characteristics ="In the WHERE must be conditions that use some ANY/ALL/IN key " \
-        "with INSIDE nullable return value.",
+        exercise_characteristics =lambda: random.choice([
+        "The query must select rows with a particular column higher/lower than at least one value in a subquery.", # col > ANY (subquery) | col < ANY (subquery)
+        "The query must select the rows with the highest/lowest value of particular column.",   # col >= ALL (subquery) | col <= ALL (subquery)
+        "The query must select rows where a particular column is equal to one value of a subquery." # col IN (subquery)
+        ]),
+        dataset_characteristics="Table must have some NULL values and numeric attributes",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(1, type=WhereConstraintType.ANY_ALL_IN),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.HasWhereConstraint(1),#type=WhereConstraintType.ANY_ALL_IN
+                #constraints.query.SelectorALL_ANY_IN(min_sel=1),
+                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.HasHavingConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(2, type=WhereConstraintType.ANY_ALL_IN),
+                constraints.query.HasWhereConstraint(2), #type=WhereConstraintType.ANY_ALL_IN
+                #constraints.query.SelectorALL_ANY_IN(min_sel=2),
                 constraints.query.HasSubQueryConstraint(state=True)
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(3, type=WhereConstraintType.ANY_ALL_IN),
+                constraints.query.HasWhereConstraint(3,), #type=WhereConstraintType.ANY_ALL_IN
+                #constraints.query.SelectorALL_ANY_IN(min_sel=3),
                 constraints.query.HasAggregationConstraint(state=True),
                 constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
-    SqlErrors.SEM_49_MANY_DUPLICATES: SqlErrorDetails(#provare piu volte
+    SqlErrors.SEM_49_MANY_DUPLICATES: SqlErrorDetails(
         description="Many duplicates",
-        exercise_characteristics ="The solution must have UNIQUE KEY or DISTINCT in SELECT",
+        exercise_characteristics ="The solution must have DISTINCT in SELECT",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
-                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT_UK)
+                constraints.query.HasHavingConstraint(state=False),
+                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT),
+                constraints.query.HasAggregationConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT_UK),
-                constraints.query.HasAggregationConstraint(state=True)
+                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT),
+                constraints.query.HasAggregationConstraint(state=False)
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT_UK),
+                constraints.query.HasDistinctOrUniqueKeyInSelectConstraint(state=True, type=DistinctOrUKInSelectConstraintType.DISTINCT),
                 constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.HasAggregationConstraint(state=True)
-            ]
-        }
-    ),
-    SqlErrors.SEM_50_CONSTANT_COLUMN_OUTPUT: SqlErrorDetails(
-        description="Constant column output",
-        exercise_characteristics = "The solution must have at least one column in SELECT that is not " \
-        "constant and at least one that is constant in CHECK",
-        dataset_characteristics="The solution must have CHECK in creation table ",
-        constraints={
-            DifficultyLevel.EASY: [
-                constraints.schema.HasCheckConstraint(1),
-                constraints.query.HasWhereConstraint(1)
-            ],
-            DifficultyLevel.MEDIUM: [
-                constraints.schema.HasCheckConstraint(1),
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.HasAggregationConstraint(state=True)
-            ],
-            DifficultyLevel.HARD: [
-                constraints.schema.HasCheckConstraint(1),
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.HasAggregationConstraint(state=True),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.HasAggregationConstraint(state=False)
             ]
         }
     ),
@@ -560,17 +558,18 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.LOG_53_EXTRANEOUS_NOT_OPERATOR: SqlErrorDetails(
         description="Extraneous NOT operator",
-        exercise_characteristics ="In the solution must have more NOT to improuve the learning of its use",
+        exercise_characteristics ="In the solution must have both classic where constraint and NOT constraint",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT),
+                constraints.query.HasWhereConstraint(1, 2), ############# deve esserci un where normale,
+                constraints.query.HasHavingConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT),
+                constraints.query.HasWhereConstraint(2),
                 constraints.query.HasAggregationConstraint(state=True)
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT),
+                constraints.query.HasWhereConstraint(2),
                 constraints.query.HasAggregationConstraint(state=True),
                 constraints.query.HasSubQueryConstraint(state=True)
             ]
@@ -581,7 +580,8 @@ ERROR_DETAILS_MAP = {
         exercise_characteristics ="In the solution must have more NOT to improve the learning of its use. ",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT),
+                constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT), ############# deve esserci un where con not,
+                constraints.query.HasHavingConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT),
@@ -596,17 +596,18 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.LOG_55_SUBSTITUTING_EXISTENCE_NEGATION_WITH_NOT_EQUAL_TO: SqlErrorDetails(
         description="Substituting existence negation with <>",
-        exercise_characteristics ="The exercise should naturally lead the student to make a mistake which " \
-        "consists in asking for a value being different or NULL instead of checking if it do NOT EXIST "
-        "(e.g. if we want: list the names of actors who have acted in a movie released in 2015 " \
-        "but we do this wrong: list the names of actors who have acted in at least one movie not released in 2015)",
+        exercise_characteristics ="The query must select all Xs that are associated with all Ys (e.g. customers who " \
+        "bought all products in category C, customer who bought all products that cost more than 50, etc.).",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT_EXIST),
+                constraints.query.HasHavingConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=True)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT_EXIST),
-                constraints.query.HasAggregationConstraint(state=True)
+                constraints.query.HasAggregationConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=True)
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT_EXIST),
@@ -614,37 +615,21 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
-    ),
-    SqlErrors.LOG_56_PUTTING_NOT_IN_FRONT_OF_INCORRECT_IN_OR_EXISTS: SqlErrorDetails(
-        description="Putting NOT in front of incorrect IN/EXISTS",
-        exercise_characteristics ="The exercise should naturally lead the student to make a mistake which consists in when MULTIPLE EXISTS/IN " \
-        "are present, putting NOT on the wrong one (e.g. if we want: list the names of actors who have acted in a movie released in 2015; " \
-        "but we do this wrong: list the names of actors who have acted in at least one movie but not in a movie that was released in 2015)",
-        constraints={
-            DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(type=WhereConstraintType.EXIST_OR_IN),
-            ],
-            DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(type=WhereConstraintType.EXIST_OR_IN),
-                constraints.query.HasAggregationConstraint(state=True)
-            ],
-            DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(2, type=WhereConstraintType.EXIST_OR_IN),
-                constraints.query.HasAggregationConstraint(state=True),
-                constraints.query.HasSubQueryConstraint(state=True)
-            ]
-        }
-    ),            
+    ),    
     SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(
         description="Incorrect comparison operator or incorrect value compared",
         exercise_characteristics ="In query solution must be more operator usage",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.COMPARISON_OPERATORS),
+                constraints.query.HasHavingConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
+                #possibilita di mettere state nel join costraint
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.COMPARISON_OPERATORS),
-                constraints.query.HasAggregationConstraint(state=True)
+                constraints.query.HasAggregationConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type=WhereConstraintType.COMPARISON_OPERATORS),
@@ -660,11 +645,14 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
+                constraints.query.HasHavingConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
                 constraints.query.HasJoinConstraint(1)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.HasJoinConstraint(2),
+                constraints.query.HasSubQueryConstraint(state=False),
                 constraints.query.HasAggregationConstraint(state=True)
             ],
             DifficultyLevel.HARD: [
@@ -1134,16 +1122,20 @@ ERROR_DETAILS_MAP = {
             ]
         }
     ),
-    SqlErrors.COM_84_UNNECESSARY_JOIN: SqlErrorDetails(#puo essere migliorata?
+    SqlErrors.COM_84_UNNECESSARY_JOIN: SqlErrorDetails(
         description="Unnecessary join",
-        exercise_characteristics ="The solution in SELECT must have foreign keys to a table that are not used in joins.",
+        dataset_characteristics ="In TABLE CREATION must be FOREIGN KEY relationship between tables ",
+        exercise_characteristics="In the solution query must be selected ONLY FOREIGN KEY column for at least one table in select.",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
+                constraints.query.HasHavingConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasAggregationConstraint(2, state=True)            
+                constraints.query.HasAggregationConstraint(2, state=True),
+                constraints.query.HasSubQueryConstraint(state=False)           
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),

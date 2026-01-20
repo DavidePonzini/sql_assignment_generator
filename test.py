@@ -13,9 +13,9 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES, DifficultyLevel.EASY),
-        (SqlErrors.SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES, DifficultyLevel.EASY),
-        (SqlErrors.SEM_42_DISTINCT_THAT_MIGHT_REMOVE_IMPORTANT_DUPLICATES, DifficultyLevel.EASY),
+        (SqlErrors.COM_84_UNNECESSARY_JOIN, DifficultyLevel.MEDIUM),
+        (SqlErrors.COM_84_UNNECESSARY_JOIN, DifficultyLevel.HARD),
+        (SqlErrors.COM_84_UNNECESSARY_JOIN, DifficultyLevel.EASY),
     ]
 
     assignment = generate_assignment(errors, domain)
