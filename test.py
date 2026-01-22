@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.LOG_77_INCORRECT_ORDERING_OF_ROWS, DifficultyLevel.EASY),
+        (SqlErrors.LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE, DifficultyLevel.EASY),
     ]*3
 
     assignment = generate_assignment(errors, domain)

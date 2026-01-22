@@ -699,9 +699,10 @@ ERROR_DETAILS_MAP = {
         }
     ),
     SqlErrors.LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE: SqlErrorDetails(
-        description="Join on incorrect column (matches possible)",#difficili chiavi esterne composte
-        dataset_characteristics ="In TABLE CREATION must have equal column with different meanings "
-        "(e.g. users.name = products.name)",
+        description="Join on incorrect column (matches possible)",
+        dataset_characteristics ="In TABLE CREATION must be composite FOREIGN KEY",
+        exercise_characteristics="Solution MUST USE composite FOREIGN KEY in join "
+        "(e.g. column1 a JOIN column2 b ON (a.col1= b.col1) AND (a.col2 = b.col2))",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
