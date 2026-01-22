@@ -13,10 +13,8 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE, DifficultyLevel.MEDIUM),
         (SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE, DifficultyLevel.EASY),
-        (SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE, DifficultyLevel.EASY),
-    ]
+    ]*10
 
     assignment = generate_assignment(errors, domain)
     
