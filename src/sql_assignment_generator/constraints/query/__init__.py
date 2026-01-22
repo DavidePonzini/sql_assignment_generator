@@ -10,3 +10,5 @@ from .subquery import HasSubQueryConstraint
 from .union import HasUnionOrUnionAllConstraint
 from .where import HasWhereConstraint
 from .distinct import HasDistinctConstraint
+from .column_number import RequireColumnNumber
+from .alias import NoAlias, RequireAlias

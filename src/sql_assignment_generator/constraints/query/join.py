@@ -24,7 +24,7 @@ class RequireJoin(QueryConstraint):
 
     def __init__(self, min_tables: int = 1, max_tables: int = -1, left: bool = False, right: bool = False) -> None:
         self.min_tables = min_tables
-        self.max_tables = max_tables if max_tables > min_tables else -1
+        self.max_tables = max_tables if max_tables >= min_tables else -1
         self.left = left
         self.right = right
 

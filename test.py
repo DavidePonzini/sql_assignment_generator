@@ -1,8 +1,8 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
-from sql_assignment_generator.difficulty_level import DifficultyLevel
+from src.sql_assignment_generator.difficulty_level import DifficultyLevel
 from sql_error_categorizer import SqlErrors
-from sql_assignment_generator import generate_assignment
+from src.sql_assignment_generator import generate_assignment
 from dotenv import load_dotenv
 import dav_tools
 
@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE, DifficultyLevel.EASY),
-    ]*10
+        (SqlErrors.LOG_77_INCORRECT_ORDERING_OF_ROWS, DifficultyLevel.EASY),
+    ]*3
 
     assignment = generate_assignment(errors, domain)
     
