@@ -360,7 +360,7 @@ ERROR_DETAILS_MAP = {
         exercise_characteristics = lambda: f''' The query in solution is mandatory that have DISTINCT and AGGREGATION of 
         type {random.choice(["AVG", "SUM"])} but MUST NOT insert DISTINCT inside the aggregation function. The solution must use
         DISTINCT outside the aggregation. The solution must not use any Key.
-        ''',
+        ''',#mettere parola distinct nel testo ma il distinct non ci deve essere il group by si
         dataset_characteristics="The table must have non-key numeric attributes",
         constraints={
             DifficultyLevel.EASY: [
@@ -463,16 +463,20 @@ ERROR_DETAILS_MAP = {
     SqlErrors.SEM_45_MIXING_A_GREATER_THAN_0_WITH_IS_NOT_NULL: SqlErrorDetails(
         description="Mixing a '> 0' with IS NOT NULL or empty string with NULL",
         dataset_characteristics= "Table must have some NULL values and numeric attributes",
-        exercise_characteristics =lambda: f'''In the WHERE must have condition that use 
+        exercise_characteristics = lambda: f'''In the WHERE must have STRING and INTEGER condition that use 
         {random.choice([
-            "NULL or NOT NULL with string values", 
-            "EMPTY with string values"])
-        } string''',
+            "Non-Nullable string", 
+            "Nullable STRING",
+            "INTEGER with comparison operator",
+            "STRING Empty ('')"])
+        }
+        ''',
         #num >0 (num is not null), string = is null (string ='')
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.NoHaving(),
                 constraints.query.HasSubQueryConstraint(state=False)
@@ -481,6 +485,7 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasSubQueryConstraint(state=False)
             ],
@@ -488,7 +493,8 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
+                #constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -628,7 +634,6 @@ ERROR_DETAILS_MAP = {
     ),    
     SqlErrors.LOG_57_INCORRECT_COMPARISON_OPERATOR_OR_VALUE: SqlErrorDetails(
         description="Incorrect comparison operator or incorrect value compared",
-        exercise_characteristics ="In query solution must be more operator usage",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.COMPARISON_OPERATORS),
@@ -648,26 +653,24 @@ ERROR_DETAILS_MAP = {
             ]
         }
     ),
-    SqlErrors.LOG_58_JOIN_ON_INCORRECT_TABLE: SqlErrorDetails(
+    SqlErrors.LOG_58_JOIN_ON_INCORRECT_TABLE: SqlErrorDetails(#join non rispetta max e min (58 59 62)
         description="Join on incorrect table",
-        dataset_characteristics ="In TABLE CREATION must be similar table (e.g. table student and table students_score)" \
-        " and must have similar column with different meanings (e.g. users.name = products.name)",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
                 constraints.query.HasSubQueryConstraint(state=False),
-                constraints.query.RequireJoin(1)
+                constraints.query.RequireJoin(min_tables=1, max_tables=1)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(2),
+                constraints.query.RequireJoin(2,3),
                 constraints.query.HasSubQueryConstraint(state=False),
                 constraints.query.RequireAggregation()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireJoin(3),
+                constraints.query.RequireJoin(3,5),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasSubQueryConstraint(state=True)
             ]
@@ -675,79 +678,85 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.LOG_59_JOIN_WHEN_JOIN_NEEDS_TO_BE_OMITTED: SqlErrorDetails(
         description="Join when join needs to be omitted",
-        dataset_characteristics ="In TABLE CREATION must be similar table (e.g. table student " \
-        "and table students_score) and more table that the solution need",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(1)
+                constraints.query.RequireJoin(1,1),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(2),
-                constraints.query.RequireAggregation()
+                constraints.query.RequireJoin(2,3),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireJoin(3),
+                constraints.query.RequireJoin(3,6),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
     SqlErrors.LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE: SqlErrorDetails(
-        description="Join on incorrect column (matches possible)",
+        description="Join on incorrect column (matches possible)",#difficili chiavi esterne composte
         dataset_characteristics ="In TABLE CREATION must have equal column with different meanings "
         "(e.g. users.name = products.name)",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(1)
-            ],
-            DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(2),
-                constraints.query.RequireAggregation()
-            ],
-            DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireJoin(3),
-                constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
-            ]
-        }
-    ),
-    SqlErrors.LOG_62_MISSING_JOIN: SqlErrorDetails(#puo essere migliorata?
-        description="Missing join",
-        exercise_characteristics ="The exercise MUST have table names almost the same to confuse " \
-        "the student in the table choise",
-        constraints={
-            DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(1)
-            ],
-            DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(2),
-                constraints.query.RequireAggregation()
-            ],
-            DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireJoin(3),
-                constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
-            ]
-        }
-    ),
-    SqlErrors.LOG_63_MPROPER_NESTING_OF_EXPRESSIONS: SqlErrorDetails( #puo essere migliorata?
-        description="Improper nesting of expressions",
-        exercise_characteristics ="TSolution query must have multiple condition that must require NESTING "
-        "(e.g. (condizione1 OR condizione2) AND condizione3 -> NESTING are the condition inside parentesis " \
-        "which are MANDATORY). Cannot use SUB-QUERY",
-        constraints={
-            DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NESTED),
+                constraints.query.RequireJoin(1),
+                constraints.query.NoHaving(),
                 constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.MEDIUM: [
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.RequireJoin(1),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.HARD: [
+                constraints.query.HasWhereConstraint(3),
+                constraints.query.RequireJoin(3),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=True)
+            ]
+        }
+    ),
+    SqlErrors.LOG_62_MISSING_JOIN: SqlErrorDetails(
+        description="Missing join",
+        constraints={
+            DifficultyLevel.EASY: [
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.RequireJoin(1,1),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.MEDIUM: [
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.RequireJoin(2,3),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.HARD: [
+                constraints.query.HasWhereConstraint(3),
+                constraints.query.RequireJoin(3,6),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=True)
+            ]
+        }
+    ),
+    SqlErrors.LOG_63_MPROPER_NESTING_OF_EXPRESSIONS: SqlErrorDetails(
+        description="Improper nesting of expressions",
+        exercise_characteristics ="Solution query must have multiple condition that must require NESTING "
+        "(e.g. (condizione1 OR condizione2) AND condizione3 -> NESTING are the condition inside parentesis " \
+        "which are MANDATORY).",
+        constraints={
+            DifficultyLevel.EASY: [
+                constraints.query.HasWhereConstraint(1, 1, type=WhereConstraintType.NESTED),
+                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NESTED),
@@ -755,19 +764,19 @@ ERROR_DETAILS_MAP = {
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NESTED),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.RequireAggregation()
             ]
-        }#non funziona sempre se metto da 2 in poi nested cond.
+        }
     ),
-    SqlErrors.LOG_64_IMPROPER_NESTING_OF_SUBQUERIES: SqlErrorDetails( #puo essere migliorata?
+    SqlErrors.LOG_64_IMPROPER_NESTING_OF_SUBQUERIES: SqlErrorDetails(
         description="Improper nesting of subqueries",
-        exercise_characteristics ="The natural language solution must confuse student to use nested subquery " \
-        "that are not necessary. Solution must have sub-query NOT NESTED",
+        exercise_characteristics ="The exercise require use of sub-query NOT NESTED",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
-                constraints.query.HasSubQueryConstraint(typeNested=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=True, typeNested=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
@@ -782,239 +791,261 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.LOG_66_MISSING_EXPRESSION: SqlErrorDetails(
         description="Missing expression",
-        exercise_characteristics ="The request in natural language must contain ambiguity: some information required " \
-        "for the query should be left out or implied, so the student can easily misunderstand it.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2)
+                constraints.query.HasWhereConstraint(2,3),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
+                constraints.query.HasWhereConstraint(3,5),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(4),
+                constraints.query.HasWhereConstraint(3,6),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
     SqlErrors.LOG_67_EXPRESSION_ON_INCORRECT_COLUMN: SqlErrorDetails(
         description="Expression on incorrect column",
-        exercise_characteristics ="Solution query must have similar condition " \
-        "e.g. SELECT * FROM store s1, store s2 WHERE s1.value = 100 AND s2.value <> 100" \
-        "The request in natural language must contain ambiguity: some information required " \
-        "for the query should be left out or implied, so the student can easily misunderstand it.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2)
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
     SqlErrors.LOG_68_EXTRANEOUS_EXPRESSION: SqlErrorDetails(
         description="Extraneous expression",
-        exercise_characteristics ="The request in natural language must contain ambiguity: " \
-        "must include an over-detailed explanation with entity names that resemble table names, encouraging the student " \
-        "to think an additional condition or table is needed when in fact it is not.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2)
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False)
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
     SqlErrors.LOG_69_EXPRESSION_IN_INCORRECT_CLAUSE: SqlErrorDetails(
         description="Expression in incorrect clause",
-        exercise_characteristics ="You need to create deliverables that appear to say one thing, but technically imply another "\
-        "(e.g. Show all products priced at more than €50 - price>50 inserted in HAVING and not in WHERE).",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2, type=WhereConstraintType.HAVING),
+                constraints.query.HasWhereConstraint(1),
+                constraints.query.RequireHaving(1,1),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(3, type=WhereConstraintType.HAVING),
-                constraints.query.RequireAggregation()
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.RequireHaving(1,3),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(4, type=WhereConstraintType.HAVING),
+                constraints.query.HasWhereConstraint(3),
+                constraints.query.RequireHaving(2,3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
-    SqlErrors.LOG_70_EXTRANEOUS_COLUMN_IN_SELECT: SqlErrorDetails(
+    SqlErrors.LOG_70_EXTRANEOUS_COLUMN_IN_SELECT: SqlErrorDetails(#costraint per numero di colonne select
         description="Extraneous column in SELECT",
-        exercise_characteristics ="The natural language query must be ambiguous, so that some columns in " \
-        "the solution query's SELECT statement can be identified as required when they are not.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2),
+                constraints.query.HasWhereConstraint(0,0),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
-    SqlErrors.LOG_71_MISSING_COLUMN_FROM_SELECT: SqlErrorDetails(
+    SqlErrors.LOG_71_MISSING_COLUMN_FROM_SELECT: SqlErrorDetails(#costraint per numero di colonne select
         description="Missing column from SELECT",
         exercise_characteristics ="The natural language query must be ambiguous and must require returning " \
         "many columns in SELECT statement, so that some columns may not be added by forgetfulness.",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
+                constraints.query.HasSubQueryConstraint(state=True)
             ]
         }
     ),
-    SqlErrors.LOG_72_MISSING_DISTINCT_FROM_SELECT: SqlErrorDetails(
+    SqlErrors.LOG_72_MISSING_DISTINCT_FROM_SELECT: SqlErrorDetails(#dataset supporta duplicati e nella select selezionare i duplicati
         description="Missing DISTINCT from SELECT",
-        exercise_characteristics ="The natural language query must require the use of DISTINCT for some column.",
+        dataset_characteristics="Create more duplicate data during insert (INSERT INTO ...)",
+        exercise_characteristics ="The SELECT column must be attribute with duplicate data.",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasDistinctConstraint(state=True)
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasDistinctConstraint(state=True)
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasSubQueryConstraint(),
-                constraints.query.HasDistinctConstraint(state=True)
+                constraints.query.HasDistinctConstraint(state=True),
             ]
         }
     ),
     SqlErrors.LOG_73_MISSING_AS_FROM_SELECT: SqlErrorDetails(
         description="Missing AS from SELECT",
-        exercise_characteristics ="The natural language query must ask to rename all column in SELECT.",
-        constraints={
-            DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2)
-            ],
-            DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation()
-            ],
-            DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(4),
-                constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint()
-            ]
-        }
-    ),
-    SqlErrors.LOG_74_MISSING_COLUMN_FROM_ORDER_BY: SqlErrorDetails(
-        description="Missing column from ORDER BY clause",
-        exercise_characteristics ="The natural language query must INDIRECTLY define the order in which " \
-        "return the result table, that the student will insert into ORDER BY.",
+        exercise_characteristics ="The natural language query must ask to rename all column in SELECT.",#costraint per AS che ci sia
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasOrderByConstraint(1)
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasOrderByConstraint(2)
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(),
+                constraints.query.HasSubQueryConstraint(state=True)
+            ]
+        }
+    ),
+    SqlErrors.LOG_74_MISSING_COLUMN_FROM_ORDER_BY: SqlErrorDetails(#costraint colonne che facciamo per quelli sopra
+        description="Missing column from ORDER BY clause",
+        constraints={
+            DifficultyLevel.EASY: [
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.HasOrderByConstraint(1),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.MEDIUM: [
+                constraints.query.HasWhereConstraint(3),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasOrderByConstraint(2),
+                constraints.query.HasSubQueryConstraint(state=False),
+            ],
+            DifficultyLevel.HARD: [
+                constraints.query.HasWhereConstraint(4),
+                constraints.query.RequireAggregation(),
+                constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.HasOrderByConstraint(3)
             ]
         }
     ),
-    SqlErrors.LOG_75_INCORRECT_COLUMN_IN_ORDER_BY: SqlErrorDetails(
+    SqlErrors.LOG_75_INCORRECT_COLUMN_IN_ORDER_BY: SqlErrorDetails(#costraint colonne che facciamo per quelli sopra
         description="Incorrect column in ORDER BY clause",
         exercise_characteristics ="TThe natural language query must INDIRECTLY define the order in " \
         "which return the result table, that the student will insert into ORDER BY.",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasOrderByConstraint(1)
+                constraints.query.HasOrderByConstraint(1),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasOrderByConstraint(2)
+                constraints.query.HasOrderByConstraint(2),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(),
+                constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.HasOrderByConstraint(3)
             ]
         }
     ),
     SqlErrors.LOG_76_EXTRANEOUS_ORDER_BY_CLAUSE: SqlErrorDetails(
         description="Extraneous ORDER BY clause",
-        exercise_characteristics ="The natural language query must make it appear that a column order "
-        "in the resulting table is needed but it is not required.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.HasOrderByConstraint(state=False)
+                constraints.query.HasWhereConstraint(1),
+                constraints.query.HasOrderByConstraint(state=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(3),
+                constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasOrderByConstraint(state=False)
+                constraints.query.HasOrderByConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(4),
+                constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.HasOrderByConstraint(state=False)
             ]
         }
     ),     
-    SqlErrors.LOG_77_INCORRECT_ORDERING_OF_ROWS: SqlErrorDetails(
+    SqlErrors.LOG_77_INCORRECT_ORDERING_OF_ROWS: SqlErrorDetails(#opzione del ASC, DSC
         description="Incorrect ordering of rows",
         exercise_characteristics ="The natural language query must be ambiguous, " \
         "not making the order of the columns clear and simple.",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasOrderByConstraint()
+                constraints.query.HasOrderByConstraint(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasOrderByConstraint(2)
+                constraints.query.HasOrderByConstraint(2),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1026,45 +1057,57 @@ ERROR_DETAILS_MAP = {
     ),
     SqlErrors.LOG_78_DISTINCT_AS_FUNCTION_PARAMETER_WHERE_NOT_APPLICABLE: SqlErrorDetails(
         description="DISTINCT as function parameter where not applicable",
-        exercise_characteristics ="In the natural language query return many unique column or column " \
-        "which not require use of DISTINCT",
+        dataset_characteristics= "Create more duplicate data during insert (INSERT INTO ...)",
+        exercise_characteristics ="The solution query must have following structure:" \
+        '''SELECT DISTINCT c
+            FROM ( SELECT col_1 [, col2 [,col_n]], COUNT(*) c
+                    FROM table
+                    GROUP BY col_1 [, col_2 [, col_n]] 
+            )''',
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(2),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasWhereConstraint(1),
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=True),
             ],
             DifficultyLevel.MEDIUM: [
-                constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation(),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=True),
             ],
             DifficultyLevel.HARD: [
-                constraints.query.HasWhereConstraint(4),
-                constraints.query.RequireAggregation(),
+                constraints.query.HasWhereConstraint(3),
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
                 constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasDistinctConstraint(state=True)
             ]
         }
     ),
     SqlErrors.LOG_79_MISSING_DISTINCT_FROM_FUNCTION_PARAMETER: SqlErrorDetails(
         description="Missing DISTINCT from function parameter",
-        exercise_characteristics ="In the natural language query return column which require use " \
-        "of DISTINCT but NOT with UNIQUE values",
+        exercise_characteristics = "The exercise must NOT have PRIMARY KEY inside COUNT, "
+        "and must have DISTINCT inside COUNT",
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.HasDistinctConstraint(state=True),
-                constraints.query.HasUniqueKeyConstraint(state=False)
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation(),
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
                 constraints.query.HasDistinctConstraint(state=True),
-                constraints.query.HasUniqueKeyConstraint(state=False)
+                constraints.query.HasUniqueKeyConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.RequireAggregation(),
+                constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
                 constraints.query.HasSubQueryConstraint(state=True),
                 constraints.query.HasDistinctConstraint(state=True),
                 constraints.query.HasUniqueKeyConstraint(state=False)
@@ -1078,11 +1121,14 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireAggregation()            
+                constraints.query.RequireAggregation(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation(2)            
+                constraints.query.RequireAggregation(2),
+                constraints.query.HasSubQueryConstraint(state=False),           
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1098,11 +1144,14 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireAggregation()            
+                constraints.query.RequireAggregation(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),           
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation(2)            
+                constraints.query.RequireAggregation(2),
+                constraints.query.HasSubQueryConstraint(state=False),            
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1118,11 +1167,14 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.HasDistinctConstraint(state=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasDistinctConstraint(state=False),            
+                constraints.query.HasDistinctConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),           
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1140,12 +1192,15 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)           
+                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),        
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1161,12 +1216,15 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
-                constraints.query.HasWhereConstraint(2)
+                constraints.query.HasWhereConstraint(2),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasSamePrimaryKeyConstraint(2),
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireAggregation(2)
+                constraints.query.RequireAggregation(2),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
@@ -1182,11 +1240,14 @@ ERROR_DETAILS_MAP = {
         "believe that the LIKE keyword is necessary. In the solution MUST NOT HAVE LIKE and WILDCARDS.",
         constraints={
             DifficultyLevel.EASY: [
-                constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD)
+                constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
-                constraints.query.RequireAggregation(2)
+                constraints.query.RequireAggregation(2),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
@@ -1202,7 +1263,8 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.EXIST),
                 constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasDistinctConstraint(state=False),
+                constraints.query.NoHaving(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.EXIST),
@@ -1224,11 +1286,14 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.NoAggregation()
+                constraints.query.NoAggregation(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.NoAggregation()
+                constraints.query.NoAggregation(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1243,11 +1308,14 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireAggregation(1)
+                constraints.query.RequireAggregation(1),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireAggregation(1)
+                constraints.query.RequireAggregation(1),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1264,13 +1332,16 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.RequireGroupBy(1),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasDistinctConstraint(state=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.RequireGroupBy(2),
-                constraints.query.HasDistinctConstraint(state=False)
+                constraints.query.HasDistinctConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1288,12 +1359,15 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.NoGroupBy()
+                constraints.query.NoGroupBy(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(2),
-                constraints.query.NoGroupBy()
+                constraints.query.NoGroupBy(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1311,12 +1385,15 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoGroupBy(),
-                constraints.query.HasDistinctConstraint(state=True)
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoGroupBy(),
-                constraints.query.HasDistinctConstraint(state=True)
+                constraints.query.HasDistinctConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1333,12 +1410,15 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasUnionOrUnionAllConstraint(state=False)
+                constraints.query.HasUnionOrUnionAllConstraint(state=False),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasUnionOrUnionAllConstraint(state=False)
+                constraints.query.HasUnionOrUnionAllConstraint(state=False),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1356,13 +1436,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.HasUnionOrUnionAllConstraint(state=False),
-                constraints.query.HasOrderByConstraint(2)
+                constraints.query.HasOrderByConstraint(2),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.HasUnionOrUnionAllConstraint(state=False),
-                constraints.query.HasOrderByConstraint(3)
+                constraints.query.HasOrderByConstraint(3),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1380,12 +1463,15 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasUnionOrUnionAllConstraint(state=True)
+                constraints.query.HasUnionOrUnionAllConstraint(state=True),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasUnionOrUnionAllConstraint(state=True)
+                constraints.query.HasUnionOrUnionAllConstraint(state=True),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1402,12 +1488,15 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin(left=True)
+                constraints.query.RequireJoin(left=True),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.RequireJoin(left=True)
+                constraints.query.RequireJoin(left=True),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
@@ -1424,12 +1513,15 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireJoin()
+                constraints.query.RequireJoin(),
+                constraints.query.NoHaving(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.RequireJoin()
+                constraints.query.RequireJoin(),
+                constraints.query.HasSubQueryConstraint(state=False),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
