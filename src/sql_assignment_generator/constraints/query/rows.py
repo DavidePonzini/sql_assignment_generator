@@ -4,8 +4,6 @@ from sqlglot import Expression, exp
 from sqlscope import Query
 from sqlscope.catalog.constraint import ConstraintType
 
-
-
 class RequireDuplicates(QueryConstraint):
     '''
     Require the query to return duplicate rows

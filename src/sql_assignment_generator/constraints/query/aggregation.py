@@ -30,7 +30,7 @@ class RequireAggregation(QueryConstraint):
 
     def __init__(self, min_: int = 1, max_: int | None = None, *, allowed_functions: list[str] = ['AVG', 'COUNT', 'SUM', 'MAX', 'MIN'] ) -> None:
         self.min = min_
-        self.max = max_ if max_ is not None and max_ > min_ else None
+        self.max = max_
 
         # normalize allowed functions to uppercase
         self.allowed_functions = [func.upper() for func in allowed_functions]
