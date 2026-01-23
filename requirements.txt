@@ -1,7 +1,9 @@
 dav_tools>=0.4.22
 # progress>=1.6
 pydantic>=2.10.4
-sql-error-categorizer>=0.1.11
+sql-error-taxonomy
+sqlscope
+sqlglot
 dotenv
 openai
 

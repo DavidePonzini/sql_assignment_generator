@@ -2,7 +2,8 @@ from dataclasses import dataclass
 import dav_tools
 from .. import llm
 import sqlglot
-from sql_error_categorizer.sql_errors import SqlErrors
+from sql_error_taxonomy import SqlErrors
+from sqlscope import Catalog, build_catalog_from_sql
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
 from ..constraints.schema import TableAmountConstraint, ColumnAmountConstraint, InsertAmountConstraint, HasCheckConstraint, HasSamePrimaryKeyConstraint
@@ -20,6 +21,26 @@ class Dataset:
 
     domain: str
     '''The domain associated with the dataset.'''
+
+    _catalog_cache: Catalog | None = None
+    '''Cached SQLScope Catalog for the dataset.'''
+
+    _catalog_cache_commands_hash: int | None = None
+    '''Hash of the CREATE TABLE commands used to build the cached Catalog.'''
+
+    @property
+    def catalog(self) -> Catalog:
+        '''
+        Build and return a SQLScope Catalog from the dataset's SQL commands.
+        The result is cached for handling multiple accesses efficiently.
+        Cache is properly invalidated if the CREATE TABLE commands change.
+        '''
+        if self._catalog_cache is None or self._catalog_cache_commands_hash != hash(tuple(self.create_commands)):
+            full_sql = '\n'.join(self.create_commands)
+            self._catalog_cache = build_catalog_from_sql(full_sql)
+            self._catalog_cache_commands_hash = hash(tuple(self.create_commands))
+        
+        return self._catalog_cache
 
     def to_sql(self, schema: str) -> str:
         '''Generate the SQL commands to create and populate the dataset within the specified schema.'''

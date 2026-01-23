@@ -1,42 +1,54 @@
 from .base import QueryConstraint
 from sqlglot import Expression, exp
+from sql_error_categorizer.query import Query
 
 class NoAlias(QueryConstraint):
     '''
-    Requires that NO columns in the SELECT clause are renamed (no aliases for columns).
+    Requires that no columns in the SELECT clause are renamed (no aliases for columns).
     '''
 
     def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
         # find the main SELECT node
-        select_node = query_ast if isinstance(query_ast, exp.Select) else query_ast.find(exp.Select)
-        if not select_node: return False
+        query = Query(query_ast.sql())
+        output = query.main_query.output
 
-        # if the expression IS an Alias (e.g., column AS name), validation fails
-        for expression in select_node.expressions:
-            if isinstance(expression, exp.Alias): return False
+        for col in output.columns:
+            if col.name != col.real_name:
+                return False
         return True
 
     @property
     def description(self) -> str:
-        return "Columns in SELECT must NOT be renamed (must NOT use AS aliases)"
-
-
+        return "Columns in SELECT must not be renamed (must not use aliases)"
 
 class RequireAlias(QueryConstraint):
     '''
-    Requires that ALL columns in the main SELECT clause are renamed using an alias (AS).
+        Requires a number of columns in the SELECT clause to be renamed using an alias (AS).
     '''
 
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        # Find the main SELECT node
-        select_node = query_ast if isinstance(query_ast, exp.Select) else query_ast.find(exp.Select)
-        if not select_node: return False
+    def __init__(self, min_: int, max_: int | None) -> None:
+        super().__init__()
+        self.min = min_
+        self.max = max_
 
-        # If the expression is NOT an Alias, validation fails
-        for expression in select_node.expressions:
-            if not isinstance(expression, exp.Alias): return False
-        return True
+
+    def validate(self, query: Query) -> bool:
+        # find the main SELECT node
+        output = query.main_query.output
+
+        alias_count = 0
+        for col in output.columns:
+            if col.name != col.real_name:
+                alias_count += 1
+
+        if self.max is None:
+            return alias_count >= self.min
+        return self.min <= alias_count <= self.max
 
     @property
     def description(self) -> str:
-        return "All columns in SELECT must be renamed using an alias (AS)"
+        if self.max is None:
+            return f"At least {self.min} columns in SELECT must be renamed using an alias (AS)"
+        if self.min == self.max:
+            return f"Exactly {self.min} columns in SELECT must be renamed using an alias (AS)"
+        return f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS)"

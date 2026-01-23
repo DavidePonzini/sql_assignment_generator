@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import sqlglot
-from sql_error_categorizer.sql_errors import SqlErrors
+from sql_error_taxonomy import SqlErrors
+from sqlscope import Query, build_catalog_from_sql
 from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
 from .dataset import Dataset
@@ -18,7 +19,7 @@ class Exercise:
     request: str
     '''The natural language request or question for the exercise.'''
 
-    solutions: list[str]
+    solutions: list[Query]
     '''The list of SQL query solutions for the exercise.'''
 
     difficulty: DifficultyLevel
@@ -129,9 +130,8 @@ Natural Language Request:
                 answer.request = answer_refinement.request_without_hints
 
                 #check sintax correctness of solution
-                solution_ast = None
                 try:
-                    solution_ast = sqlglot.parse_one(answer.solution, read="postgres")
+                    query = Query(answer.solution, catalog=dataset.catalog)
                 except Exception as e:
                     raise ValueError(f"Generated SQL solution contains syntax errors: {e}")
 
@@ -139,7 +139,7 @@ Natural Language Request:
                 missing_requirements = []
                 
                 for constraint in query_constraints:
-                    if not constraint.validate(solution_ast, parsed_dataset_tables):
+                    if not constraint.validate(query):
                         missing_requirements.append(constraint.description)
 
                 if not missing_requirements:
@@ -147,7 +147,7 @@ Natural Language Request:
                     return Exercise(
                         title=title,
                         request=answer.request,
-                        solutions=[answer.solution],
+                        solutions=[query],
                         difficulty=difficulty,
                         error=error
                     )

@@ -1,8 +1,9 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
 from src.sql_assignment_generator.difficulty_level import DifficultyLevel
-from sql_error_categorizer import SqlErrors
 from src.sql_assignment_generator import generate_assignment
+
+from sql_error_taxonomy import SqlErrors
 from dotenv import load_dotenv
 import dav_tools
 

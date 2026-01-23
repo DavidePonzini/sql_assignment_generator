@@ -1,3 +1,4 @@
+from sqlscope import Query
 from .base import QueryConstraint
 from sqlglot import Expression, exp
 
@@ -5,9 +6,13 @@ from sqlglot import Expression, exp
 class NoAggregation(QueryConstraint):
     '''Requires the absence of aggregation functions in the SQL query.'''
 
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        aggregations_found = list(query_ast.find_all(exp.AggFunc))
-        return len(aggregations_found) == 0
+    def validate(self, query: Query) -> bool:
+        for select in query.selects:
+            query_ast = select.ast
+            aggregations_found = list(query_ast.find_all(exp.AggFunc))
+            if len(aggregations_found) > 0:
+                return False
+        return True
     
     @property
     def description(self) -> str:
@@ -43,9 +48,14 @@ class RequireAggregation(QueryConstraint):
         if 'MIN' in self.allowed_functions:
             self.allowed_exps.append(exp.Min)
 
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        aggregations_found = list(query_ast.find_all(tuple(self.allowed_exps)))
-        count = len(aggregations_found)
+    def validate(self, query: Query) -> bool:
+        count = 0
+
+        for select in query.selects:
+            select = select.strip_subqueries()      # get rid of subqueries to avoid double counting
+            query_ast = select.ast
+            aggregations_found = list(query_ast.find_all(tuple(self.allowed_exps)))
+            count += len(aggregations_found)
 
         if self.max is None:
             return self.min <= count

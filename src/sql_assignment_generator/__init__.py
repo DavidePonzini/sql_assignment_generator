@@ -12,7 +12,7 @@ from .domains import random_domain
 from .assignments import Assignment, Dataset, Exercise
 
 import dav_tools
-from sql_error_categorizer.sql_errors import SqlErrors
+from sql_error_taxonomy import SqlErrors
 
 
 def generate_assignment(
