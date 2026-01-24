@@ -28,20 +28,19 @@ ERROR_DETAILS_MAP = {
                 constraints.schema.HasSameColumnNameConstraint(min_tables=2),
                 constraints.query.HasWhereConstraint(),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasSameColumnNameConstraint(min_tables=2),
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasSameColumnNameConstraint(min_tables=3),
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -55,19 +54,19 @@ ERROR_DETAILS_MAP = {
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=2),
                 constraints.query.HasWhereConstraint(),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=4),
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=8),
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(state=True),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -80,17 +79,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -104,20 +103,20 @@ ERROR_DETAILS_MAP = {
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=2),
                 constraints.query.HasWhereConstraint(),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=4),
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasComplexColumnNameConstraint(min_complex_cols=8),
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -132,18 +131,18 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -157,18 +156,18 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type = WhereConstraintType.STRING),
                 constraints.query.RequireJoin(max_=1, min_=0),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type = WhereConstraintType.STRING),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type = WhereConstraintType.STRING),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -182,16 +181,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type = WhereConstraintType.MULTIPLE),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type = WhereConstraintType.MULTIPLE),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type = WhereConstraintType.MULTIPLE),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -204,16 +203,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.RequireAggregation(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(2)
             ]
         }
@@ -226,16 +225,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
             ]
         }
@@ -249,17 +248,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, 1, type=WhereConstraintType.NULL),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, 2, type=WhereConstraintType.NULL),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, 3, type=WhereConstraintType.NULL),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -271,17 +270,17 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
-                constraints.query.HasSubQueryConstraint(state=True, typeNested=False),
+                constraints.query.RequireUnnestedSubqueries(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -292,16 +291,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -315,16 +314,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type= WhereConstraintType.MULTIPLE),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(1, type= WhereConstraintType.MULTIPLE),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type= WhereConstraintType.MULTIPLE),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -339,18 +338,18 @@ ERROR_DETAILS_MAP = {
                 constraints.schema.HasCheckConstraint(1),
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.MULTIPLE),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasCheckConstraint(2),
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.MULTIPLE),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasCheckConstraint(3),
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.MULTIPLE),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -364,22 +363,22 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.RequireAggregation(1, allowed_functions=["SUM", "AVG"]),
-                constraints.query.RequireDistinct(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoDistinct(),
+                constraints.query.NoSubquery(),
                 constraints.query.RequireGroupBy(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.RequireAggregation(2, allowed_functions=["SUM", "AVG"]),
-                constraints.query.RequireDistinct(state=False),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoDistinct(),
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(2, allowed_functions=["SUM", "AVG"]),
-                constraints.query.RequireDistinct(state=True)
+                constraints.query.RequireDistinct()
             ]
         }
     ),
@@ -393,25 +392,25 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.NoAggregation(),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.NoDistinct(),
                 constraints.query.HasUniqueKeyConstraint(state=False),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.NoDistinct(),
                 constraints.query.HasUniqueKeyConstraint(state=False),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.NoAggregation(),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.NoDistinct(),
                 constraints.query.HasUniqueKeyConstraint(state=False)
             ]
         }
@@ -424,16 +423,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.WILDCARD),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.WILDCARD),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type=WhereConstraintType.WILDCARD),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -446,16 +445,16 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.WILDCARD),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.WILDCARD),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type=WhereConstraintType.WILDCARD),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -478,7 +477,7 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
@@ -486,14 +485,14 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.NOT_NULL),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.EMPTY),
                 constraints.query.HasWhereConstraint(0, 1, type=WhereConstraintType.COMPARISON_OPERATORS),
-                #constraints.query.HasSubQueryConstraint(state=True),
+                #constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -509,17 +508,17 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),#type=WhereConstraintType.ANY_ALL_IN
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2), #type=WhereConstraintType.ANY_ALL_IN
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3,), #type=WhereConstraintType.ANY_ALL_IN
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -530,20 +529,20 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.NoHaving(),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.NoAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.NoAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.RequireDistinct(state=True),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireDistinct(),
+                constraints.query.RequireSubqueries(),
                 constraints.query.NoAggregation()
             ]
         }
@@ -562,7 +561,7 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -573,17 +572,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -595,17 +594,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT),
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -617,17 +616,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, type=WhereConstraintType.NOT_EXIST),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT_EXIST),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NOT_EXIST),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),    
@@ -637,18 +636,18 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoJoin()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type=WhereConstraintType.COMPARISON_OPERATORS),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -658,20 +657,20 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.RequireJoin(min_=1, max_=1)
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(2,3),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.RequireAggregation()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireJoin(3,5),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -682,19 +681,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(1,1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(2,3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireJoin(3,6),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -708,19 +707,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(1),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireJoin(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -731,19 +730,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(1,1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(2,3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireJoin(3,6),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -755,16 +754,16 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1, 1, type=WhereConstraintType.NESTED),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NESTED),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.NESTED),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -776,15 +775,15 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=True, typeNested=False),
+                constraints.query.RequireUnnestedSubqueries(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.HasSubQueryConstraint(typeNested=False)
+                constraints.query.RequireUnnestedSubqueries()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
-                constraints.query.HasSubQueryConstraint(typeNested=False),
+                constraints.query.RequireUnnestedSubqueries(),
                 constraints.query.RequireAggregation()
             ]
         }
@@ -795,17 +794,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2,3),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3,5),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3,6),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -815,17 +814,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -835,17 +834,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -855,19 +854,19 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.RequireHaving(1,1),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireHaving(1,3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireHaving(2,3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -878,19 +877,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(0,0),
                 constraints.query.RequireColumnNumber(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireColumnNumber(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireColumnNumber(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -903,19 +902,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireColumnNumber(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireColumnNumber(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireColumnNumber(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -926,21 +925,21 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False)
+                constraints.query.NoSubquery()
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.RequireDistinct(state=True),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.RequireDistinct(),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireSubqueries(),
+                constraints.query.RequireDistinct(),
             ]
         }
     ),
@@ -952,19 +951,19 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAlias(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAlias(),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAlias(),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)
+                constraints.query.RequireSubqueries()
             ]
         }
     ),
@@ -976,20 +975,20 @@ ERROR_DETAILS_MAP = {
                 constraints.query.RequireOrderBy(1),
                 constraints.query.RequireColumnNumber(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireColumnNumber(3),
                 constraints.query.RequireOrderBy(2),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireColumnNumber(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireOrderBy(3)
             ]
         }
@@ -1004,20 +1003,20 @@ ERROR_DETAILS_MAP = {
                 constraints.query.RequireOrderBy(1),
                 constraints.query.RequireColumnNumber(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireColumnNumber(3),
                 constraints.query.RequireOrderBy(2),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireColumnNumber(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireOrderBy(3)
             ]
         }
@@ -1029,18 +1028,18 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(1),
                 constraints.query.RequireOrderBy(state=False),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireOrderBy(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireOrderBy(state=False)
             ]
         }
@@ -1053,18 +1052,18 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireOrderBy(is_desc=True),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireOrderBy(2, is_desc=True),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireOrderBy(3, is_desc=True)
             ]
         }
@@ -1081,22 +1080,22 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(1),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
-                constraints.query.RequireDistinct(state=True),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireDistinct(),
+                constraints.query.RequireSubqueries(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
-                constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.RequireDistinct(state=True)
+                constraints.query.RequireSubqueries(),
+                constraints.query.RequireDistinct()
             ]
         }
     ),
@@ -1107,23 +1106,23 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.HasUniqueKeyConstraint(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(allowed_functions=["COUNT"]),
-                constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireSubqueries(),
+                constraints.query.RequireDistinct(),
                 constraints.query.HasUniqueKeyConstraint(state=False)
             ]
         }
@@ -1137,17 +1136,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),           
+                constraints.query.NoSubquery(),           
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True)            
+                constraints.query.RequireSubqueries()            
             ]
         }
     ),
@@ -1160,17 +1159,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),           
+                constraints.query.NoSubquery(),           
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),            
+                constraints.query.NoSubquery(),            
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True)            
+                constraints.query.RequireSubqueries()            
             ]
         }
     ),
@@ -1180,21 +1179,21 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.NoDistinct(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.RequireDistinct(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),           
+                constraints.query.NoDistinct(),
+                constraints.query.NoSubquery(),           
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.RequireDistinct(state=False),            
+                constraints.query.RequireSubqueries(),
+                constraints.query.NoDistinct(),            
             ]
         }
     ),
@@ -1206,20 +1205,20 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),        
+                constraints.query.NoSubquery(),
+                constraints.query.NoSubquery(),        
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True)            
+                constraints.query.RequireSubqueries()            
             ]
         }
     ),
@@ -1232,19 +1231,19 @@ ERROR_DETAILS_MAP = {
                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.schema.HasSamePrimaryKeyConstraint(2),
                 constraints.query.HasWhereConstraint(3),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True)           
+                constraints.query.RequireSubqueries()           
             ]
         }
     ),                         
@@ -1256,17 +1255,17 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
                 constraints.query.RequireAggregation(2),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.NO_WILDCARD),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True)           
+                constraints.query.RequireSubqueries()           
             ]
         }
     ),
@@ -1276,20 +1275,20 @@ ERROR_DETAILS_MAP = {
         constraints={
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(type=WhereConstraintType.EXIST),
-                constraints.query.HasSubQueryConstraint(state=True),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.RequireSubqueries(),
+                constraints.query.NoDistinct(),
                 constraints.query.NoHaving(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2, type=WhereConstraintType.EXIST),
-                constraints.query.HasSubQueryConstraint(2, state=True),
-                constraints.query.RequireDistinct(state=False)
+                constraints.query.RequireSubqueries(2),
+                constraints.query.NoDistinct()
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(3, type=WhereConstraintType.EXIST),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(3, state=True),
-                constraints.query.RequireDistinct(state=False)           
+                constraints.query.RequireSubqueries(2),
+                constraints.query.RequireDistinct()           
             ]
         }
     ),
@@ -1302,17 +1301,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.NoAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True)           
+                constraints.query.RequireSubqueries()           
             ]
         }
     ),
@@ -1324,17 +1323,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(1),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(1),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(1),
-                constraints.query.HasSubQueryConstraint(state=True)           
+                constraints.query.RequireSubqueries()           
             ]
         }
     ),
@@ -1346,23 +1345,23 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.RequireGroupBy(1),
-                constraints.query.RequireDistinct(state=False),
+                constraints.query.NoDistinct(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoAggregation(),
                 constraints.query.RequireGroupBy(2),
-                constraints.query.RequireDistinct(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoDistinct(),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.NoAggregation(),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireGroupBy(3),
-                constraints.query.RequireDistinct(state=False)
+                constraints.query.NoDistinct()
             ]
         }
     ),
@@ -1375,18 +1374,18 @@ ERROR_DETAILS_MAP = {
                 constraints.query.RequireAggregation(),
                 constraints.query.NoGroupBy(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(2),
                 constraints.query.NoGroupBy(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
                 constraints.query.RequireAggregation(3),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.NoGroupBy()
             ]
         }
@@ -1399,21 +1398,21 @@ ERROR_DETAILS_MAP = {
             DifficultyLevel.EASY: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=True),
+                constraints.query.RequireDistinct(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=True),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.RequireDistinct(),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.NoGroupBy(),
-                constraints.query.RequireDistinct(state=True)
+                constraints.query.RequireDistinct()
             ]
         }
     ),
@@ -1426,17 +1425,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireUnion(state=False),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireUnion(state=False),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireUnion(state=False)
             ]
@@ -1452,18 +1451,18 @@ ERROR_DETAILS_MAP = {
                 constraints.query.RequireUnion(state=False),
                 constraints.query.RequireOrderBy(2),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireUnion(state=False),
                 constraints.query.RequireOrderBy(3),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireOrderBy(4)
             ]
@@ -1479,17 +1478,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireUnion(state=True),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireUnion(state=True),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireUnion(state=True)
             ]
@@ -1504,17 +1503,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(left=True),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireJoin(left=True),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireJoin(2, left=True)
             ]
@@ -1529,17 +1528,17 @@ ERROR_DETAILS_MAP = {
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireJoin(),
                 constraints.query.NoHaving(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.MEDIUM: [
                 constraints.query.HasWhereConstraint(2),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireJoin(),
-                constraints.query.HasSubQueryConstraint(state=False),
+                constraints.query.NoSubquery(),
             ],
             DifficultyLevel.HARD: [
                 constraints.query.HasWhereConstraint(4),
-                constraints.query.HasSubQueryConstraint(state=True),
+                constraints.query.RequireSubqueries(),
                 constraints.query.RequireAggregation(),
                 constraints.query.RequireJoin(2)
             ]

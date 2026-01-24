@@ -79,3 +79,18 @@ class RequireJoin(QueryConstraint):
         if self.max < 0:  return f'Must have minimum {self.min} {join_type}'
         elif self.min == self.max:  return f'Must have exactly {self.min} {join_type}'
         else: return f'Must have between {self.min} and {self.max} {join_type}'
+
+
+class NoJoin(QueryConstraint):
+    '''
+    Requires the ABSENCE of any JOIN clause in the SQL query.
+    '''
+
+    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
+        # check if there are any JOIN clauses in the query AST
+        return not any(query_ast.find_all(exp.Join))
+    
+    @property
+    def description(self) -> str:
+        return "Must NOT have JOIN clause"
+   
