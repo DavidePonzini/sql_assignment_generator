@@ -6,7 +6,7 @@ class WhereConstraintType(Enum):
     # EMPTY = "WHERE EMPTY conditions"
     # NULL = "WHERE NULL conditions"
     # NOT_NULL = "WHERE NOT NULL conditions"
-    MULTIPLE = "MULTIPLE WHERE conditions"
+    # MULTIPLE = "MULTIPLE WHERE conditions"
     NESTED = "NESTED WHERE conditions"
     # WILDCARD = "WHERE conditions with WILDCARD that must have minimum 4 letters"
     # NO_WILDCARD = "WHERE conditions without WILDCARD"

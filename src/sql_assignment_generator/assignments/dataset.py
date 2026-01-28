@@ -1,13 +1,11 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 import dav_tools
+import sqlglot
+from sqlscope import Catalog, build_catalog_from_sql
 
 from ..constraints.schema import SchemaConstraint
 from .. import llm
-import sqlglot
-from sql_error_taxonomy import SqlErrors
-from sqlscope import Catalog, build_catalog_from_sql
-from ..sql_errors_details import ERROR_DETAILS_MAP
 from ..difficulty_level import DifficultyLevel
 from ..constraints import SchemaConstraint, schema as schema_constraints
 from ..exceptions import SQLParsingError
@@ -63,6 +61,14 @@ class Dataset:
             self._catalog_cache_commands_hash = hash(tuple(self.create_commands))
         
         return self._catalog_cache
+    
+    def to_sql_no_context(self) -> str:
+        '''Generate the SQL commands to create and populate the dataset without schema context.'''
+
+        create_cmds = '\n'.join(self.create_commands)
+        insert_cmds = '\n'.join(self.insert_commands)
+
+        return f'''{create_cmds}\n\n{insert_cmds}'''
 
     def to_sql(self, schema: str) -> str:
         '''Generate the SQL commands to create and populate the dataset within the specified schema.'''
@@ -88,8 +94,8 @@ COMMIT;'''
     @staticmethod
     def generate(domain: str,
                  constraints: Sequence[SchemaConstraint],
-                 *,
                  extra_details: list[str] = [],
+                 *,
                  max_attempts: int = 3
         ) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
@@ -169,7 +175,7 @@ INSERT INTO tableName VALUES
                 # no errors, return dataset
                 if not errors:
                     dav_tools.messages.success(f"Dataset generated and validated successfully at attempt {attempt + 1}.")
-                    
+
                     result = Dataset(
                         create_commands=create_commands,
                         insert_commands=insert_commands,

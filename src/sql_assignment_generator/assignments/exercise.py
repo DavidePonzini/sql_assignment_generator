@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-import sqlglot
 from sql_error_taxonomy import SqlErrors
-from sqlscope import Query, build_catalog_from_sql
-from ..sql_errors_details import ERROR_DETAILS_MAP
+from sqlscope import Query
+
+from ..constraints import QueryConstraint
 from ..difficulty_level import DifficultyLevel
 from .dataset import Dataset
 from .. import llm
 import dav_tools
+from ..exceptions import ExerciseGenerationError, SQLParsingError
 
 
 @dataclass
@@ -29,39 +30,33 @@ class Exercise:
     '''The SQL error type associated with the exercise.'''
 
     @staticmethod
-    def generate(error: SqlErrors, difficulty: DifficultyLevel, dataset: Dataset, title: str) -> 'Exercise':
+    def generate(
+        error: SqlErrors,
+        difficulty: DifficultyLevel,
+        constraints: list[QueryConstraint],
+        extra_details: str,
+        dataset: Dataset,
+        title: str,
+        *,
+        max_attempts: int = 3,
+    ) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''
-        if error not in ERROR_DETAILS_MAP:
-            raise NotImplementedError(f'SQL Error not supported: {error.name}')
 
-        error_details = ERROR_DETAILS_MAP[error]
-        constraints_list = ERROR_DETAILS_MAP[error].constraints[difficulty]
+        formatted_constraints = '\n'.join(f'- {constraint.description}' for constraint in constraints)
 
-        #prepare characteristics text (if contain funcion random we solve it first)
-        char_text = error_details.exercise_characteristics
-        if callable(char_text):
-            char_text = char_text()
-    
-        #filter only query costraint
-        query_constraints = [c for c in constraints_list if 'query' in c.__class__.__module__]
-        formatted_constraints = '\n'.join(f'- {item.description}' for item in query_constraints)
-
-        #prepare DB for assignment text
-        dataset_context = "\n".join(dataset.create_commands) + "\n\n" + "\n".join(dataset.insert_commands)
-
-        #controll characteristics for exercise
-        characteristics_prompt = "" 
-        if char_text and isinstance(char_text, str) and char_text.strip():
-            characteristics_prompt = f"The exercise must have the following characteristics: {char_text}."
+        if extra_details.strip():
+            extra_details_formatted = f"The exercise must have the following characteristics:\n{extra_details}"
+        else:
+            extra_details_formatted = ""
         
 
         assignment_text =f'''
 ### CONTEXT (DATABASE SCHEMA AND DATA) ###
-{dataset_context}
+{dataset.to_sql_no_context()}
 
 ### GUIDELINES ###
 Generate a SQL exercise based on the dataset above.
-{characteristics_prompt}.
+{extra_details_formatted}
 
 ### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
 {formatted_constraints}
@@ -75,22 +70,9 @@ Generate a SQL exercise based on the dataset above.
         messages = llm.Message()
         messages.add_message_user(assignment_text)
 
-        #parse dataset table
-        parsed_dataset_tables = []
-        try:
-            for cmd in dataset.create_commands:
-                parsed_dataset_tables.append(sqlglot.parse_one(cmd))
-        except Exception as e:
-             dav_tools.messages.warning(f"Warning: Could not parse dataset tables for validation: {e}")
-
-        max_attempts = 3
         for attempt in range(max_attempts):
             try:
-                answer = llm.generate_answer(
-                    messages,
-                    json_format=llm.models.Assignment
-                )
-
+                answer = llm.generate_answer(messages, json_format=llm.models.Assignment)
                 assert isinstance(answer, llm.models.Assignment)
                 
                 #refinement of the natural language request to remove hints
@@ -129,21 +111,22 @@ Natural Language Request:
                 dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
                 answer.request = answer_refinement.request_without_hints
 
-                #check sintax correctness of solution
+                # check syntax correctness of solution
                 try:
                     query = Query(answer.solution, catalog=dataset.catalog)
                 except Exception as e:
-                    raise ValueError(f"Generated SQL solution contains syntax errors: {e}")
+                    raise SQLParsingError(f"Generated SQL solution contains syntax errors: {e}", answer.solution)
 
-                #constraint validation
-                missing_requirements = []
+                # constraint validation
+                constraint_errors = []
                 
-                for constraint in query_constraints:
+                for constraint in constraints:
                     if not constraint.validate(query):
-                        missing_requirements.append(constraint.description)
+                        constraint_errors.append(constraint.description)
 
-                if not missing_requirements:
+                if not constraint_errors:
                     dav_tools.messages.success(f"Exercise '{title}' generated and validated successfully.")
+                    
                     return Exercise(
                         title=title,
                         request=answer.request,
@@ -152,11 +135,11 @@ Natural Language Request:
                         error=error
                     )
 
-                #validetion fail management
-                dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(missing_requirements)}')
+                # validation fail management
+                dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
                 
                 feedback = (
-                    f'The previously generated solution was REJECTED because it missed the following requirements: {", ".join(missing_requirements)}. '
+                    f'The previously generated solution was REJECTED because it missed the following requirements: {", ".join(constraint_errors)}. '
                     f'Please regenerate the JSON. The SQL solution MUST satisfy ALL the original constraints:\n{formatted_constraints}'
                 )
                 messages.add_message_user(feedback)
@@ -165,5 +148,4 @@ Natural Language Request:
                 dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.")
 
-        #raise Exception(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')
-        return None
+        raise ExerciseGenerationError(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')

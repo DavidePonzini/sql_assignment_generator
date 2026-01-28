@@ -18,3 +18,7 @@ class ConstraintMergeError(Exception):
     def __init__(self, this, other) -> None:
         message = f'Cannot merge constraints of different types: {type(this)} vs {type(other)}'
         super().__init__(message)
+
+class ExerciseGenerationError(Exception):
+    '''Custom exception for errors during exercise generation.'''
+    pass

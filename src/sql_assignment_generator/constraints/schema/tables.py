@@ -70,9 +70,9 @@ class MinChecks(SchemaConstraint):
 class MinColumns(SchemaConstraint):
     '''Requires that at least a specific number of tables in the schema have at least a specific number of columns.'''
 
-    def __init__(self, tables: int = 1, columns: int = 2) -> None:
-        self.tables = tables
+    def __init__(self, columns: int = 2, tables: int = 1) -> None:
         self.columns = columns
+        self.tables = tables
 
     def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
         valid_tables_count = 0

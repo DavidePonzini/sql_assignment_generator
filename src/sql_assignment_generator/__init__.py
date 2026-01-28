@@ -10,6 +10,9 @@ import random
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
 from .assignments import Assignment, Dataset, Exercise
+from .constraints import SchemaConstraint, QueryConstraint
+from .error_requirements import SqlErrorRequirements, ERROR_REQUIREMENTS_MAP
+from .exceptions import ExerciseGenerationError
 
 import dav_tools
 from sql_error_taxonomy import SqlErrors
@@ -49,9 +52,26 @@ def generate_assignment(
     if shuffle_exercises:
         random.shuffle(errors)
 
+    # convert SqlErrors -> SqlErrorRequirements, keeping difficulty levels
+    requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = []
+    for error, difficulty in errors:
+        if error not in ERROR_REQUIREMENTS_MAP:
+            raise NotImplementedError(f'Error requirements not implemented for error: {error.name}')
+        
+        requirements.append((error, ERROR_REQUIREMENTS_MAP[error], difficulty))
+
+    # initialize requirements and extra details
+    dataset_requirements: list[SchemaConstraint] = []
+    for _, req, difficulty in requirements:
+        dataset_requirements.extend(req.dataset_constraints(difficulty))
+
+    dataset_extra_details: list[str] = [
+        req.dataset_extra_details()
+        for _, req, _ in requirements
+    ]
 
     dav_tools.messages.info(f'Generating dataset for domain: {domain}')
-    dataset = Dataset.generate(domain, errors)
+    dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details)
 
     generated_solutions_hashes: set[str] = set()
     hashes_lock = threading.Lock()
@@ -59,26 +79,13 @@ def generate_assignment(
     # Serialize log output to avoid interleaving (and to keep dav_tools usage thread-safe).
     log_lock = threading.Lock()
 
-    def _normalize_solution(solution: str) -> str:
-        return ' '.join(solution.split()).lower()
-
-    def _log(level: str, msg: str, *, message_id: str) -> None:
-        # "each message also has the exercises name as its id"
-        with log_lock:
-            try:
-                if level == 'warning':
-                    dav_tools.messages.warning(f'{message_id}: {msg}')
-                else:
-                    dav_tools.messages.error(f'{message_id}: {msg}')
-            except TypeError:
-                # If dav_tools.messages.<level> doesn't support id=..., fall back gracefully.
-                prefix = f'[{message_id}] '
-                if level == 'warning':
-                    dav_tools.messages.warning(prefix + msg)
-                else:
-                    dav_tools.messages.error(prefix + msg)
-
-    def _worker(idx: int, error: SqlErrors, difficulty: DifficultyLevel) -> tuple[int, Exercise | None]:
+    def _worker(
+            idx: int,
+            error: SqlErrors,
+            difficulty: DifficultyLevel,
+            constraints: list[QueryConstraint],
+            extra_details: str
+    ) -> tuple[int, Exercise | None]:
         title = naming_func(error, difficulty)
 
         dav_tools.messages.info(f'Starting generation for exercise: {title}')
@@ -86,19 +93,16 @@ def generate_assignment(
         last_generated_exercise: Exercise | None = None
 
         for attempt in range(max_unique_attempts):
-            generated_exercise = Exercise.generate(error, difficulty, dataset, title=title)
-            last_generated_exercise = generated_exercise
-
-            if generated_exercise is None:
-                _log(
-                    'warning',
-                    f'Skipping exercise generation for {error.name} due to validation failures.',
-                    message_id=title
-                )
+            try:
+                generated_exercise = Exercise.generate(error, difficulty, constraints, extra_details, dataset=dataset, title=title)
+            except ExerciseGenerationError:
+                with log_lock:
+                    dav_tools.messages.warning(f'{title}: Skipping exercise generation for {error.name} due to validation failures.')
                 return (idx, None)
 
+            last_generated_exercise = generated_exercise
             raw_solution = generated_exercise.solutions[0]
-            normalized_solution = _normalize_solution(raw_solution)
+            normalized_solution = raw_solution.sql.lower().strip()
 
             with hashes_lock:
                 is_duplicate = normalized_solution in generated_solutions_hashes
@@ -106,36 +110,29 @@ def generate_assignment(
                     generated_solutions_hashes.add(normalized_solution)
 
             if is_duplicate:
-                _log(
-                    'warning',
-                    f'Duplicate solution detected for {error.name} (Attempt {attempt + 1}/{max_unique_attempts}). Regenerating...',
-                    message_id=title
-                )
+                with log_lock:
+                    dav_tools.messages.warning(f'{title}: Duplicate solution detected for {error.name} (Attempt {attempt + 1}/{max_unique_attempts}). Regenerating...')
                 continue
 
             return (idx, generated_exercise)
 
         if last_generated_exercise is not None:
-            _log(
-                'error',
-                f'Could not generate a UNIQUE exercise for {error.name} after {max_unique_attempts} retries. Skipping.',
-                message_id=title
-            )
-
+            with log_lock:
+                dav_tools.messages.error(f'{title}: Could not generate a UNIQUE exercise for {error.name} after {max_unique_attempts} retries. Skipping.')
         return (idx, None)
 
     # Pre-allocate so we can preserve ordering no matter completion order.
     ordered_results: list[Exercise | None] = [None] * len(errors)
 
     if max_workers == 1:
-        for idx, (error, difficulty) in enumerate(errors):
-            i, ex = _worker(idx, error, difficulty)
+        for idx, (error, requirement, difficulty) in enumerate(requirements):
+            i, ex = _worker(idx, error, difficulty, requirement.exercise_constraints(difficulty), requirement.exercise_extra_details())
             ordered_results[i] = ex
     else:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
-                executor.submit(_worker, idx, error, difficulty)
-                for idx, (error, difficulty) in enumerate(errors)
+                executor.submit(_worker, idx, error, difficulty, requirement.exercise_constraints(difficulty), requirement.exercise_extra_details())
+                for idx, (error, requirement, difficulty) in enumerate(requirements)
             ]
             for fut in as_completed(futures):
                 idx, ex = fut.result()

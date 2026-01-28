@@ -10,11 +10,11 @@ from typing import Callable, Union
 from .difficulty_level import DifficultyLevel
 from sql_error_taxonomy import SqlErrors
 from .constraints.costraintType import WhereConstraintType
+from .error_requirements import *
 
 
 
 
-ERROR_DETAILS_MAP: dict[SqlErrors, SqlErrorRequirements] = {}
 
 
 #     SqlErrors.SYN_2_AMBIGUOUS_COLUMN: SqlErrorRequirements(
@@ -1544,4 +1544,3 @@ ERROR_DETAILS_MAP: dict[SqlErrors, SqlErrorRequirements] = {}
 #         }
 #     )
 # }
-'''Mapping of SQL errors to their details.'''
