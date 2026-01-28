@@ -4,7 +4,7 @@ from sqlglot import Expression, exp
 from sqlscope import Query
 from sqlscope.catalog.constraint import ConstraintType
 
-class RequireDuplicates(QueryConstraint):
+class Duplicates(QueryConstraint):
     '''
     Require the query to return duplicate rows
     '''
@@ -39,7 +39,7 @@ class NoDuplicates(QueryConstraint):
     def description(self) -> str:
         return 'The exercise must select a unique/primary key, as well as any other columns in the SELECT clause, or grouping is applied.'
 
-class RequireDistinct(QueryConstraint):
+class Distinct(QueryConstraint):
     '''
     Require the query to use the DISTINCT keyword to eliminate duplicate rows.
     This means that the query must return duplicate rows without DISTINCT, and return unique rows with DISTINCT.

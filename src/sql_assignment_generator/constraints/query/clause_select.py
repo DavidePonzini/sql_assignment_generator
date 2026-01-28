@@ -1,7 +1,7 @@
 from .base import QueryConstraint
 from sqlscope import Query
 
-class RequireColumnNumber(QueryConstraint):
+class SelectedColumns(QueryConstraint):
     '''Requires a specific number of columns in the main SELECT clause.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
@@ -41,7 +41,7 @@ class NoAlias(QueryConstraint):
     def description(self) -> str:
         return "Columns in SELECT must not be renamed (must not use aliases)"
 
-class RequireAlias(QueryConstraint):
+class Alias(QueryConstraint):
     '''
         Requires a number of columns in the SELECT clause to be renamed using an alias (AS).
     '''

@@ -18,7 +18,7 @@ class NoAggregation(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require any aggregation operations."
 
-class RequireAggregation(QueryConstraint):
+class Aggregation(QueryConstraint):
     '''
     Requires the presence of aggregation functions in the SQL query.
     

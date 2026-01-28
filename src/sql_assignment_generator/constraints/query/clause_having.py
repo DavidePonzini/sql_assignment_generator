@@ -15,7 +15,7 @@ class NoHaving(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require condition on groups (HAVING clause)."
 
-class RequireHaving(QueryConstraint):
+class Having(QueryConstraint):
     '''
     Requires the presence (or absence) of a HAVING clause with a specific number of conditions.
     In case of multiple SELECTs (UNION/subqueries), the constraint is satisfied if ANY of them satisfy the constraint.

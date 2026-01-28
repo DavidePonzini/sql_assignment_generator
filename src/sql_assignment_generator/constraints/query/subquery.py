@@ -17,7 +17,7 @@ class NoSubquery(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require any subqueries."
 
-class RequireUnnestedSubqueries(QueryConstraint):
+class UnnestedSubqueries(QueryConstraint):
     '''Requires the presence of a certain number of unnested subqueries in the SQL query.'''
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
         self.min = min_
@@ -45,7 +45,7 @@ class RequireUnnestedSubqueries(QueryConstraint):
             return f'Exercise must require exactly {self.min} unnested subqueries.'
         return f'Exercise must require between {self.min} and {self.max} unnested subqueries.'
 
-class RequireSubqueries(QueryConstraint):
+class Subqueries(QueryConstraint):
     '''Requires the presence of nested subqueries (a subquery inside another subquery).'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:

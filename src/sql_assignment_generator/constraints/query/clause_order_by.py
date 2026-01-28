@@ -15,7 +15,7 @@ class NoOrderBy(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require ordering (i.e., no ORDER BY clause)."
 
-class RequireOrderBy(QueryConstraint):
+class OrderBy(QueryConstraint):
     '''
     Requires the presence of an ORDER BY clause with a specific number of columns.
     Ordering can be ascending or descending.
@@ -78,7 +78,7 @@ class RequireOrderBy(QueryConstraint):
         else:
             return f'Exercise must require ordering by between {self.min} and {self.max} columns.'
         
-class RequireOrderByASC(RequireOrderBy):
+class OrderByASC(OrderBy):
     '''
     Requires a certain number of columns in the ORDER BY clause to be in ascending order.
     '''
@@ -108,7 +108,7 @@ class RequireOrderByASC(RequireOrderBy):
         else:
             return f'Exercise must require between {self.min} and {self.max} columns in ORDER BY to be in ascending order.'
         
-class RequireOrderByDESC(RequireOrderBy):
+class OrderByDESC(OrderBy):
     '''
     Requires a certain number of columns in the ORDER BY clause to be in descending order.
     '''

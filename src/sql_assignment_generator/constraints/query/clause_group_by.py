@@ -16,7 +16,7 @@ class NoGroupBy(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require grouping (i.e., no GROUP BY clause)."
 
-class RequireGroupBy(QueryConstraint):
+class GroupBy(QueryConstraint):
     '''Requires the presence of a GROUP BY clause, optionally on a specified number of columns.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None ) -> None:

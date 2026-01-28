@@ -4,7 +4,7 @@ from sqlglot import Expression, exp
 import sqlglot
 from sqlscope import Query
 
-class RequireUnion(QueryConstraint):
+class Union(QueryConstraint):
     '''
     Requires the presence of UNIONs (including UNION ALL).
     Can specify a minimum and maximum number of UNIONs.
@@ -54,7 +54,7 @@ class RequireUnion(QueryConstraint):
         else:
             return f'Exercise must require between {self.min} and {self.max} UNION operations.'
         
-class NoUnion(RequireUnion):
+class NoUnion(Union):
     '''Ensures that the query does not contain any UNION operations.'''
 
     def __init__(self) -> None:
@@ -64,7 +64,7 @@ class NoUnion(RequireUnion):
     def description(self) -> str:
         return "Exercise must not require combining results from multiple queries (i.e., no UNION operations)."
 
-class RequireUnionOfType(RequireUnion):
+class UnionOfType(Union):
     '''
     Requires the presence of UNIONs of a specific type: either 'UNION' or 'UNION ALL'.
     

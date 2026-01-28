@@ -3,7 +3,7 @@ from .base import QueryConstraint
 from sqlglot import Expression, exp
 from sqlscope import Query
 
-class RequireTableReferences(QueryConstraint):
+class TableReferences(QueryConstraint):
     '''
     Requires the query to reference a specified number of different tables (either in FROM or JOIN clauses).
     '''
@@ -34,7 +34,7 @@ class RequireTableReferences(QueryConstraint):
             return f'Exercise must require between {self.min} and {self.max} tables (i.e., JOINs).'
 
 
-class RequireJoin(QueryConstraint):
+class Join(QueryConstraint):
     '''
     Requires the presence of JOINs.
     Can specify if strictly LEFT, RIGHT, or generic JOINs are required.
