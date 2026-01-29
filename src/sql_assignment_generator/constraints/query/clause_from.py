@@ -7,18 +7,23 @@ class TableReferences(QueryConstraint):
     Requires the query to reference a specified number of different tables (either in FROM or JOIN clauses).
     '''
 
-    def __init__(self, min_: int = 1, max_: int | None = None) -> None:
+    def __init__(self, min_: int = 1, max_: int | None = None, *, allow_self_join: bool = False) -> None:
         self.min = min_
         self.max = max_
+        self.allow_self_join = allow_self_join
 
     def validate(self, query: Query) -> bool:
-        referenced_tables: set[str] = set()
+        referenced_tables: list[str] = []
 
         for select in query.selects:
             for table in select.referenced_tables:
-                referenced_tables.add(table.real_name)
+                referenced_tables.append(table.real_name)
 
-        table_count = len(referenced_tables)
+        if not self.allow_self_join:
+            table_count = len(referenced_tables)
+        else:
+            table_count = len(set(referenced_tables))
+            
         if self.max is None:
             return table_count >= self.min
         return self.min <= table_count <= self.max

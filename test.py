@@ -47,7 +47,7 @@ if __name__ == '__main__':
         )
         for solution in exercise.solutions:
             dav_tools.messages.message(
-                solution,
+                solution.sql,
                 default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
                 icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
                 icon='SOL',

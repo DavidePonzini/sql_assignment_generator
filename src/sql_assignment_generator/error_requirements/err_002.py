@@ -29,14 +29,15 @@ class Err002_AmbiguousColumn(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
+                query_constraints.clause_from.TableReferences(2),
                 query_constraints.clause_where.Condition(),
-                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving(),
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 *constraints,
+                query_constraints.clause_from.TableReferences(2),
                 query_constraints.clause_where.Condition(2),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.aggregation.Aggregation(),
@@ -45,10 +46,11 @@ class Err002_AmbiguousColumn(SqlErrorRequirements):
         # HARD
         return [
             *constraints,
+            query_constraints.clause_from.TableReferences(2),
             query_constraints.clause_where.Condition(3),
             query_constraints.subquery.Subqueries(),
             query_constraints.aggregation.Aggregation(),
         ]
 
     def exercise_extra_details(self) -> str:
-        return 'This exercise should require students to reference a column present in both tables'
+        return 'This exercise should require students to reference a non-key column (neither PKs nor FKs) present in both tables'
