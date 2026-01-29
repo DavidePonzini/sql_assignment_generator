@@ -19,7 +19,7 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(2),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.GroupBy(1),
-                query_constraints.rows.NoDuplicates(),
+                query_constraints.rows.Duplicates(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]
@@ -29,7 +29,7 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(2),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.GroupBy(2),
-                query_constraints.rows.NoDuplicates(),
+                query_constraints.rows.Duplicates(),
                 query_constraints.subquery.NoSubquery()
             ]
         
@@ -39,7 +39,7 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(3),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.GroupBy(3),
-                query_constraints.rows.NoDuplicates(),
+                query_constraints.rows.Duplicates(),
                 query_constraints.subquery.Subqueries()
         ]
 
