@@ -1,4 +1,5 @@
 from collections import Counter
+import random
 from typing import Callable
 from .base import QueryConstraint
 from sqlglot import Expression, exp
@@ -28,6 +29,12 @@ def operator_to_string(op: type[exp.Predicate]) -> str:
         return 'ILIKE'
     else:
         return ''
+
+ANY_ALL_IN_constraint = [
+    "The query must select rows with a particular column higher/lower than at least one value in a subquery.", # col > ANY (subquery) | col < ANY (subquery)
+    "The query must select the rows with the highest/lowest value of particular column.",   # col >= ALL (subquery) | col <= ALL (subquery)
+    "The query must select rows where a particular column is equal to one value of a subquery." # col IN (subquery)
+]
 
 class Condition(QueryConstraint):
     '''
@@ -134,7 +141,6 @@ class StringComparison(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require exactly {self.min} string comparisons on rows (WHERE conditions) using any of the following operators: {operators_str}.'
         return f'Exercise must require between {self.min} and {self.max} string comparisons on rows (WHERE conditions) using any of the following operators: {operators_str}.'
-
 
 class EmptyStringComparison(QueryConstraint):
     '''
@@ -387,7 +393,6 @@ class NotExist(QueryConstraint):
             return f'Exercise must require exactly {self.min} NOT EXIST operations on rows (WHERE conditions).'
         return f'Exercise must require between {self.min} and {self.max} NOT EXIST operations on rows (WHERE conditions).'
 
-
 class MathOperators(QueryConstraint):
     '''Requires the presence of a certain number of mathematical operators in the WHERE clause of the SQL query.'''
 
@@ -496,7 +501,6 @@ class ExistsNotExists_InNotIn(QueryConstraint):
 
         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
 
-
 class WildcardLength(QueryConstraint):
     '''
     Requires all wildcards in the WHERE clause of the SQL query to have a minimum/maximum length, not counting special characters.
@@ -535,7 +539,6 @@ class WildcardLength(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with exactly {self.min} non-special characters.'
         return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with between {self.min} and {self.max} non-special characters.'
-
 
 class Condition_WhereHaving(QueryConstraint):
     '''
@@ -583,7 +586,6 @@ class Condition_WhereHaving(QueryConstraint):
             return f'Exercise must require exactly {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
         return f'Exercise must require between {self.min} and {self.max} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
 
-
 class MultipleConditionsOnSameColumn(QueryConstraint):
     '''Requires multiple conditions on the same column in the WHERE clause of the SQL query.'''
 
@@ -611,6 +613,29 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
     def description(self) -> str:
         return f'Exercise must require at least {self.min_columns} columns to have multiple conditions in the same WHERE clause.'
 
+class InAnyAll(QueryConstraint):
+    '''
+    .
+    '''
+    def __init__(self, min_: int = 1 ) -> None:
+        self.min = min_
+
+    def validate(self, query: 'Query') -> bool:
+        parsed = exp.parse_one(query.sql)
+        
+        count = 0
+        for node in parsed.walk():
+            if isinstance(node, (exp.In, exp.Any, exp.All)):
+                count += 1
+        
+        return count >= self.min
+
+    @property
+    def description(self) -> str:
+        count = min(self.min, len(ANY_ALL_IN_constraint))
+        selected_constraints = random.sample(ANY_ALL_IN_constraint, k=count)
+        
+        return "\n".join(selected_constraints)
 
 
 
