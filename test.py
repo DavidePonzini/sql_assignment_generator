@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.LOG_60_JOIN_ON_INCORRECT_COLUMN_MATCHES_POSSIBLE, DifficultyLevel.EASY),
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
     ]*3
 
     assignment = generate_assignment(errors, domain)

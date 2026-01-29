@@ -149,10 +149,8 @@ class SameColumnNames(SchemaConstraint):
     Requires that a specific number of tables have at least 2 non-key (PK/FK) columns with the same names.
     '''
 
-    def __init__(self, min_tables: int = 1) -> None:
-        if min_tables < 2:
-            min_tables = 2
-        self.min_tables = min_tables
+    def __init__(self, pairs: int = 1) -> None:
+        self.min_tables = pairs
 
     def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
         name_counts: Counter[str] = Counter()
@@ -177,6 +175,10 @@ class SameColumnNames(SchemaConstraint):
 
                     name_counts[col_name] += 1
 
+
+        import dav_tools
+        dav_tools.messages.debug(f'Column name counts across tables: {name_counts}')
+
         tables_with_same_col_names = sum(1 for count in name_counts.values() if count >= 2)
         return tables_with_same_col_names >= self.min_tables
     
@@ -189,4 +191,4 @@ class SameColumnNames(SchemaConstraint):
             raise ConstraintMergeError(self, other)
         
         min_tables = max(self.min_tables, other.min_tables)
-        return SameColumnNames(min_tables=min_tables)
+        return SameColumnNames(pairs=min_tables)

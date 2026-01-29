@@ -58,19 +58,3 @@ class Distinct(QueryConstraint):
     def description(self) -> str:
         return 'The exercise must use the DISTINCT keyword to eliminate duplicate rows, ' \
         'meaning that, had DISTINCT not been used, the query would have returned duplicate rows.'
-
-class NoDistinct(QueryConstraint):
-    '''Requires the absence of the DISTINCT keyword in the main SELECT clause.'''
-
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        # found main select
-        select_node = query_ast if isinstance(query_ast, exp.Select) else query_ast.find(exp.Select)
-        if not select_node:  return True
-
-        # look for DISTINCT term in all query 
-        distinct_nodes = select_node.find_all(exp.Distinct)
-        return not distinct_nodes
-
-    @property
-    def description(self) -> str:
-        return "The SELECT clause must NOT use the DISTINCT keyword."

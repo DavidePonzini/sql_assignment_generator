@@ -6,28 +6,9 @@ from sqlscope import Catalog, build_catalog_from_sql
 
 from ..constraints.schema import SchemaConstraint
 from .. import llm
-from ..difficulty_level import DifficultyLevel
 from ..constraints import SchemaConstraint, schema as schema_constraints
 from ..exceptions import SQLParsingError
 
-
-default_constraints: dict[DifficultyLevel, Sequence[SchemaConstraint]] = {
-    DifficultyLevel.EASY: [
-        schema_constraints.tables.MinTables(2),
-        schema_constraints.tables.MinColumns(2, tables=1),
-        schema_constraints.values.MinRows(3)
-    ],
-    DifficultyLevel.MEDIUM: [
-        schema_constraints.tables.MinTables(4),
-        schema_constraints.tables.MinColumns(4, tables=2),
-        schema_constraints.values.MinRows(4)
-    ],
-    DifficultyLevel.HARD: [
-        schema_constraints.tables.MinTables(6),
-        schema_constraints.tables.MinColumns(5, tables=3),
-        schema_constraints.values.MinRows(5)
-    ]
-}
 
 @dataclass
 class Dataset:
@@ -100,14 +81,13 @@ COMMIT;'''
         ) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
 
-        # TODO: add default constraints based on difficulty level of errors
-        # they need to be handled in the calling function
-
         # merge similar constraints
         constraints = schema_constraints.merge_constraints(constraints)
 
         formatted_constraints = '\n'.join(f'- {c.description}' for c in constraints)
-        
+
+        # remove empty extra details        
+        extra_details = [detail for detail in extra_details if detail.strip() != '']
         # dataset characteristics str
         if len(extra_details) > 0:
             extra_details_str = "The dataset must have the following characteristics:\n"
@@ -126,7 +106,7 @@ MANDATORY CONSTRAINTS:
 
 MANDATORY OUTPUT (JSON):
 {{
-    "schema_tables": ["CREATE TABLE t1...", "CREATE TABLE t2..."],
+    "schema_tables": ["CREATE TABLE t1(...);", "CREATE TABLE t2(...);"],
     "insert_commands": ["INSERT INTO t1...", "INSERT INTO t2..."]
 }}
 
@@ -140,31 +120,33 @@ INSERT INTO tableName VALUES
         messages.add_message_user(prompt_text)
         
         for attempt in range(max_attempts):
+            messages.print_chat()
             try:
                 answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
 
                 # parse CREATE TABLEs
                 parsed_tables = []
-                for insert_into in answer.schema_tables:
+                for create_table in answer.schema_tables:
                     try:
-                        parsed = sqlglot.parse_one(insert_into, read="postgres")
+                        parsed = sqlglot.parse_one(create_table, read="postgres")
                         parsed_tables.append(parsed)
                     except Exception as e:
-                        raise SQLParsingError(f"Syntax error in CREATE TABLE generated: {e}", insert_into)
+                        raise SQLParsingError(f"Syntax error in CREATE TABLE generated: {e}", create_table)
                 create_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_tables]
 
                 # parse INSERT INTOs
                 parsed_inserts = []
-                for insert_into in answer.insert_commands:
+                for create_table in answer.insert_commands:
                     try:
-                        parsed = sqlglot.parse_one(insert_into, read="postgres")
+                        parsed = sqlglot.parse_one(create_table, read="postgres")
                         parsed_inserts.append(parsed)
                     except Exception as e:
-                        raise SQLParsingError(f"Syntax error in INSERT COMMANDS generated: {e}", insert_into)
+                        raise SQLParsingError(f"Syntax error in INSERT COMMANDS generated: {e}", create_table)
                 insert_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_inserts]
 
-                catalog = build_catalog_from_sql('\n'.join(cmd.sql() for cmd in parsed_tables))
+                catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
+                dav_tools.messages.debug(f'Generated Catalog: {catalog}')
 
                 # check if constraints are satisfied
                 errors = []

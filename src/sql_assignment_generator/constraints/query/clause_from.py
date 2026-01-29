@@ -1,6 +1,5 @@
-from collections import Counter
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 from sqlscope import Query
 
 class TableReferences(QueryConstraint):
@@ -34,61 +33,56 @@ class TableReferences(QueryConstraint):
             return f'Exercise must require between {self.min} and {self.max} tables (i.e., JOINs).'
 
 
-class Join(QueryConstraint):
+class LeftJoin(QueryConstraint):
     '''
-    Requires the presence of JOINs.
-    Can specify if strictly LEFT, RIGHT, or generic JOINs are required.
+    Requires the presence of a Left JOINs.
     '''
-
-    def __init__(self, min_: int = 1, max_: int = -1, left: bool = False, right: bool = False) -> None:
-        self.min = min_
-        self.max = max_
-        self.left = left
-        self.right = right
 
     def validate(self, query: Query) -> bool:
-        count = 0
-        #found all join nodes
-        for join_node in query_ast.find_all(exp.Join):
-            join_kind = (join_node.kind or "").upper()
-            join_side = (join_node.side or "").upper()
+        # TODO
 
-            is_left = 'LEFT' in join_kind or 'LEFT' in join_side
-            is_right = 'RIGHT' in join_kind or 'RIGHT' in join_side
-
-            if self.left and self.right: #case both LEFT and RIGHT
-                if is_left or is_right: count += 1
-            elif self.left: #case only LEFT
-                if is_left: count += 1
-            elif self.right: #case only RIGHT
-                if is_right: count += 1
-            else: count += 1
-
-        if self.max < 0:
-            return count >= self.min
-        return self.min <= count <= self.max
+        for select in query.selects:
+            # look for any LEFT JOIN node in the query and return True if found
+            pass
+        
+        return True
     
+        return False
+     
     @property
     def description(self) -> str:
-        # determine join type description
-        if self.left and self.right: join_type = "LEFT or RIGHT JOIN"
-        elif self.left: join_type = "LEFT JOIN"
-        elif self.right: join_type = "RIGHT JOIN"
-        else:  join_type = "JOIN"
+        return "Exercise must require at least one LEFT JOIN operation."
 
-        if self.max < 0:  return f'Must have minimum {self.min} {join_type}'
-        elif self.min == self.max:  return f'Must have exactly {self.min} {join_type}'
-        else: return f'Must have between {self.min} and {self.max} {join_type}'
+class RightJoin(QueryConstraint):
+    '''
+    Requires the presence of a Left JOINs.
+    '''
 
+    def validate(self, query: Query) -> bool:
+        # TODO
+
+        for select in query.selects:
+            # look for any RIGHT JOIN node in the query and return True if found
+            pass
+        
+        return True
+    
+        return False
+     
+    @property
+    def description(self) -> str:
+        return "Exercise must require at least one RIGHT JOIN operation."
 
 class NoJoin(QueryConstraint):
     '''
     Requires the ABSENCE of any JOIN clause in the SQL query.
     '''
 
-    def validate(self, query_ast: Expression, tables: list[Expression]) -> bool:
-        # check if there are any JOIN clauses in the query AST
-        return not any(query_ast.find_all(exp.Join))
+    def validate(self, query: Query) -> bool:
+        from_tables = query.main_query.referenced_tables
+
+        return len(from_tables) <= 1        
+        
     
     @property
     def description(self) -> str:

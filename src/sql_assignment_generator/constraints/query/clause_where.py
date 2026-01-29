@@ -29,7 +29,7 @@ def operator_to_string(op: type[exp.Predicate]) -> str:
     else:
         return ''
 
-class RequireWhereCondition(QueryConstraint):
+class Condition(QueryConstraint):
     '''
     Requires the presence of a certain number of WHERE conditions in the SQL query.
     Any kind of condition is accepted.
@@ -64,7 +64,7 @@ class RequireWhereCondition(QueryConstraint):
         return f'Exercise must require all SELECT statements to have between {self.min} and {self.max} comparisons on rows (WHERE conditions).'
 
 # TODO: other classes
-class RequireWhereStringComparison(QueryConstraint):
+class StringComparison(QueryConstraint):
     '''
     Requires the presence of a certain number of WHERE conditions in the SQL query
     that compare string values.
@@ -136,7 +136,7 @@ class RequireWhereStringComparison(QueryConstraint):
         return f'Exercise must require between {self.min} and {self.max} string comparisons on rows (WHERE conditions) using any of the following operators: {operators_str}.'
 
 
-class RequireWhereEmptyStringComparison(QueryConstraint):
+class EmptyStringComparison(QueryConstraint):
     '''
     Requires the presence of a certain number of WHERE conditions in the SQL query
     that compare to empty string values.
@@ -183,7 +183,7 @@ class RequireWhereEmptyStringComparison(QueryConstraint):
             return f'Exercise must require exactly {self.min} comparisons to empty strings on rows (WHERE conditions) using "column = \'\'" or "column <> \'\'".'
         return f'Exercise must require between {self.min} and {self.max} comparisons to empty strings on rows (WHERE conditions) using "column = \'\'" or "column <> \'\'".'
 
-class RequireWhereNullComparison(QueryConstraint):
+class NullComparison(QueryConstraint):
     '''
     Requires the presence of a certain number of WHERE conditions in the SQL query
     that check for NULL values.
@@ -224,7 +224,7 @@ class RequireWhereNullComparison(QueryConstraint):
             return f'Exercise must require exactly {self.min} NULL checks on rows (WHERE conditions) using "IS NULL".'
         return f'Exercise must require between {self.min} and {self.max} NULL checks on rows (WHERE conditions) using "IS NULL".'
 
-class RequireWhereNotNullComparison(QueryConstraint):
+class NotNullComparison(QueryConstraint):
     '''
     Requires the presence of a certain number of WHERE conditions in the SQL query
     that check for NOT NULL values.
@@ -265,7 +265,7 @@ class RequireWhereNotNullComparison(QueryConstraint):
             return f'Exercise must require exactly {self.min} NOT NULL checks on rows (WHERE conditions) using "IS NOT NULL".'
         return f'Exercise must require between {self.min} and {self.max} NOT NULL checks on rows (WHERE conditions) using "IS NOT NULL".'
     
-class NoWhereLikeOperator(QueryConstraint):
+class NoLike(QueryConstraint):
     '''Requires that there are no LIKE operators in the WHERE clause of the SQL query.'''
 
     def validate(self, query: Query) -> bool:
@@ -282,7 +282,7 @@ class NoWhereLikeOperator(QueryConstraint):
     def description(self) -> str:
         return "Exercise must not require the use of LIKE operations on rows (WHERE conditions)."
 
-class RequireWhereNotOperator(QueryConstraint):
+class Not(QueryConstraint):
     '''Requires the presence of a certain number of NOT operators in the WHERE clause of the SQL query.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
@@ -316,7 +316,7 @@ class RequireWhereNotOperator(QueryConstraint):
             return f'Exercise must require exactly {self.min} NOT operations on rows (WHERE conditions).'
         return f'Exercise must require between {self.min} and {self.max} NOT operations on rows (WHERE conditions).'
     
-class RequireWhereExistOperator(QueryConstraint):
+class Exists(QueryConstraint):
     '''Requires the presence of a certain number of EXIST operators in the WHERE clause of the SQL query.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
@@ -352,7 +352,7 @@ class RequireWhereExistOperator(QueryConstraint):
             return f'Exercise must require exactly {self.min} EXIST operations on rows (WHERE conditions). NOT EXIST are not counted.'
         return f'Exercise must require between {self.min} and {self.max} EXIST operations on rows (WHERE conditions). NOT EXIST are not counted.'
 
-class RequireWhereNotExistOperator(QueryConstraint):
+class NotExist(QueryConstraint):
     '''Requires the presence of a certain number of NOT EXIST operators in the WHERE clause of the SQL query.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
@@ -388,8 +388,8 @@ class RequireWhereNotExistOperator(QueryConstraint):
         return f'Exercise must require between {self.min} and {self.max} NOT EXIST operations on rows (WHERE conditions).'
 
 
-class RequireWhereMathOperators(QueryConstraint):
-    '''Requires the presence of a certain number of mathematical comparison operators in the WHERE clause of the SQL query.'''
+class MathOperators(QueryConstraint):
+    '''Requires the presence of a certain number of mathematical operators in the WHERE clause of the SQL query.'''
 
     def __init__(self, min_: int = 1, max_: int | None = None) -> None:
         self.min = min_
@@ -430,7 +430,7 @@ class RequireWhereMathOperators(QueryConstraint):
             return f'Exercise must require exactly {self.min} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
         return f'Exercise must require between {self.min} and {self.max} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
 
-class RequireWhereExistsNotExistsInNotInComparison(QueryConstraint):
+class ExistsNotExists_InNotIn(QueryConstraint):
     '''
     Requires the presence of a certain number of EXISTS/NOT EXISTS or IN/NOT IN operators in the WHERE clause of the SQL query.
     '''
@@ -497,7 +497,7 @@ class RequireWhereExistsNotExistsInNotInComparison(QueryConstraint):
         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
 
 
-class RequireWhereWildcardLength(QueryConstraint):
+class WildcardLength(QueryConstraint):
     '''
     Requires all wildcards in the WHERE clause of the SQL query to have a minimum/maximum length, not counting special characters.
     '''
@@ -537,7 +537,7 @@ class RequireWhereWildcardLength(QueryConstraint):
         return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with between {self.min} and {self.max} non-special characters.'
 
 
-class RequireConditions(QueryConstraint):
+class Condition_WhereHaving(QueryConstraint):
     '''
     Requires the presence of a certain number of conditions in either WHERE or HAVING clauses of the SQL query.
     Any kind of condition is accepted.
