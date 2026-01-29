@@ -77,7 +77,7 @@ COMMIT;'''
                  constraints: Sequence[SchemaConstraint],
                  extra_details: list[str] = [],
                  *,
-                 max_attempts: int = 3
+                 max_attempts: int = 5
         ) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
 
@@ -111,7 +111,7 @@ MANDATORY OUTPUT (JSON):
 }}
 
 INSERT INTO statements must have following format (Multi-row insert): 
-INSERT INTO tableName VALUES 
+INSERT INTO tableName(<all columns except SERIAL/AUTO_INCREMENT>) VALUES 
     (val_1, val_2, ...),
     (val_n, val_n+1, ...);
 
