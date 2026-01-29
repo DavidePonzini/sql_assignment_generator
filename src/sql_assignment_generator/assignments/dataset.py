@@ -7,7 +7,7 @@ from sqlscope import Catalog, build_catalog_from_sql
 from ..constraints.schema import SchemaConstraint
 from .. import llm
 from ..constraints import SchemaConstraint, schema as schema_constraints
-from ..exceptions import SQLParsingError
+from ..exceptions import SQLParsingError, ConstraintValidationError
 
 
 @dataclass
@@ -114,6 +114,9 @@ INSERT INTO statements must have following format (Multi-row insert):
 INSERT INTO tableName VALUES 
     (val_1, val_2, ...),
     (val_n, val_n+1, ...);
+
+For each table, insert at least 5 rows of data.
+Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
 '''
         # query LLM to generate dataset
         messages = llm.Message()
@@ -151,8 +154,11 @@ INSERT INTO tableName VALUES
                 # check if constraints are satisfied
                 errors = []
                 for constraint in constraints:
-                    if not constraint.validate(catalog, parsed_tables, parsed_inserts):
-                        errors.append(constraint.description)
+                    try:
+                        constraint.validate(catalog, parsed_tables, parsed_inserts)
+                    except ConstraintValidationError as e:
+                        errors.append(str(e))
+                        continue
 
                 # no errors, return dataset
                 if not errors:

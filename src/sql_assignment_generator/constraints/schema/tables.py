@@ -2,7 +2,7 @@ from .base import SchemaConstraint
 from sqlglot import exp
 from sqlscope import Catalog
 from sqlscope.catalog.constraint import ConstraintType
-from ...exceptions import ConstraintMergeError
+from ...exceptions import ConstraintMergeError, ConstraintValidationError
 from collections import Counter
 
 class MinTables(SchemaConstraint):
@@ -11,9 +11,11 @@ class MinTables(SchemaConstraint):
     def __init__(self, min_tables: int = 5) -> None:
         self.min_tables = min_tables
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         table_count = len(tables_sql)
-        return self.min_tables <= table_count
+
+        if table_count < self.min_tables:
+            raise ConstraintValidationError(f'Schema has {table_count} tables, which is less than the required minimum of {self.min_tables} tables.')
 
     @property
     def description(self) -> str:
@@ -32,7 +34,7 @@ class MinChecks(SchemaConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         total_checks = 0
         
         for table in tables_sql:
@@ -40,8 +42,11 @@ class MinChecks(SchemaConstraint):
             total_checks += len(checks_found)
 
         if self.max is None:
-            return total_checks >= self.min
-        return self.min <= total_checks <= self.max
+            if total_checks < self.min:
+                raise ConstraintValidationError(f'Schema has {total_checks} CHECK constraints, which is less than the required minimum of {self.min}.')
+        else:
+            if not (self.min <= total_checks <= self.max):
+                raise ConstraintValidationError(f'Schema has {total_checks} CHECK constraints, which is not within the required range of {self.min} to {self.max}.')
         
     @property
     def description(self) -> str:
@@ -74,7 +79,7 @@ class MinColumns(SchemaConstraint):
         self.columns = columns
         self.tables = tables
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         valid_tables_count = 0
 
         for schema_name in catalog.schema_names:
@@ -88,7 +93,8 @@ class MinColumns(SchemaConstraint):
                 if column_count >= self.columns:
                     valid_tables_count += 1
         
-        return valid_tables_count >= self.tables
+        if valid_tables_count < self.tables:
+            raise ConstraintValidationError(f'Schema has {valid_tables_count} tables with at least {self.columns} columns, which is less than the required minimum of {self.tables} tables.')
 
     @property
     def description(self) -> str:
@@ -117,8 +123,8 @@ class ComplexColumnName(SchemaConstraint):
     def __init__(self, min_columns: int = 1) -> None:
         self.min_columns = min_columns
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
-        complex_cols_found = 0
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
+        complex_cols_found = []
 
         for schema_name in catalog.schema_names:
             for table_name in catalog[schema_name].table_names:
@@ -129,9 +135,13 @@ class ComplexColumnName(SchemaConstraint):
                     
                     # check criteria
                     if len(col_name) >= 15 and '_' in col_name:
-                        complex_cols_found += 1
+                        complex_cols_found.append(col_name)
 
-        return complex_cols_found >= self.min_columns
+        if len(complex_cols_found) < self.min_columns:
+            raise ConstraintValidationError(
+                f'Schema has {len(complex_cols_found)} columns with complex names ({complex_cols_found}), '
+                f'which is less than the required minimum of {self.min_columns}.'
+            )
     
     @property
     def description(self) -> str:
@@ -152,7 +162,7 @@ class SameColumnNames(SchemaConstraint):
     def __init__(self, pairs: int = 1) -> None:
         self.pairs = pairs
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         name_counts: Counter[str] = Counter()
         '''Counter for column names across all tables.'''
 
@@ -170,7 +180,7 @@ class SameColumnNames(SchemaConstraint):
 
                 for column in table.columns:
                     col_name = column.real_name
-                    if col_name in pk_cols:
+                    if col_name in pk_cols or column.is_fk:
                         continue
 
                     name_counts[col_name] += 1
@@ -180,7 +190,12 @@ class SameColumnNames(SchemaConstraint):
         dav_tools.messages.debug(f'Column name counts across tables: {name_counts}')
 
         tables_with_same_col_names = sum(1 for count in name_counts.values() if count >= 2)
-        return tables_with_same_col_names >= self.pairs
+        if tables_with_same_col_names < self.pairs:
+            raise ConstraintValidationError(
+                f'Schema has {tables_with_same_col_names} pair(s) of non-key columns with the same name, '
+                f'which is less than the required minimum of {self.pairs} pair(s).'
+                f'Current column name counts: {name_counts}. Columns not counted are part of PKs/FKs.'
+            )
     
     @property
     def description(self) -> str:

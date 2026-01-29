@@ -1,7 +1,7 @@
 from collections import Counter
 from .base import SchemaConstraint
 from sqlglot import exp 
-from ...exceptions import ConstraintMergeError
+from ...exceptions import ConstraintMergeError, ConstraintValidationError
 from sqlscope import Catalog
 
 
@@ -11,7 +11,7 @@ class MinRows(SchemaConstraint):
     def __init__(self, min_: int = 3) -> None:
         self.min = min_
 
-    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> bool:
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         table_row_counts = Counter()
 
         for value in values_sql:
@@ -25,11 +25,13 @@ class MinRows(SchemaConstraint):
 
         # if no tables found but min > 0, fail
         if not table_row_counts and self.min > 0:
-            return False
+            raise ConstraintValidationError(f'No rows found for any table, which is less than the required minimum of {self.min} rows per table.')
 
         # check each table meets minimum row requirement
-        return all(count >= self.min for count in table_row_counts.values())
-    
+        for table_name, count in table_row_counts.items():
+            if count < self.min:
+                raise ConstraintValidationError(f'Table "{table_name}" has {count} rows, which is less than the required minimum of {self.min} rows.')
+
     @property
     def description(self) -> str:
         return f'Dataset must have at least {self.min} rows of data for each table.'
