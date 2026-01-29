@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from sql_error_taxonomy import SqlErrors
 from sqlscope import Query
-
-from ..constraints import QueryConstraint
-from ..difficulty_level import DifficultyLevel
-from .dataset import Dataset
-from .. import llm
 import dav_tools
-from ..exceptions import ExerciseGenerationError, SQLParsingError
+
+from . import strings
+from ..dataset import Dataset
+from ...constraints import QueryConstraint
+from ...difficulty_level import DifficultyLevel
+from ... import llm
+from ...exceptions import ExerciseGenerationError, SQLParsingError, ConstraintValidationError
 
 
 @dataclass
@@ -42,33 +43,12 @@ class Exercise:
     ) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''
 
-        formatted_constraints = '\n'.join(f'- {constraint.description}' for constraint in constraints)
-
-        if extra_details.strip():
-            extra_details_formatted = f"The exercise must have the following characteristics:\n{extra_details}"
-        else:
-            extra_details_formatted = ""
-        
-
-        assignment_text =f'''
-### CONTEXT (DATABASE SCHEMA AND DATA) ###
-{dataset.to_sql_no_context()}
-
-### GUIDELINES ###
-Generate a SQL exercise based on the dataset above.
-{extra_details_formatted}
-
-### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
-{formatted_constraints}
-
-#### JSON REQUIRED OUTPUT FORMAT ####
-{{
-    "request": "Extract and return ONLY NATURAL LANGUAGE query following the assigned constraints. NEVER ask to include mistake. Be concise and clear. Do NOT provide hints or explanations.",
-    "solution": "Only a single and SYNTACTICALLY and SEMANTICALLY correct (executable with minimum 1 returned row) SQL query following the ASSIGNED CONSTRAINTS. The query must be well-formatted and match with request."
-}}
-'''
         messages = llm.Message()
-        messages.add_message_user(assignment_text)
+        messages.add_message_user(strings.prompt_generate(
+            dataset_str=dataset.to_sql_no_context(),
+            extra_details=extra_details,
+            constraints=constraints
+        ))
 
         for attempt in range(max_attempts):
             try:
@@ -77,30 +57,7 @@ Generate a SQL exercise based on the dataset above.
                 
                 #refinement of the natural language request to remove hints
                 messages_refinement = llm.Message()
-                refinement_prompt = (
-                    f'''
-For the following query solution:
---- SOLUTION START ---
-{answer.solution}
---- SOLUTION END ---
-
-Remove any kind of hints on how to write the query from its natural language request. 
-Keep it simple and straighforward
-Do not use generic phrases like "a certain amount"; instead specify exact terms.
-Avoids mentioning tables explicitly
-Removes any reference to joins or join keys
-Keeps the condition purely at the problem level, not the SQL level.
-Make it clear which columns should be selected. If any columns are aliased in the solution, make sure to reflect that in the request.
-Do not use any formatting on the answer
-The alias in select solution must be appear in natural language request.
-
-Natural Language Request:
---- REQUEST START ---
-{answer.request}
---- REQUEST END ---'''
-                )
-
-                messages_refinement.add_message_user(refinement_prompt)
+                messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, answer.solution))
                 answer_refinement = llm.generate_answer(
                     messages_refinement,
                     json_format=llm.models.RemoveHints
@@ -121,7 +78,9 @@ Natural Language Request:
                 constraint_errors = []
                 
                 for constraint in constraints:
-                    if not constraint.validate(query):
+                    try:
+                        constraint.validate(query)
+                    except ConstraintValidationError:
                         constraint_errors.append(constraint.description)
 
                 if not constraint_errors:
@@ -138,12 +97,7 @@ Natural Language Request:
                 # validation fail management
                 dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
                 
-                feedback = (
-                    f'The previously generated solution was REJECTED because it missed the following requirements: {", ".join(constraint_errors)}. '
-                    f'Please regenerate the JSON. The SQL solution MUST satisfy ALL the original constraints:\n{formatted_constraints}'
-                )
-                messages.add_message_user(feedback)
-            
+                messages.add_message_user(strings.feedback_validation_errors(constraint_errors))
             except Exception as e:
                 dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.")

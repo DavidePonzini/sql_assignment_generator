@@ -1,6 +1,6 @@
 from .base import QueryConstraint
-from sqlglot import exp
 from sqlscope import Query
+from ...exceptions import ConstraintValidationError
 
 class TableReferences(QueryConstraint):
     '''
@@ -12,7 +12,7 @@ class TableReferences(QueryConstraint):
         self.max = max_
         self.allow_self_join = allow_self_join
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query):
         referenced_tables: list[str] = []
 
         for select in query.selects:
@@ -20,14 +20,19 @@ class TableReferences(QueryConstraint):
                 referenced_tables.append(table.real_name)
 
         if not self.allow_self_join:
-            table_count = len(referenced_tables)
-        else:
-            table_count = len(set(referenced_tables))
+            referenced_tables = list(set(referenced_tables))
+        table_count = len(referenced_tables)
             
         if self.max is None:
-            return table_count >= self.min
-        return self.min <= table_count <= self.max
-    
+            if table_count < self.min:
+                raise ConstraintValidationError(
+                    f'Exercise references {table_count} different tables ({referenced_tables}), which is less than the required minimum of {self.min} tables.'
+                )
+        elif not (self.min <= table_count <= self.max):
+            raise ConstraintValidationError(
+                f'Exercise references {table_count} different tables ({referenced_tables}), which is not within the required range of {self.min} to {self.max} tables.'
+            )
+
     @property
     def description(self) -> str:
         if self.max is None:
@@ -43,16 +48,13 @@ class LeftJoin(QueryConstraint):
     Requires the presence of a Left JOINs.
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         # TODO
 
         for select in query.selects:
-            # look for any LEFT JOIN node in the query and return True if found
+            # look for any LEFT JOIN node in the query and raise an exception if found
             pass
         
-        return True
-    
-        return False
      
     @property
     def description(self) -> str:
@@ -63,16 +65,12 @@ class RightJoin(QueryConstraint):
     Requires the presence of a Left JOINs.
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         # TODO
 
         for select in query.selects:
-            # look for any RIGHT JOIN node in the query and return True if found
+            # look for any RIGHT JOIN node in the query and raise an exception if found
             pass
-        
-        return True
-    
-        return False
      
     @property
     def description(self) -> str:
@@ -83,10 +81,11 @@ class NoJoin(QueryConstraint):
     Requires the ABSENCE of any JOIN clause in the SQL query.
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         from_tables = query.main_query.referenced_tables
 
-        return len(from_tables) <= 1        
+        if len(from_tables) > 1:
+            raise ConstraintValidationError("Exercise references more than a single table, which implies the presence of JOIN clauses, which are not allowed.")
         
     
     @property

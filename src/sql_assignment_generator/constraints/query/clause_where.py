@@ -1,13 +1,8 @@
 from collections import Counter
-from typing import Callable
 from .base import QueryConstraint
-from sqlglot import Expression, exp
-from ..costraintType import WhereConstraintType
-from .base import QueryConstraint
-from sqlglot import Expression, exp
-from ..costraintType import WhereConstraintType
-from collections import Counter
 from sqlscope import Query
+from sqlglot import exp
+from ...exceptions import ConstraintValidationError
 
 def operator_to_string(op: type[exp.Predicate]) -> str:
     if op == exp.EQ:
@@ -39,7 +34,7 @@ class Condition(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -52,8 +47,16 @@ class Condition(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} comparisons on rows (WHERE conditions), but only {count} were found.'
+                )
+            return
+        
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} comparisons on rows (WHERE conditions), but found {count}.'
+            )
                 
     @property
     def description(self) -> str:
@@ -90,7 +93,7 @@ class StringComparison(QueryConstraint):
         self.max = max_
         self.allowed_operators = allowed_operators
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -122,8 +125,15 @@ class StringComparison(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} string comparisons on rows (WHERE conditions), but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} string comparisons on rows (WHERE conditions), but found {count}.'
+            )
         
     @property
     def description(self) -> str:
@@ -147,7 +157,7 @@ class EmptyStringComparison(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -172,8 +182,15 @@ class EmptyStringComparison(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} comparisons to empty strings on rows (WHERE conditions), but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} comparisons to empty strings on rows (WHERE conditions), but found {count}.'
+            )
         
     @property
     def description(self) -> str:
@@ -194,7 +211,7 @@ class NullComparison(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -213,8 +230,15 @@ class NullComparison(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} NULL checks on rows (WHERE conditions) using "IS NULL", but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} NULL checks on rows (WHERE conditions) using "IS NULL", but found {count}.'
+            )
         
     @property
     def description(self) -> str:
@@ -235,7 +259,7 @@ class NotNullComparison(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -254,8 +278,15 @@ class NotNullComparison(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} NOT NULL checks on rows (WHERE conditions) using "IS NOT NULL", but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} NOT NULL checks on rows (WHERE conditions) using "IS NOT NULL", but found {count}.'
+            )
         
     @property
     def description(self) -> str:
@@ -268,15 +299,16 @@ class NotNullComparison(QueryConstraint):
 class NoLike(QueryConstraint):
     '''Requires that there are no LIKE operators in the WHERE clause of the SQL query.'''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         for select in query.main_query.selects:
             where = select.where
             if where is not None:
                 # Look for LIKE comparisons
                 like_nodes = list(where.find_all((exp.Like, exp.ILike)))
                 if like_nodes:
-                    return False
-        return True
+                    raise ConstraintValidationError(
+                        "Query must not require the use of LIKE operations on rows (WHERE conditions)."
+                    )
     
     @property
     def description(self) -> str:
@@ -289,7 +321,7 @@ class Not(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -305,8 +337,15 @@ class Not(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} NOT operations on rows (WHERE conditions), but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} NOT operations on rows (WHERE conditions), but found {count}.'
+            )
         
     @property
     def description(self) -> str:
@@ -323,7 +362,7 @@ class Exists(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -341,8 +380,15 @@ class Exists(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} EXIST operations on rows (WHERE conditions). NOT EXIST are not counted.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} EXIST operations on rows (WHERE conditions). NOT EXIST are not counted.'
+            )
         
     @property
     def description(self) -> str:
@@ -359,7 +405,7 @@ class NotExist(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -376,8 +422,15 @@ class NotExist(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} NOT EXIST operations on rows (WHERE conditions).'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} NOT EXIST operations on rows (WHERE conditions).'
+            )
         
     @property
     def description(self) -> str:
@@ -395,7 +448,7 @@ class MathOperators(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         math_operators = (
@@ -419,8 +472,15 @@ class MathOperators(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
+            )
         
     @property
     def description(self) -> str:
@@ -441,7 +501,7 @@ class ExistsNotExists_InNotIn(QueryConstraint):
         self.max_pos = max_pos
         self.max_neg = max_neg
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         pos_count = 0
         neg_count = 0
 
@@ -474,7 +534,10 @@ class ExistsNotExists_InNotIn(QueryConstraint):
         else:
             neg_valid = self.min_neg <= neg_count <= self.max_neg
 
-        return pos_valid and neg_valid
+        if not (pos_valid and neg_valid):
+            raise ConstraintValidationError(
+                f'Query must require {self.description}. Found {pos_count} positive (EXISTS/IN) and {neg_count} negative (NOT EXISTS/NOT IN) operations.'
+            )
     
     @property
     def description(self) -> str:
@@ -506,8 +569,11 @@ class WildcardLength(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         special_characters = {'%', '_', '[', ']', '^', '-', '*', '+', '?', '(', ')', '{', '}'}
+    
+        wildcard_lengths: dict[str, int] = {}
+    
         for select in query.main_query.selects:
             where = select.where
             if where is not None:
@@ -517,17 +583,31 @@ class WildcardLength(QueryConstraint):
                         literal_value = right_side.this
 
                         # Check if it contains special characters (i.e. is a valid wildcard)
+                        no_wildcards: list[str] = []
+                        for char in literal_value:
+                            if char not in special_characters:
+                                no_wildcards.append(char)
+                        
                         if not any(char in special_characters for char in literal_value):
-                            return False
+                            raise ConstraintValidationError(
+                                "All LIKE operations on rows (WHERE conditions) must contain wildcards."
+                            )
                             
                         # Calculate length excluding special characters
                         length = sum(1 for char in literal_value if char not in special_characters)
-                        if length < self.min:
-                            return False
-                        if self.max is not None and length > self.max:
-                            return False
-        return True
+                        wildcard_lengths[literal_value] = length
 
+        for length in wildcard_lengths.values():                        
+            if length < self.min:
+                raise ConstraintValidationError(
+                    f'All LIKE operations on rows (WHERE conditions) must have wildcards with at least {self.min} non-special characters.'
+                    f'Wildcards found and their lengths: {wildcard_lengths}'
+                )
+            if self.max is not None and length > self.max:
+                raise ConstraintValidationError(
+                    f'All LIKE operations on rows (WHERE conditions) must have wildcards with at most {self.max} non-special characters.'
+                    f'Wildcards found and their lengths: {wildcard_lengths}'
+                )
     @property
     def description(self) -> str:
         if self.max is None:
@@ -547,7 +627,7 @@ class Condition_WhereHaving(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
@@ -572,8 +652,15 @@ class Condition_WhereHaving(QueryConstraint):
 
         count: int = sum(condition_count)
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Query must require at least {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions), but only {count} were found.'
+                )
+            return
+        if not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Query must require between {self.min} and {self.max} comparisons on rows (WHERE conditions) or groups (HAVING conditions), but found {count}.'
+            )
 
     @property
     def description(self) -> str:
@@ -590,7 +677,7 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
     def __init__(self, min_columns: int = 1) -> None:
         self.min_columns = min_columns
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         for select in query.main_query.selects:
             where = select.where
             if where is not None:
@@ -604,12 +691,14 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
 
                 multiple_conditions_columns = sum(1 for count in column_counter.values() if count > 1)
                 if multiple_conditions_columns >= self.min_columns:
-                    return True
-        return False
+                    return
+        raise ConstraintValidationError(
+            f'Query must require at least {self.min_columns} columns to have multiple conditions on the same column in a single WHERE clause.'
+        )
 
     @property
     def description(self) -> str:
-        return f'Exercise must require at least {self.min_columns} columns to have multiple conditions in the same WHERE clause.'
+        return f'Exercise must require at least {self.min_columns} columns to have multiple conditions on the same column in a single WHERE clause.'
 
 
 

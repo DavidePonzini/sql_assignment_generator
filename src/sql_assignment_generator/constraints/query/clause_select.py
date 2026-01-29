@@ -1,5 +1,6 @@
 from .base import QueryConstraint
 from sqlscope import Query
+from ...exceptions import ConstraintValidationError
 
 class SelectedColumns(QueryConstraint):
     '''Requires a specific number of columns in the main SELECT clause.'''
@@ -8,14 +9,22 @@ class SelectedColumns(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         output = query.main_query.output
 
         columns = len(output.columns)
 
         if self.max is None:
-            return columns >= self.min
-        return self.min <= columns <= self.max
+            if columns < self.min:
+                raise ConstraintValidationError(
+                    f'Query must select at least {self.min} columns, but selected {columns} columns.'
+                )
+            return
+        if not (self.min <= columns <= self.max):
+            raise ConstraintValidationError(
+                f'Query must select between {self.min} and {self.max} columns, but selected {columns} columns.'
+            )
+
     @property
     def description(self) -> str:
         if self.max is None:
@@ -29,13 +38,14 @@ class NoAlias(QueryConstraint):
     Requires that no columns in the SELECT clause are renamed (no aliases for columns).
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         output = query.main_query.output
 
         for col in output.columns:
             if col.name != col.real_name:
-                return False
-        return True
+                raise ConstraintValidationError(
+                    "Columns in SELECT must not be renamed (must not use aliases)."
+                )
 
     @property
     def description(self) -> str:
@@ -52,7 +62,7 @@ class Alias(QueryConstraint):
         self.max = max_
 
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         output = query.main_query.output
 
         alias_count = 0
@@ -61,8 +71,16 @@ class Alias(QueryConstraint):
                 alias_count += 1
 
         if self.max is None:
-            return alias_count >= self.min
-        return self.min <= alias_count <= self.max
+            if alias_count < self.min:
+                raise ConstraintValidationError(
+                    f"At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found."
+                )
+            return
+        
+        if not (self.min <= alias_count <= self.max):
+            raise ConstraintValidationError(
+                f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found."
+            )
 
     @property
     def description(self) -> str:

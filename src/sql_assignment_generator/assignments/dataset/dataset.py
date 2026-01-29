@@ -4,10 +4,11 @@ import dav_tools
 import sqlglot
 from sqlscope import Catalog, build_catalog_from_sql
 
-from ..constraints.schema import SchemaConstraint
-from .. import llm
-from ..constraints import SchemaConstraint, schema as schema_constraints
-from ..exceptions import SQLParsingError, ConstraintValidationError
+from . import strings
+from ...constraints.schema import SchemaConstraint
+from ... import llm
+from ...constraints import SchemaConstraint, schema as schema_constraints
+from ...exceptions import SQLParsingError, ConstraintValidationError, DatasetGenerationError
 
 
 @dataclass
@@ -60,17 +61,7 @@ class Dataset:
         create_cmds = '\n\n'.join(self.create_commands)
         insert_cmds = '\n\n'.join(self.insert_commands)
 
-        return f'''BEGIN;
-
-DROP SCHEMA IF EXISTS {schema} CASCADE;
-CREATE SCHEMA {schema};
-SET search_path TO {schema};
-
-{create_cmds}
-
-{insert_cmds}
-
-COMMIT;'''
+        return strings.to_sql_format(schema=schema, create_cmds=create_cmds, insert_cmds=insert_cmds)
     
     @staticmethod
     def generate(domain: str,
@@ -84,40 +75,12 @@ COMMIT;'''
         # merge similar constraints
         constraints = schema_constraints.merge_constraints(constraints)
 
-        formatted_constraints = '\n'.join(f'- {c.description}' for c in constraints)
+        prompt_text = strings.prompt_generate(
+            domain=domain,
+            extra_details=extra_details,
+            constraints=constraints
+        )
 
-        # remove empty extra details        
-        extra_details = [detail for detail in extra_details if detail.strip() != '']
-        # dataset characteristics str
-        if len(extra_details) > 0:
-            extra_details_str = "The dataset must have the following characteristics:\n"
-            for detail in extra_details:
-                extra_details_str += f"- {detail}\n"
-        else:
-            extra_details_str = ''
-        
-        prompt_text = f'''
-Generate a SQL dataset about the following domain: "{domain}".
-{extra_details_str}
-
-MANDATORY CONSTRAINTS:
-- FOREIGN KEY attributes should have the REFERENCES keyword inline (e.g. "col TYPE REFERENCES table_name(column_name)").
-{formatted_constraints}
-
-MANDATORY OUTPUT (JSON):
-{{
-    "schema_tables": ["CREATE TABLE t1(...);", "CREATE TABLE t2(...);"],
-    "insert_commands": ["INSERT INTO t1...", "INSERT INTO t2..."]
-}}
-
-INSERT INTO statements must have following format (Multi-row insert): 
-INSERT INTO tableName(<all columns except SERIAL/AUTO_INCREMENT>) VALUES 
-    (val_1, val_2, ...),
-    (val_n, val_n+1, ...);
-
-For each table, insert at least 5 rows of data.
-Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
-'''
         # query LLM to generate dataset
         messages = llm.Message()
         messages.add_message_user(prompt_text)
@@ -177,15 +140,10 @@ Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
                 
                 dav_tools.messages.error(f'Validation failed for attempt {attempt + 1}. Missing requirements: {", ".join(errors)}')
                 
-                # TODO: use constraint validation errors to give better feedback
-                feedback = (
-                    f"The previous JSON output was REJECTED because the SQL violated these constraints: {', '.join(errors)}. "
-                    "Regenerate the JSON correcting the SQL to satisfy ALL mandatory constraints."
-                )
-                messages.add_message_user(feedback)
+                messages.add_message_user(strings.feedback_constraint_violations(errors))
 
             except SQLParsingError as e:
                 dav_tools.messages.error(f"Error during generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"SQL code is not syntactically valid: {str(e)}. Please regenerate valid SQL.")
         
-        raise Exception(f'Failed to generate a valid dataset after {max_attempts} attempts.')
+        raise DatasetGenerationError(f'Failed to generate a valid dataset after {max_attempts} attempts.')

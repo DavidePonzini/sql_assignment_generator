@@ -185,10 +185,6 @@ class SameColumnNames(SchemaConstraint):
 
                     name_counts[col_name] += 1
 
-
-        import dav_tools
-        dav_tools.messages.debug(f'Column name counts across tables: {name_counts}')
-
         tables_with_same_col_names = sum(1 for count in name_counts.values() if count >= 2)
         if tables_with_same_col_names < self.pairs:
             raise ConstraintValidationError(
@@ -199,7 +195,7 @@ class SameColumnNames(SchemaConstraint):
     
     @property
     def description(self) -> str:
-        return f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name'
+        return f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name but different semantic meaning'
 
     def merge(self, other: SchemaConstraint) -> 'SameColumnNames':
         if not isinstance(other, SameColumnNames):

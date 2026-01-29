@@ -1,15 +1,15 @@
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 from sqlscope import Query
+from ...exceptions import ConstraintValidationError
 
 class NoHaving(QueryConstraint):
     '''Ensures that the query does not contain a HAVING clause.'''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         for select in query.selects:
             if select.having is not None:
-                return False
-        return True
+                raise ConstraintValidationError("Exercise must not require condition on groups (HAVING clause).")
 
     @property
     def description(self) -> str:
@@ -25,7 +25,7 @@ class Having(QueryConstraint):
         self.min = min_
         self.max = max_
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         having_conditions: list[int] = []
 
         for select in query.selects:
@@ -45,13 +45,16 @@ class Having(QueryConstraint):
         for condition_count in having_conditions:
             if self.max is None:
                 if condition_count >= self.min:
-                    return True
+                    return
                 continue
             if self.min <= condition_count <= self.max:
-                return True
+                return
             continue
 
-        return False
+        raise ConstraintValidationError(
+            "Exercise does not satisfy the HAVING clause condition count requirements."
+            f"HAVING clause condition counts found: {having_conditions}, required min: {self.min}, required max: {self.max}"
+        )
     
     @property
     def description(self) -> str:

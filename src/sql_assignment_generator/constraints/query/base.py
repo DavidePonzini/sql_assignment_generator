@@ -7,7 +7,7 @@ class QueryConstraint(BaseConstraint):
     '''Base class for query-related constraints.'''
     
     @abstractmethod
-    def validate(self, query: Query):
+    def validate(self, query: Query) -> None:
         '''
         Validate if the given SQL query satisfies the constraint.
 

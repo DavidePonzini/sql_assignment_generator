@@ -22,3 +22,7 @@ class ConstraintMergeError(Exception):
 class ExerciseGenerationError(Exception):
     '''Custom exception for errors during exercise generation.'''
     pass
+
+class DatasetGenerationError(Exception):
+    '''Custom exception for errors during dataset generation.'''
+    pass

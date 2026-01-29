@@ -1,15 +1,15 @@
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 from sqlscope import Query
+from ...exceptions import ConstraintValidationError
 
 class NoOrderBy(QueryConstraint):
     '''Requires the absence of an ORDER BY clause.'''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         for select in query.selects:
             if select.order_by is not None:
-                return False
-        return True
+                raise ConstraintValidationError("Exercise must not require ordering (i.e., no ORDER BY clause).")
     
     @property
     def description(self) -> str:
@@ -53,7 +53,7 @@ class OrderBy(QueryConstraint):
 
         return order_bys
     
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         order_bys = self.find_order_bys(query)
 
         for order_by in order_bys:
@@ -61,13 +61,16 @@ class OrderBy(QueryConstraint):
 
             if self.max is None:
                 if count >= self.min:
-                    return True
+                    return
                 continue
             if self.min <= count <= self.max:
-                return True
+                return
             continue
 
-        return False
+        raise ConstraintValidationError(
+            "Exercise does not satisfy the ORDER BY clause column count requirements."
+            f"ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}"
+        )
     
     @property
     def description(self) -> str:
@@ -83,7 +86,7 @@ class OrderByASC(OrderBy):
     Requires a certain number of columns in the ORDER BY clause to be in ascending order.
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         order_bys = self.find_order_bys(query)
 
         for order_by in order_bys:
@@ -91,13 +94,17 @@ class OrderByASC(OrderBy):
 
             if self.max is None:
                 if asc_count >= self.min:
-                    return True
+                    return
                 continue
             if self.min <= asc_count <= self.max:
-                return True
+                return
             continue
 
-        return False
+        raise ConstraintValidationError(
+            "Exercise does not satisfy the ORDER BY clause column count requirements."
+            f"ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}"
+            "Only ascending columns are counted."
+        )
     
     @property
     def description(self) -> str:
@@ -113,7 +120,7 @@ class OrderByDESC(OrderBy):
     Requires a certain number of columns in the ORDER BY clause to be in descending order.
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         order_bys = self.find_order_bys(query)
 
         for order_by in order_bys:
@@ -121,13 +128,17 @@ class OrderByDESC(OrderBy):
 
             if self.max is None:
                 if desc_count >= self.min:
-                    return True
+                    return
                 continue
             if self.min <= desc_count <= self.max:
-                return True
+                return
             continue
 
-        return False
+        raise ConstraintValidationError(
+            "Exercise does not satisfy the ORDER BY clause column count requirements."
+            f"ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}"
+            "Only descending columns are counted."
+        )
     
     @property
     def description(self) -> str:
