@@ -36,15 +36,15 @@ MANDATORY CONSTRAINTS:
 - FOREIGN KEY attributes should have the REFERENCES keyword inline (e.g. "col TYPE REFERENCES table_name(column_name)").
 {formatted_constraints}
 
-MANDATORY OUTPUT (JSON):
+MANDATORY OUTPUT (JSON) - each line in both lists must correspond to a single table:
 {{
     "schema_tables": [
         "CREATE TABLE t1(...);",
         "CREATE TABLE t2(...);"
     ],
     "insert_commands": [
-        "INSERT INTO t1(...) VALUES(...);",
-        "INSERT INTO t2(...) VALUES(...);"
+        "INSERT INTO t1(...) VALUES(val_1, val_2, ...), (...), (val_n, val_n+1, ...);",
+        "INSERT INTO t2(...) VALUES(val_1, val_2, ...), (...), (val_n, val_n+1, ...);"
     ]
 }}
 

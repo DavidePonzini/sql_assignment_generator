@@ -55,19 +55,6 @@ class Exercise:
                 answer = llm.generate_answer(messages, json_format=llm.models.Assignment)
                 assert isinstance(answer, llm.models.Assignment)
                 
-                #refinement of the natural language request to remove hints
-                messages_refinement = llm.Message()
-                messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, answer.solution))
-                answer_refinement = llm.generate_answer(
-                    messages_refinement,
-                    json_format=llm.models.RemoveHints
-                )
-
-                assert isinstance(answer_refinement, llm.models.RemoveHints)
-                dav_tools.messages.debug(f"Old Request: {answer.request}")
-                dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
-                answer.request = answer_refinement.request_without_hints
-
                 # check syntax correctness of solution
                 try:
                     query = Query(answer.solution, catalog=dataset.catalog)
@@ -83,21 +70,33 @@ class Exercise:
                     except ConstraintValidationError:
                         constraint_errors.append(constraint.description)
 
-                if not constraint_errors:
-                    dav_tools.messages.success(f"Exercise '{title}' generated and validated successfully.")
-                    
-                    return Exercise(
-                        title=title,
-                        request=answer.request,
-                        solutions=[query],
-                        difficulty=difficulty,
-                        error=error
-                    )
+                if constraint_errors:
+                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
+                    messages.add_message_user(strings.feedback_validation_errors(constraint_errors))
+                    continue
 
-                # validation fail management
-                dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
+                # refine natural language request to remove hints
+                messages_refinement = llm.Message()
+                messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, query))
+                answer_refinement = llm.generate_answer(
+                    messages_refinement,
+                    json_format=llm.models.RemoveHints
+                )
+
+                assert isinstance(answer_refinement, llm.models.RemoveHints)
+                dav_tools.messages.debug(f"Old Request: {answer.request}")
+                dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
+                answer.request = answer_refinement.request_without_hints
+
+                dav_tools.messages.success(f"Exercise '{title}' generated and validated successfully.")
                 
-                messages.add_message_user(strings.feedback_validation_errors(constraint_errors))
+                return Exercise(
+                    title=title,
+                    request=answer.request,
+                    solutions=[query],
+                    difficulty=difficulty,
+                    error=error
+                )
             except Exception as e:
                 dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")
                 messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.")
