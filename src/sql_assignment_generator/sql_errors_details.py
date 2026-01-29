@@ -1205,8 +1205,6 @@ from .error_requirements import *
 #                 constraints.query.HasWhereConstraint(2),
 #                 constraints.query.NoHaving(),
 #                 constraints.query.NoSubquery(),
-#                 constraints.query.NoHaving(),
-#                 constraints.query.NoSubquery(),
 #             ],
 #             DifficultyLevel.MEDIUM: [
 #                 constraints.query.HasWhereConstraint(3),
@@ -1227,19 +1225,16 @@ from .error_requirements import *
 #         "(e.g. table 'tablename' with PK 'name_id' and table 'tablename_info' with PK 'name_id').",
 #         constraints={
 #             DifficultyLevel.EASY: [
-#                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
 #                 constraints.query.HasWhereConstraint(2),
 #                 constraints.query.NoHaving(),
 #                 constraints.query.NoSubquery(),
 #             ],
 #             DifficultyLevel.MEDIUM: [
-#                 constraints.schema.HasSamePrimaryKeyConstraint(2),
 #                 constraints.query.HasWhereConstraint(3),
 #                 constraints.query.Aggregation(2),
 #                 constraints.query.NoSubquery(),
 #             ],
 #             DifficultyLevel.HARD: [
-#                 constraints.schema.HasSamePrimaryKeyConstraint(2), 
 #                 constraints.query.HasWhereConstraint(4),
 #                 constraints.query.Aggregation(3),
 #                 constraints.query.RequireSubqueries()           

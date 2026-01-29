@@ -1,5 +1,5 @@
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 from sqlscope import Query
 
 class NoHaving(QueryConstraint):
@@ -60,4 +60,3 @@ class Having(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require exactly {self.min} logical conditions on a single group (HAVING clause).'
         return f'Exercise must require between {self.min} and {self.max} logical conditions on a single group (HAVING clause).'
-

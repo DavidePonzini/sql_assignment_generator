@@ -1,5 +1,5 @@
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 from sqlscope import Query
 
 class NoOrderBy(QueryConstraint):
