@@ -1,6 +1,8 @@
 from .base import QueryConstraint
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
+from collections import Counter
+from sqlglot import exp
 
 class TableReferences(QueryConstraint):
     '''
@@ -42,19 +44,22 @@ class TableReferences(QueryConstraint):
         else:
             return f'Exercise must require between {self.min} and {self.max} tables (i.e., JOINs).'
 
-
 class LeftJoin(QueryConstraint):
     '''
     Requires the presence of a Left JOINs.
     '''
 
     def validate(self, query: Query) -> None:
-        # TODO
-
         for select in query.selects:
-            # look for any LEFT JOIN node in the query and raise an exception if found
-            pass
+            for join in select.ast.find_all(exp.Join):
+                # control side and join type
+                kind = (join.kind or "").upper()
+                side = (join.side or "").upper()
+
+                if 'LEFT' in kind or 'LEFT' in side:
+                    return
         
+        raise ConstraintValidationError("Exercise does not require any LEFT JOIN operation.")
      
     @property
     def description(self) -> str:
@@ -66,11 +71,15 @@ class RightJoin(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> None:
-        # TODO
-
         for select in query.selects:
-            # look for any RIGHT JOIN node in the query and raise an exception if found
-            pass
+            for join in select.ast.find_all(exp.Join):
+                kind = (join.kind or "").upper()
+                side = (join.side or "").upper()
+
+                if 'RIGHT' in kind or 'RIGHT' in side:
+                    return
+        
+        raise ConstraintValidationError("Exercise does not require any RIGHT JOIN operation.")
      
     @property
     def description(self) -> str:
@@ -91,4 +100,25 @@ class NoJoin(QueryConstraint):
     @property
     def description(self) -> str:
         return "Must NOT have JOIN clause"
-   
+
+class SelfJoin(QueryConstraint):
+    '''
+    Requires the presence of a Self JOIN (joining a table with itself).
+    '''
+
+    def validate(self, query: Query) -> bool:
+        # iterate in main query and in subquery
+        for select in query.selects:
+            # extract name table and count all occurrence
+            table_names = [table.real_name for table in select.referenced_tables]
+            counts = Counter(table_names)
+            
+            # table is repeat more than 1 
+            if any(count > 1 for count in counts.values()):
+                return True
+        
+        return False
+    
+    @property
+    def description(self) -> str:
+        return "Exercise must require a SELF JOIN operation (joining a table to itself)."

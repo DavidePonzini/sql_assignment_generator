@@ -1,4 +1,6 @@
 from collections import Counter
+import random
+from typing import Callable
 from .base import QueryConstraint
 from sqlscope import Query
 from sqlglot import exp
@@ -144,7 +146,6 @@ class StringComparison(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require exactly {self.min} string comparisons on rows (WHERE conditions) using any of the following operators: {operators_str}.'
         return f'Exercise must require between {self.min} and {self.max} string comparisons on rows (WHERE conditions) using any of the following operators: {operators_str}.'
-
 
 class EmptyStringComparison(QueryConstraint):
     '''
@@ -440,7 +441,6 @@ class NotExist(QueryConstraint):
             return f'Exercise must require exactly {self.min} NOT EXIST operations on rows (WHERE conditions).'
         return f'Exercise must require between {self.min} and {self.max} NOT EXIST operations on rows (WHERE conditions).'
 
-
 class MathOperators(QueryConstraint):
     '''Requires the presence of a certain number of mathematical operators in the WHERE clause of the SQL query.'''
 
@@ -559,7 +559,6 @@ class ExistsNotExists_InNotIn(QueryConstraint):
 
         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
 
-
 class WildcardLength(QueryConstraint):
     '''
     Requires all wildcards in the WHERE clause of the SQL query to have a minimum/maximum length, not counting special characters.
@@ -616,7 +615,6 @@ class WildcardLength(QueryConstraint):
             return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with exactly {self.min} non-special characters.'
         return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with between {self.min} and {self.max} non-special characters.'
 
-
 class Condition_WhereHaving(QueryConstraint):
     '''
     Requires the presence of a certain number of conditions in either WHERE or HAVING clauses of the SQL query.
@@ -670,7 +668,6 @@ class Condition_WhereHaving(QueryConstraint):
             return f'Exercise must require exactly {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
         return f'Exercise must require between {self.min} and {self.max} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
 
-
 class MultipleConditionsOnSameColumn(QueryConstraint):
     '''Requires multiple conditions on the same column in the WHERE clause of the SQL query.'''
 
@@ -700,6 +697,52 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
     def description(self) -> str:
         return f'Exercise must require at least {self.min_columns} columns to have multiple conditions on the same column in a single WHERE clause.'
 
+class InAnyAll(QueryConstraint):
+    '''
+    Requires the presence of a certain number of IN, ANY, or ALL operators in the SQL query.
+    '''
+    def __init__(self, min_: int = 1 ) -> None:
+        self.min = min_
+        self.options = random.sample(
+            ['IN', 'ANY', 'ALL'],
+            k=min(self.min, 3)
+        )
+
+    def validate(self, query: 'Query') -> None:
+        count = 0
+
+        for select in query.main_query.selects:
+            select = select.strip_subqueries()  # prevent double counting of subqueries
+
+            exps = select.ast.find_all((exp.In, exp.Any, exp.All))
+            count += len(list(exps))
+
+        if count < self.min:
+            error_msg = ''
+            if 'IN' in self.options:
+                error_msg += 'Exercise must require selecting rows where a particular column is equal to one value of a subquery (IN).\n'
+            if 'ANY' in self.options:
+                error_msg += 'Exercise must require selecting rows with a particular column higher/lower than at least one value in a subquery (ANY).\n'
+            if 'ALL' in self.options:
+                error_msg += 'Exercise must require selecting the rows with the highest/lowest value of particular column (ALL).\n'
+
+            raise ConstraintValidationError(error_msg.strip())
+    @property
+    def description(self) -> str:
+        descriptions = {
+            # col IN (subquery)
+            'IN': "The query must select rows where a particular column is equal to one value of a subquery.",
+            
+            # col > ANY (subquery) | col < ANY (subquery)
+            'ANY': "The query must select rows with a particular column higher/lower than at least one value in a subquery.",
+            
+            # col >= ALL (subquery) | col <= ALL (subquery)
+            'ALL': "The query must select the rows with the highest/lowest value of particular column.",
+        }
+
+        selected_constraints = [descriptions[option] for option in self.options]        
+        
+        return '\n'.join(selected_constraints)
 
 
 

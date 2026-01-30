@@ -5,36 +5,39 @@ from ..difficulty_level import DifficultyLevel
 class Err026_TooManyColumnsInSubquery(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
         if difficulty == DifficultyLevel.EASY:
-            return [
-
-            ]
+            return []
         if difficulty == DifficultyLevel.MEDIUM:
-            return[
-
-            ]
-
+            return[]
         # HARD
-        return [
-
-            ]
+        return []
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
+        constraints = super().exercise_constraints(difficulty)
         if difficulty == DifficultyLevel.EASY:
             return [
-                
+                *constraints,
+                query_constraints.clause_where.Condition(1),
+                query_constraints.subquery.UnnestedSubqueries(),
+                query_constraints.clause_having.NoHaving()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
-                
+                *constraints,
+                query_constraints.clause_where.Condition(2),
+                query_constraints.subquery.Subqueries()
             ]
         
         # HARD
         return [
-            
+            *constraints,
+            query_constraints.clause_where.Condition(3),
+            query_constraints.subquery.Subqueries(),
+            query_constraints.aggregation.Aggregation(2)
         ]
 
     def exercise_extra_details(self) -> str:
-        return ''
+        return "The solution in natural language must have comparison for each row must be compared with " \
+        "a value from the same row or subset of rows (e.g. 'WHERE balance <comparison operator> (SELECT balance ... WHERE name = 'John')')"
 
     def dataset_extra_details(self) -> str:
         return ''

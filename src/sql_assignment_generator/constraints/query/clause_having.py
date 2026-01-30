@@ -63,4 +63,3 @@ class Having(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require exactly {self.min} logical conditions on a single group (HAVING clause).'
         return f'Exercise must require between {self.min} and {self.max} logical conditions on a single group (HAVING clause).'
-
