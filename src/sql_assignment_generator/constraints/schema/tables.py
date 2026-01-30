@@ -153,7 +153,6 @@ class ComplexColumnName(SchemaConstraint):
         min_cols = max(self.min_columns, other.min_columns)
         return ComplexColumnName(min_columns=min_cols)
     
-
 class SameColumnNames(SchemaConstraint):
     '''
     Requires that a specific number of tables have at least 2 non-key (PK/FK) columns with the same names.
