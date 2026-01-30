@@ -559,6 +559,46 @@ class ExistsNotExists_InNotIn(QueryConstraint):
 
         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
 
+class WildcardCharacters(QueryConstraint):
+    '''
+    Requires for at least a certain amount of wildcards to have specific characters
+    appear at least as many times as specified in the input string, regardless of position,
+    in LIKE operations in the WHERE clause of the SQL query.
+    '''
+
+    def __init__(self, required_characters: str, min_: int = 1) -> None:
+        self.min = min_
+        self.required_characters: Counter[str] = Counter(required_characters)
+
+    def validate(self, query: Query) -> None:
+        wildcard_status: dict[str, bool] = {}
+        '''True if the wildcard contains all required characters with required counts, False if it's an invalid wildcard.'''
+        
+        for select in query.main_query.selects:
+            where = select.where
+            if where is None:
+                continue
+
+            for like in where.find_all((exp.Like, exp.ILike)):
+                right_side = like.expression
+                if isinstance(right_side, exp.Literal) and right_side.is_string:
+                    literal_value = right_side.this
+
+                    # Check if it contains all required characters with required counts
+                    literal_counter = Counter(literal_value)
+                    wildcard_status[literal_value] = all(literal_counter[char] >= count for char, count in self.required_characters.items())
+
+        valid_wildcard_count = sum(1 for is_valid in wildcard_status.values() if is_valid)
+        if valid_wildcard_count < self.min:
+            raise ConstraintValidationError(
+                f'Query must require at least {self.min} LIKE operations on rows (WHERE conditions) to contain the following wildcard characters with required counts: {self.required_characters}.'
+                f' Wildcards found and their validity: {wildcard_status}'
+            )
+
+    @property
+    def description(self) -> str:
+        return f'Exercise must require at least {self.min} LIKE operations on rows (WHERE conditions) to contain the following wildcard characters with required counts: {self.required_characters}.'
+
 class WildcardLength(QueryConstraint):
     '''
     Requires all wildcards in the WHERE clause of the SQL query to have a minimum/maximum length, not counting special characters.
@@ -595,6 +635,11 @@ class WildcardLength(QueryConstraint):
                         # Calculate length excluding special characters
                         length = sum(1 for char in literal_value if char not in special_characters)
                         wildcard_lengths[literal_value] = length
+
+        if not wildcard_lengths:
+            raise ConstraintValidationError(
+                "Exercise must require all LIKE operations on rows (WHERE conditions) to contain wildcards. None were found."
+            )
 
         for length in wildcard_lengths.values():                        
             if length < self.min:
