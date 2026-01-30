@@ -30,7 +30,7 @@ class Err004_UndefinedColumn(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(),
                 query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
-                query_constraints.clause_having.NoHaving(),S
+                query_constraints.clause_having.NoHaving(),
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
