@@ -1,7 +1,6 @@
-from ..difficulty_level import DifficultyLevel
-from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints
 from abc import ABC
 from ..difficulty_level import DifficultyLevel
+from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints
 
 class SqlErrorRequirements(ABC):
     '''Requirements for generating an assignment likely to trigger a specific error'''

@@ -4,12 +4,22 @@ from ..difficulty_level import DifficultyLevel
 
 class Err086_CorrelationNamesAreAlwaysIdentical(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
+        constraints = super().schema_constraints(difficulty)
         if difficulty == DifficultyLevel.EASY:
-            return []
+            return [
+                *constraints,
+                schema_constraints.tables.SameColumnNames()
+            ]
         if difficulty == DifficultyLevel.MEDIUM:
-            return[]
+            return[
+                *constraints,
+                schema_constraints.tables.SameColumnNames()
+            ]
         # HARD
-        return []
+        return [
+            *constraints,
+            schema_constraints.tables.SameColumnNames(2)
+        ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
@@ -43,4 +53,4 @@ class Err086_CorrelationNamesAreAlwaysIdentical(SqlErrorRequirements):
         return ''
 
     def dataset_extra_details(self) -> str:
-        return ''
+        return ""
