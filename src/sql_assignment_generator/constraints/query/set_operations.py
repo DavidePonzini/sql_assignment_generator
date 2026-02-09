@@ -1,4 +1,6 @@
 from collections import Counter
+
+from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
 from sqlglot import Expression, exp
 import sqlglot
@@ -40,9 +42,13 @@ class Union(QueryConstraint):
         union_count, union_all_count = self.count_unions(query)
         total_unions = union_count + union_all_count
 
-        if self.max is None:
-            return total_unions >= self.min
-        return self.min <= total_unions <= self.max
+        if self.max is None and total_unions >= self.min: return 
+        if self.min <= total_unions <= self.max: return
+        raise ConstraintValidationError(
+            f"The number of UNION operations ({total_unions}) does not meet the requirements. "
+            f"Found {union_count} UNION and {union_all_count} UNION ALL. "
+            f"Required: min={self.min}, max={self.max}"
+        )
 
     
     @property
@@ -60,6 +66,16 @@ class NoUnion(Union):
     def __init__(self) -> None:
         super().__init__(min_=0, max_=0)
 
+    def validate(self, query: Query) -> bool:
+        union_count, union_all_count = self.count_unions(query)
+        total_unions = union_count + union_all_count
+
+        if total_unions == 0: return
+        raise ConstraintValidationError(
+            f"The query contains {total_unions} UNION operations, but they are not allowed "
+            "for this specific exercise."
+        )
+    
     @property
     def description(self) -> str:
         return "Exercise must not require combining results from multiple queries (i.e., no UNION operations)."
@@ -86,6 +102,10 @@ class UnionOfType(Union):
         else:  # 'UNION ALL'
             count = union_all_count
 
-        if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+        if self.max is None and count >= self.min: return 
+        if self.min <= count <= self.max: return
+        type_str = "UNION ALL" if self.all else "UNION"
+        raise ConstraintValidationError(
+            f"Requirement for {type_str} not met. Found {count} occurrences, "
+            f"but required min={self.min} and max={self.max}."
+        )

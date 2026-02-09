@@ -17,6 +17,7 @@ class Err026_TooManyColumnsInSubquery(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.UnnestedSubqueries(),
                 query_constraints.clause_having.NoHaving()
             ]

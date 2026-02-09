@@ -1,4 +1,4 @@
-from collections import Counter
+from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
 from sqlglot import Expression, exp
 from sqlscope import Query
@@ -14,7 +14,11 @@ class Duplicates(QueryConstraint):
 
         output_constraints = main_query.output.unique_constraints
 
-        return len(output_constraints) == 0
+        if len(output_constraints) == 0: return
+        raise ConstraintValidationError(
+            f"The query is forced to return unique rows due to: {output_constraints}. "
+            f"The exercise requires a query that allows duplicate rows (no PK, no DISTINCT, no Group By)."
+        )
     
     
     @property
@@ -33,7 +37,12 @@ class NoDuplicates(QueryConstraint):
 
         other_constraints = [c for c in output_constraints if c.constraint_type != ConstraintType.DISTINCT]
 
-        return len(other_constraints) > 0
+        if len(other_constraints) > 0: return
+        raise ConstraintValidationError(
+            f"The query results are not guaranteed to be unique. To satisfy this constraint, "
+            f"you must select a Primary Key/Unique column or apply grouping. "
+            f"Current output constraints: {output_constraints}"
+        )
     
     @property
     def description(self) -> str:
@@ -52,7 +61,11 @@ class Distinct(QueryConstraint):
 
         has_distinct_constraint = any(c.constraint_type == ConstraintType.DISTINCT for c in output_constraints)
 
-        return has_distinct_constraint
+        if has_distinct_constraint: return
+        raise ConstraintValidationError(
+            "The DISTINCT keyword is missing. The exercise specifically requires explicit "
+            "duplicate elimination using DISTINCT."
+        )
 
     @property
     def description(self) -> str:

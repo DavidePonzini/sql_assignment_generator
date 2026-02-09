@@ -4,19 +4,22 @@ from ..difficulty_level import DifficultyLevel
 
 class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        constraints = super().schema_constraints(difficulty)
+        constraints = super().dataset_constraints(difficulty)
         if difficulty == DifficultyLevel.EASY:
             return [
-                schema_constraints.MinChecks(1)
+                *constraints,
+                schema_constraints.tables.MinChecks(1)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return[
-                schema_constraints.MinChecks(2)
+                *constraints,
+                schema_constraints.tables.MinChecks(2)
             ]
         
         # HARD
         return [
-            schema_constraints.MinChecks(3)
+            *constraints,
+            schema_constraints.tables.MinChecks(3)
         ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -25,6 +28,7 @@ class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.MultipleConditionsOnSameColumn(1),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]

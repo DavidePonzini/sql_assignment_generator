@@ -17,6 +17,7 @@ class Err012_FailureToSpecifyColumnNameTwice(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.MultipleConditionsOnSameColumn(),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]

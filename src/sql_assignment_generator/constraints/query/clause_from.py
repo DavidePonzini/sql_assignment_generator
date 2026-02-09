@@ -67,7 +67,7 @@ class LeftJoin(QueryConstraint):
 
 class RightJoin(QueryConstraint):
     '''
-    Requires the presence of a Left JOINs.
+    Requires the presence of a Right JOINs.
     '''
 
     def validate(self, query: Query) -> None:
@@ -114,10 +114,12 @@ class SelfJoin(QueryConstraint):
             counts = Counter(table_names)
             
             # table is repeat more than 1 
-            if any(count > 1 for count in counts.values()):
-                return True
+            if any(count > 1 for count in counts.values()): return
         
-        return False
+        raise ConstraintValidationError(
+            f"No SELF JOIN detected. A self join requires referencing the same table multiple times "
+            f"within the same clause. Referenced tables found: {table_names}"
+        )
     
     @property
     def description(self) -> str:

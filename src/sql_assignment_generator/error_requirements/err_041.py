@@ -17,10 +17,10 @@ class Err041_DistinctInSumOrAvg(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                random.choice(
+                random.choice([
                     query_constraints.aggregation.Aggregation(1, allowed_functions=["SUM"]),
                     query_constraints.aggregation.Aggregation(1, allowed_functions=["AVG"]),
-                ),
+                ]),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_group_by.GroupBy(),
@@ -30,10 +30,10 @@ class Err041_DistinctInSumOrAvg(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
-                random.choice(
+                random.choice([
                     query_constraints.aggregation.Aggregation(2, allowed_functions=["SUM"]),
                     query_constraints.aggregation.Aggregation(2, allowed_functions=["AVG"]),
-                ),
+                ]),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.rows.Duplicates()
             ]
@@ -43,10 +43,10 @@ class Err041_DistinctInSumOrAvg(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.Condition(2),
             query_constraints.subquery.Subqueries(),
-            random.choice(
+            random.choice([
                 query_constraints.aggregation.Aggregation(2, allowed_functions=["SUM"]),
                 query_constraints.aggregation.Aggregation(2, allowed_functions=["AVG"]),
-            ),
+            ]),
             query_constraints.rows.Duplicates()
         ]
 

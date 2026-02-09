@@ -8,18 +8,18 @@ class Err009_Misspellings(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                schema_constraints.tables.ComplexColumnName(min_tables=2)
+                schema_constraints.tables.ComplexColumnName(2)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return[
                 *constraints,
-                schema_constraints.tables.ComplexColumnName(min_tables=4)
+                schema_constraints.tables.ComplexColumnName(4)
             ]
 
         # HARD
         return [
             *constraints,
-            schema_constraints.tables.ComplexColumnName(min_tables=8)
+            schema_constraints.tables.ComplexColumnName(8)
             ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:

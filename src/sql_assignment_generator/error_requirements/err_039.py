@@ -24,8 +24,9 @@ class Err039_AndInsteadOfOr(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.MultipleConditionsOnSameColumn(1),
+                query_constraints.clause_from.TableReferences(0, 2),
                 query_constraints.subquery.NoSubquery(),
-                query_constraints.having.NoHaving()
+                query_constraints.clause_having.NoHaving()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [

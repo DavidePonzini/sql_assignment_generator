@@ -112,7 +112,7 @@ class Dataset:
                 insert_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_inserts]
 
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
-                dav_tools.messages.debug(f'Generated Catalog: {catalog}')
+                # dav_tools.messages.debug(f'Generated Catalog: {catalog}')
 
                 # check if constraints are satisfied
                 errors = []

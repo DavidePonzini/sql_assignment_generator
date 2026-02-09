@@ -17,6 +17,7 @@ class Err021_ComparisonWithNull(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.NullComparison(1, 1),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]

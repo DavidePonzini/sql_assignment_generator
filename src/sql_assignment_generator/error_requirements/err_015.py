@@ -16,6 +16,7 @@ class Err015_AggregateFunctionsCannotBeNested(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 query_constraints.aggregation.Aggregation(2),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]

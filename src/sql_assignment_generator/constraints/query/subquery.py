@@ -1,4 +1,6 @@
 from collections import Counter
+
+from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
 from sqlglot import Expression, exp
 from sqlscope import Query
@@ -10,8 +12,10 @@ class NoSubquery(QueryConstraint):
 
         for select in query.selects:
             if len(select.subqueries) > 0:
-                return False
-        return True
+                raise ConstraintValidationError(
+                    "Subqueries were detected in the solution, but this exercise must be solved "
+                    "without using any subqueries."
+                )
 
     @property
     def description(self) -> str:
@@ -29,13 +33,16 @@ class UnnestedSubqueries(QueryConstraint):
         for count in unnested_subquery_counts:
             if self.max is None:
                 if count >= self.min:
-                    return True
+                    return
                 continue
             if self.min <= count <= self.max:
-                return True
+                return
             continue
 
-        return False
+        raise ConstraintValidationError(
+            f"Number of unnested subqueries is insufficient. Found counts per SELECT: {unnested_subquery_counts}. "
+            f"Requirements: min={self.min}, max={self.max}"
+        )
 
     @property
     def description(self) -> str:
@@ -64,11 +71,14 @@ class Subqueries(QueryConstraint):
 
         for count in nested_counts:
             if self.max is None:
-                if count >= self.min: return True
+                if count >= self.min: return
                 continue
-            if self.min <= count <= self.max: return True
+            if self.min <= count <= self.max: return
             continue
-        return False
+        raise ConstraintValidationError(
+            f"Insufficient nesting level for subqueries. Found {nested_counts} nested subqueries, "
+            f"but the exercise requires min={self.min} and max={self.max} nested structures."
+        )
 
     @property
     def description(self) -> str:
