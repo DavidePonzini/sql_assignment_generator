@@ -776,13 +776,13 @@ class InAnyAll(QueryConstraint):
     def description(self) -> str:
         descriptions = {
             # col IN (subquery)
-            'IN': "The query must select rows where a particular column is equal to one value of a subquery.",
+            'IN': "The query must select rows where a particular column is equal to one value of a subquery (IN).",
             
             # col > ANY (subquery) | col < ANY (subquery)
-            'ANY': "The query must select rows with a particular column higher/lower than at least one value in a subquery.",
+            'ANY': "The query must select rows with a particular column higher/lower than at least one value in a subquery (ANY).",
             
             # col >= ALL (subquery) | col <= ALL (subquery)
-            'ALL': "The query must select the rows with the highest/lowest value of particular column.",
+            'ALL': "The query must select the rows with the highest/lowest value of particular column (ALL).",
         }
 
         selected_constraints = [descriptions[option] for option in self.options]        

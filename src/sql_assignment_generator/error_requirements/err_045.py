@@ -14,27 +14,25 @@ class Err045_MixingGT0WithIsNotNullOrEmptyStringWithNull(SqlErrorRequirements):
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
+        selected_comparison = random.choice([
+            query_constraints.clause_where.NullComparison(),
+            query_constraints.clause_where.NotNullComparison(),
+            query_constraints.clause_where.StringComparison(),
+            query_constraints.clause_where.EmptyStringComparison()
+        ])
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                random.choice([
-                    query_constraints.clause_where.NullComparison,
-                    query_constraints.clause_where.NotNullComparison,
-                    query_constraints.clause_where.StringComparison,
-                    query_constraints.clause_where.EmptyStringComparison
-                ]),
+                selected_comparison,
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return[
                 *constraints,
-                random.choice([
-                    query_constraints.clause_where.NullComparison,
-                    query_constraints.clause_where.NotNullComparison,
-                    query_constraints.clause_where.StringComparison,
-                    query_constraints.clause_where.EmptyStringComparison
-                ]),
+                selected_comparison,
                 query_constraints.aggregation.Aggregation(),
                 query_constraints.subquery.NoSubquery()
             ]
@@ -42,12 +40,7 @@ class Err045_MixingGT0WithIsNotNullOrEmptyStringWithNull(SqlErrorRequirements):
         # HARD
         return [
             *constraints,
-            random.choice([
-                query_constraints.clause_where.NullComparison,
-                query_constraints.clause_where.NotNullComparison,
-                query_constraints.clause_where.StringComparison,
-                query_constraints.clause_where.EmptyStringComparison
-            ]),
+            selected_comparison,
             query_constraints.aggregation.Aggregation(),
             query_constraints.subquery.Subqueries()
         ]

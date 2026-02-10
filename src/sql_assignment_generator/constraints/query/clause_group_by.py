@@ -6,10 +6,23 @@ class NoGroupBy(QueryConstraint):
     '''Requires the absence of a GROUP BY clause.'''
 
     def validate(self, query: Query) -> None:
-        #look for node GROUP BY in query
-        for select in query.selects:
-            if select.group_by is not None:
-                raise ConstraintValidationError("Exercise requires grouping, which is not allowed.")
+        # 1. Otteniamo le select (gestendo dict o list)
+        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
+
+        for s in selects_collection:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            if isinstance(curr_select, str): continue 
+
+            gb = curr_select.group_by
+            if gb is not None:
+                if isinstance(gb, list):
+                    if len(gb) > 0:
+                        raise ConstraintValidationError(self.description)
+                elif hasattr(gb, 'expressions'):
+                    if len(gb.expressions) > 0:
+                        raise ConstraintValidationError(self.description)
+                else:
+                    raise ConstraintValidationError(self.description)
     
     @property
     def description(self) -> str:

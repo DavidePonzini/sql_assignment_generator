@@ -65,10 +65,10 @@ def generate_assignment(
     for _, req, difficulty in requirements:
         dataset_requirements.extend(req.dataset_constraints(difficulty))
 
-    dataset_extra_details: list[str] = [
-        req.dataset_extra_details()
-        for _, req, _ in requirements
-    ]
+    raw_details = [req.dataset_extra_details() for _, req, _ in requirements] #duplicate remotion
+    dataset_extra_details: list[str] = list(dict.fromkeys(
+        detail for detail in raw_details if detail.strip()
+    ))
 
     dav_tools.messages.info(f'Generating dataset for domain: {domain}')
     dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details)

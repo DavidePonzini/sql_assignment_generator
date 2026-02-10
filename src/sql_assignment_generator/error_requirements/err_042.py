@@ -17,6 +17,7 @@ class Err042_DistinctThatMightRemoveImportantDuplicates(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.NoGroupBy(),
                 query_constraints.rows.Duplicates(),

@@ -14,7 +14,7 @@ class Err044_IncorrectWildcard(SqlErrorRequirements):
         
         if difficulty == DifficultyLevel.EASY: n = 1
         elif difficulty == DifficultyLevel.MEDIUM: n = 2
-        else:  n = 2
+        else:  n = 3
         
         self._selected_symbols = random.sample(all_wildcards, k=n)
 

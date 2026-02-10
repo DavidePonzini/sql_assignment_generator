@@ -51,6 +51,7 @@ class Exercise:
         ))
 
         for attempt in range(max_attempts):
+            messages.print_chat()
             try:
                 answer = llm.generate_answer(messages, json_format=llm.models.Assignment)
                 assert isinstance(answer, llm.models.Assignment)

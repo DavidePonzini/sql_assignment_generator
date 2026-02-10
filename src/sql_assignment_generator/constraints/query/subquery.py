@@ -1,8 +1,5 @@
-from collections import Counter
-
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
-from sqlglot import Expression, exp
 from sqlscope import Query
 
 class NoSubquery(QueryConstraint):
@@ -28,8 +25,28 @@ class UnnestedSubqueries(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> bool:
-        unnested_subquery_counts = [len(select.subqueries) for select in query.selects]
+        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
+        all_normalized_selects = []
+        total_subqueries_found = 0
 
+        for s in selects_collection:
+            curr = s[1] if isinstance(s, tuple) else s
+            if isinstance(curr, str): continue
+            all_normalized_selects.append(curr)
+            #cout total subqueryies found in the entire query (including nested ones)
+            total_subqueries_found += len(curr.subqueries)
+
+        #if there are more subqueries found than the number of main level selects, it means there is nesting
+        main_subqueries_count = len(query.main_query.subqueries)
+        
+        if total_subqueries_found > main_subqueries_count:
+            raise ConstraintValidationError(
+                f"Nested subqueries detected (Total: {total_subqueries_found}, Main level: {main_subqueries_count}). "
+                "All subqueries must be at the top level of the WHERE clause."
+            )
+
+        #if there are no subqueries at all, it fails the validation if min > 0
+        unnested_subquery_counts = [len(select.subqueries) for select in all_normalized_selects]
         for count in unnested_subquery_counts:
             if self.max is None:
                 if count >= self.min:
