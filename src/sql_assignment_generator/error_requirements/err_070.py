@@ -5,18 +5,11 @@ from ..difficulty_level import DifficultyLevel
 class Err070_ExtraneousColumnInSelect(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
         if difficulty == DifficultyLevel.EASY:
-            return [
-
-            ]
+            return []
         if difficulty == DifficultyLevel.MEDIUM:
-            return[
-
-            ]
-
+            return[]
         # HARD
-        return [
-
-            ]
+        return []
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
@@ -25,6 +18,7 @@ class Err070_ExtraneousColumnInSelect(SqlErrorRequirements):
                 *constraints,
                 query_constraints.clause_where.Condition(0,0),
                 query_constraints.clause_select.SelectedColumns(2),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
             ]

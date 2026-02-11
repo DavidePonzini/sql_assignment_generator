@@ -17,7 +17,9 @@ class Err073_MissingAsFromSelect(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
-                query_constraints.clause_select.Alias(),
+                query_constraints.clause_select.Alias(1,1),
+                query_constraints.clause_select.SelectedColumns(2),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]
@@ -25,7 +27,8 @@ class Err073_MissingAsFromSelect(SqlErrorRequirements):
             return [
                *constraints,
                 query_constraints.clause_where.Condition(3),
-                query_constraints.clause_select.Alias(),
+                query_constraints.clause_select.Alias(2),
+                query_constraints.clause_select.SelectedColumns(3),
                 query_constraints.aggregation.Aggregation(),
                 query_constraints.subquery.NoSubquery() 
             ]
@@ -34,7 +37,7 @@ class Err073_MissingAsFromSelect(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(4),
-            query_constraints.clause_select.Alias(),
+            query_constraints.clause_select.Alias(3),
             query_constraints.aggregation.Aggregation(),
             query_constraints.subquery.Subqueries() 
         ]

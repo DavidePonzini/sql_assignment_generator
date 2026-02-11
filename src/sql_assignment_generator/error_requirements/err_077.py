@@ -18,6 +18,7 @@ class Err077_IncorrectOrderingOfRows(SqlErrorRequirements):
                 *constraints,
                 query_constraints.clause_where.Condition(2),
                 query_constraints.clause_order_by.OrderByDESC(),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]

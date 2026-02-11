@@ -15,34 +15,45 @@ class TableReferences(QueryConstraint):
         self.allow_self_join = allow_self_join
 
     def validate(self, query: Query):
-        referenced_tables: list[str] = []
+        #obtain all SELECT blocks in the query (main and subqueries)
+        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
 
-        for select in query.selects:
-            for table in select.referenced_tables:
-                referenced_tables.append(table.real_name)
+        for s in selects_collection:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            if isinstance(curr_select, str): continue
 
-        if not self.allow_self_join:
-            referenced_tables = list(set(referenced_tables))
-        table_count = len(referenced_tables)
+            #count how many different tables are referenced in the FROM/JOIN clauses of this SELECT block
+            tables_in_this_block = []
+            for table in curr_select.referenced_tables:
+                tables_in_this_block.append(table.real_name)
+
+            if not self.allow_self_join:
+                tables_in_this_block = list(set(tables_in_this_block))
             
-        if self.max is None:
-            if table_count < self.min:
+            table_count = len(tables_in_this_block)
+
+            #validate single SELECT block based on min/max constraints
+            if self.max is None:
+                if table_count < self.min:
+                    raise ConstraintValidationError(
+                        f'A SELECT block in the query references {table_count} tables, '
+                        f'but at least {self.min} are required. Tables: {tables_in_this_block}'
+                    )
+            elif not (self.min <= table_count <= self.max):
                 raise ConstraintValidationError(
-                    f'Exercise references {table_count} different tables ({referenced_tables}), which is less than the required minimum of {self.min} tables.'
+                    f'A SELECT block in the query references {table_count} tables, '
+                    f'which is outside the allowed range of {self.min} to {self.max}. '
+                    f'Tables found in block: {tables_in_this_block}'
                 )
-        elif not (self.min <= table_count <= self.max):
-            raise ConstraintValidationError(
-                f'Exercise references {table_count} different tables ({referenced_tables}), which is not within the required range of {self.min} to {self.max} tables.'
-            )
 
     @property
     def description(self) -> str:
         if self.max is None:
-            return f'Exercise must require referencing at least {self.min} different tables (i.e., JOINs).'
+            return f'Exercise must have at least {self.min} tables in FROM (i.e., JOINs).'
         elif self.min == self.max:
-            return f'Exercise must require exactly {self.min} tables (i.e., JOINs).'
+            return f'Exercise must have exactly {self.min} tables in FROM (i.e., JOINs).'
         else:
-            return f'Exercise must require between {self.min} and {self.max} tables (i.e., JOINs).'
+            return f'Exercise must have between {self.min} and {self.max} tables in FROM (i.e., JOINs).'
 
 class LeftJoin(QueryConstraint):
     '''

@@ -56,7 +56,7 @@ class Alias(QueryConstraint):
         Requires a number of columns in the SELECT clause to be renamed using an alias (AS).
     '''
 
-    def __init__(self, min_: int, max_: int | None) -> None:
+    def __init__(self, min_: int = 1, max_: int | None = None) -> None:
         super().__init__()
         self.min = min_
         self.max = max_

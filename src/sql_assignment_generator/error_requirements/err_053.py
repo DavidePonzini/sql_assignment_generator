@@ -17,6 +17,7 @@ class Err053_ExtraneousNot(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]
@@ -25,7 +26,7 @@ class Err053_ExtraneousNot(SqlErrorRequirements):
                 *constraints,
                 query_constraints.clause_where.Condition(2),
                 query_constraints.subquery.NoSubquery(),
-                query_constraints.clause_having.NoHaving()
+                query_constraints.aggregation.Aggregation()
             ]
         
         # HARD
@@ -33,7 +34,7 @@ class Err053_ExtraneousNot(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.Condition(3),
             query_constraints.subquery.NoSubquery(),
-            query_constraints.clause_having.NoHaving()
+            query_constraints.aggregation.Aggregation(2)
         ]
 
     def exercise_extra_details(self) -> str:

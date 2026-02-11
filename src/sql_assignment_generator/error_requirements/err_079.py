@@ -16,7 +16,8 @@ class Err079_MissingDistinctFromFunctionParameter(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                query_constraints.clause_where.Condition(2),
+                query_constraints.clause_where.Condition(),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.rows.Distinct(),
                 query_constraints.aggregation.Aggregation(allowed_functions=["COUNT"]),
                 query_constraints.clause_having.NoHaving(),
@@ -25,7 +26,7 @@ class Err079_MissingDistinctFromFunctionParameter(SqlErrorRequirements):
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 *constraints,
-                query_constraints.clause_where.Condition(3),
+                query_constraints.clause_where.Condition(2),
                 query_constraints.rows.Distinct(),
                 query_constraints.aggregation.Aggregation(allowed_functions=["COUNT"]),
                 query_constraints.subquery.NoSubquery()
@@ -34,15 +35,17 @@ class Err079_MissingDistinctFromFunctionParameter(SqlErrorRequirements):
         # HARD
         return [
             *constraints,
-                query_constraints.clause_where.Condition(4),
+                query_constraints.clause_where.Condition(3),
                 query_constraints.rows.Distinct(),
                 query_constraints.aggregation.Aggregation(allowed_functions=["COUNT"]),
                 query_constraints.subquery.Subqueries()
         ]
 
     def exercise_extra_details(self) -> str:
-        return "The exercise must NOT have PRIMARY KEY inside COUNT, " \
-        "and must have DISTINCT inside COUNT"
+        return "The solution query must have following structure:" \
+        '''SELECT col_1 [, col2 [,col_n]], COUNT(DISTINCT col) c
+            FROM table
+            GROUP BY col_1 [, col_2 [, col_n]] '''
 
     def dataset_extra_details(self) -> str:
-        return ''
+        return 'Create more duplicate data during insert (INSERT INTO ...)'

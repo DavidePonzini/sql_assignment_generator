@@ -1,12 +1,12 @@
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
 from sqlscope import Query
+from sqlglot import parse_one, exp
 
 class NoSubquery(QueryConstraint):
     '''Requires the absence of subqueries in the SQL query.'''
 
     def validate(self, query: Query) -> bool:
-
         for select in query.selects:
             if len(select.subqueries) > 0:
                 raise ConstraintValidationError(
@@ -77,24 +77,19 @@ class Subqueries(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> bool:
-        nested_counts = []
-        
-        for select in query.selects:
-            current_nesting_count = 0
-            for subquery in select.subqueries:
-                if len(subquery.subqueries) > 0:
-                    current_nesting_count += 1
-            nested_counts.append(current_nesting_count)
+        ast = parse_one(query.sql)
+        all_selects = list(ast.find_all(exp.Select))
+        total_subqueries = len(all_selects) - 1
 
-        for count in nested_counts:
-            if self.max is None:
-                if count >= self.min: return
-                continue
-            if self.min <= count <= self.max: return
-            continue
+        if self.max is None:
+            if total_subqueries >= self.min: 
+                return
+        elif self.min <= total_subqueries <= self.max:
+            return
+
         raise ConstraintValidationError(
-            f"Insufficient nesting level for subqueries. Found {nested_counts} nested subqueries, "
-            f"but the exercise requires min={self.min} and max={self.max} nested structures."
+            f"Exercise does not have the required number of subqueries. "
+            f"Found {total_subqueries}, but required min: {self.min}, max: {self.max if self.max else 'unlimited'}."
         )
 
     @property

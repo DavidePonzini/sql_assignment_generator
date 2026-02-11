@@ -51,13 +51,13 @@ class Condition(QueryConstraint):
         if self.max is None:
             if count < self.min:
                 raise ConstraintValidationError(
-                    f'Query must require at least {self.min} comparisons on rows (WHERE conditions), but only {count} were found.'
+                    f'Query must require at least {self.min} WHERE conditions, but only {count} were found.'
                 )
             return
         
         if not (self.min <= count <= self.max):
             raise ConstraintValidationError(
-                f'Query must require between {self.min} and {self.max} comparisons on rows (WHERE conditions), but found {count}.'
+                f'Query must require between {self.min} and {self.max} WHERE conditions, but found {count}.'
             )
                 
     @property

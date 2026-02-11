@@ -1,6 +1,6 @@
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import Expression, exp, parse_one
 from sqlscope import Query
 from sqlscope.catalog.constraint import ConstraintType
 
@@ -55,16 +55,33 @@ class Distinct(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> bool:
-        main_query = query.main_query
+        ast = parse_one(query.sql)
 
-        output_constraints = main_query.output.unique_constraints
+        #ptincipal SELECT clause of the query
+        main_select = ast.find(exp.Select)
+        if not main_select:
+            return
 
-        has_distinct_constraint = any(c.constraint_type == ConstraintType.DISTINCT for c in output_constraints)
+        #check if DISTINCT is used in the main SELECT clause
+        if main_select.args.get("distinct") is not None: return
 
-        if has_distinct_constraint: return
+        #look for DISTINCT in the expressions of the SELECT clause (e.g., COUNT(DISTINCT col))
+        for expression in main_select.expressions:
+            distinct_nodes = list(expression.find_all(exp.Distinct))
+            if len(distinct_nodes) > 0: return
+
+        main_q = query.main_query
+        curr_q = main_q[1] if isinstance(main_q, tuple) else main_q
+        
+        if not isinstance(curr_q, str) and hasattr(curr_q, 'output'):
+            output_constraints = curr_q.output.unique_constraints
+            has_distinct = any(c.constraint_type == ConstraintType.DISTINCT for c in output_constraints)
+            if has_distinct: return
+
+        #no DISTINCT found
         raise ConstraintValidationError(
             "The DISTINCT keyword is missing. The exercise specifically requires explicit "
-            "duplicate elimination using DISTINCT."
+            "duplicate elimination using DISTINCT (either in SELECT or inside a function like COUNT)."
         )
 
     @property

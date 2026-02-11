@@ -17,13 +17,14 @@ class Err055_SubstitutingExistanceNegation(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.NotExist(1),
-                query_constraints.subquery.Subqueries(),
+                query_constraints.subquery.UnnestedSubqueries(),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 *constraints,
-                query_constraints.clause_where.NotExist(2),
+                query_constraints.clause_where.NotExist(1),
                 query_constraints.subquery.Subqueries(),
                 query_constraints.aggregation.Aggregation(),
             ]

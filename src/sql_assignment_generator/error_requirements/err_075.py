@@ -19,7 +19,8 @@ class Err075_IncorrectColumnInOrderByClause(SqlErrorRequirements):
                query_constraints.clause_where.Condition(2),
                query_constraints.clause_order_by.OrderBy(1),
                query_constraints.clause_select.SelectedColumns(2),
-               query_constraints.having.NoHaving(),
+                query_constraints.clause_from.TableReferences(1,2),
+               query_constraints.clause_having.NoHaving(),
                query_constraints.subquery.NoSubquery()
                 
             ]

@@ -18,6 +18,7 @@ class Err072_MissingDistinctFromSelect(SqlErrorRequirements):
                 *constraints,
                 query_constraints.clause_where.Condition(2),
                 query_constraints.rows.Distinct(),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]

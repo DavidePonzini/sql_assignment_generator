@@ -1,5 +1,5 @@
 from .base import QueryConstraint
-from sqlglot import exp
+from sqlglot import exp, parse_one
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
 
@@ -7,9 +7,22 @@ class NoOrderBy(QueryConstraint):
     '''Requires the absence of an ORDER BY clause.'''
 
     def validate(self, query: Query) -> None:
-        for select in query.selects:
-            if select.order_by is not None:
-                raise ConstraintValidationError("Exercise must not require ordering (i.e., no ORDER BY clause).")
+        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
+
+        for s in selects_collection:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            if isinstance(curr_select, str): continue 
+
+            ob = curr_select.order_by
+            if ob is not None:
+                if isinstance(ob, list):
+                    if len(ob) > 0:
+                        raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
+                elif hasattr(ob, 'expressions'):
+                    if len(ob.expressions) > 0:
+                        raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
+                else:
+                    raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
     
     @property
     def description(self) -> str:
@@ -121,23 +134,27 @@ class OrderByDESC(OrderBy):
     '''
 
     def validate(self, query: Query) -> None:
-        order_bys = self.find_order_bys(query)
+        ast = parse_one(query.sql)
+        order_nodes = list(ast.find_all(exp.Order))
+        
+        if not order_nodes:
+            raise ConstraintValidationError("No ORDER BY clause found, but at least one DESC column is required.")
 
-        for order_by in order_bys:
-            desc_count = sum(1 for is_asc in order_by if not is_asc)
-
+        for order_node in order_nodes:
+            desc_count = 0
+            for ordered_exp in order_node.expressions:
+                #controll if the expression has the 'desc' attribute set to True
+                if ordered_exp.args.get("desc") is True:
+                    desc_count += 1
+            
             if self.max is None:
-                if desc_count >= self.min:
-                    return
-                continue
-            if self.min <= desc_count <= self.max:
-                return
-            continue
+                if desc_count >= self.min: return
+            elif self.min <= desc_count <= self.max: return
 
         raise ConstraintValidationError(
-            "Exercise does not satisfy the ORDER BY clause column count requirements."
-            f"ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}"
-            "Only descending columns are counted."
+            f"Exercise does not satisfy the ORDER BY DESC requirements. "
+            f"Found {desc_count} descending columns, but required min: {self.min}. "
+            "Make sure to explicitly use the DESC keyword in the SQL query."
         )
     
     @property

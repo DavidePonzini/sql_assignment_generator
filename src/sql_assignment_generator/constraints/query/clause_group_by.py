@@ -6,7 +6,6 @@ class NoGroupBy(QueryConstraint):
     '''Requires the absence of a GROUP BY clause.'''
 
     def validate(self, query: Query) -> None:
-        # 1. Otteniamo le select (gestendo dict o list)
         selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
 
         for s in selects_collection:
@@ -15,14 +14,9 @@ class NoGroupBy(QueryConstraint):
 
             gb = curr_select.group_by
             if gb is not None:
-                if isinstance(gb, list):
-                    if len(gb) > 0:
-                        raise ConstraintValidationError(self.description)
-                elif hasattr(gb, 'expressions'):
-                    if len(gb.expressions) > 0:
-                        raise ConstraintValidationError(self.description)
-                else:
+                if isinstance(gb, list) and len(gb) > 0:
                     raise ConstraintValidationError(self.description)
+                else: return
     
     @property
     def description(self) -> str:

@@ -20,6 +20,7 @@ class Err064_ImproperNestingOfSubqueries(SqlErrorRequirements):
                 query_constraints.subquery.UnnestedSubqueries(),
                 query_constraints.clause_where.Condition(1),
                 query_constraints.clause_having.NoHaving(),
+                query_constraints.clause_from.TableReferences(1,2)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [

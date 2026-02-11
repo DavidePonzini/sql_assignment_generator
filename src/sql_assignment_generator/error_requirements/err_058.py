@@ -19,7 +19,7 @@ class Err058_JoinOnIncorrectTable(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
-                query_constraints.clause_from.TableReferences(1,1)
+                query_constraints.clause_from.TableReferences(1,2)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
