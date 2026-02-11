@@ -17,6 +17,7 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.GroupBy(1),
                 query_constraints.rows.Duplicates(),
@@ -47,4 +48,4 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
         return 'The exercise MUST HAVE GROUP BY but on NON UNIQUE columns.'
 
     def dataset_extra_details(self) -> str:
-        return ''
+        return 'Insert duplicate values in the columns.'

@@ -4,7 +4,7 @@ from ..difficulty_level import DifficultyLevel
 
 class Err086_CorrelationNamesAreAlwaysIdentical(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        constraints = super().schema_constraints(difficulty)
+        constraints = super().dataset_constraints(difficulty)
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,

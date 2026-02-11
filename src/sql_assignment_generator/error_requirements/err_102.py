@@ -17,6 +17,7 @@ class Err102_InefficientUnion(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.NoJoin(),
                 query_constraints.set_operations.Union(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
@@ -40,7 +41,7 @@ class Err102_InefficientUnion(SqlErrorRequirements):
         ]
 
     def exercise_extra_details(self) -> str:
-        return 'If exercise has same tables in FROM must use UNION ALL, if tables are different MUST USE UNION.'
+        return 'If exercise has same tables in FROM MUST use UNION ALL, if tables in FROM are different MUST use UNION.'
 
     def dataset_extra_details(self) -> str:
         return ''

@@ -17,6 +17,7 @@ class Err097_GroupByCanBeReplacedWithDistinct(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.rows.Distinct(),
                 query_constraints.clause_group_by.NoGroupBy(),
                 query_constraints.clause_having.NoHaving(),

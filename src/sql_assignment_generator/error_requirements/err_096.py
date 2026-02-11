@@ -17,6 +17,7 @@ class Err096_GroupByWithOnlyASingleGroup(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.Aggregation(1),
                 query_constraints.clause_group_by.NoGroupBy(),
                 query_constraints.clause_having.NoHaving(),
@@ -28,7 +29,6 @@ class Err096_GroupByWithOnlyASingleGroup(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(2),
                 query_constraints.aggregation.Aggregation(2),
                 query_constraints.clause_group_by.NoGroupBy(),
-                query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]
         # HARD
@@ -37,8 +37,7 @@ class Err096_GroupByWithOnlyASingleGroup(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(3),
                 query_constraints.aggregation.Aggregation(2),
                 query_constraints.clause_group_by.NoGroupBy(),
-                query_constraints.clause_having.NoHaving(),
-                query_constraints.subquery.NoSubquery()
+                query_constraints.subquery.Subqueries()
         ]
 
     def exercise_extra_details(self) -> str:

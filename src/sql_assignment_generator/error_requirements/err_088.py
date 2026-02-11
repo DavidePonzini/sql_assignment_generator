@@ -17,6 +17,7 @@ class Err088_LikeWithoutWildcards(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.clause_where.NoLike(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
@@ -28,7 +29,6 @@ class Err088_LikeWithoutWildcards(SqlErrorRequirements):
                 query_constraints.aggregation.Aggregation(1),
                 query_constraints.clause_where.NoLike(),
                 query_constraints.subquery.NoSubquery()
-
             ]
         
         # HARD

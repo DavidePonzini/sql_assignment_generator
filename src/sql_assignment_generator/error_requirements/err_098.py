@@ -17,6 +17,7 @@ class Err098_UnionByCanReplacedByOr(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.set_operations.NoUnion(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
@@ -39,7 +40,7 @@ class Err098_UnionByCanReplacedByOr(SqlErrorRequirements):
         ]
 
     def exercise_extra_details(self) -> str:
-        return 'The exercise can be solved with a OR in where condition or with UNION but must be use only the OR'
+        return 'The exercise must have in WHERE same column with two different conditions connected by OR'
 
     def dataset_extra_details(self) -> str:
         return ''

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.LOG_79_MISSING_DISTINCT_FROM_FUNCTION_PARAMETER, DifficultyLevel.EASY),
+        (SqlErrors.LOG_63_IMPROPER_NESTING_OF_EXPRESSIONS, DifficultyLevel.EASY),
     ]*3
 
     assignment = generate_assignment(errors, domain)

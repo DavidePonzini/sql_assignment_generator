@@ -17,6 +17,7 @@ class Err091_UnnessaryAggregateFunction(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()

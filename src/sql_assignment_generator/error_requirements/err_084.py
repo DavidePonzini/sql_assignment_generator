@@ -17,7 +17,7 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
-                query_constraints.clause_from.TableReferences(1, 1),########
+                query_constraints.clause_from.TableReferences(1, 1),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
             ]
@@ -25,7 +25,7 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(3),
-                query_constraints.clause_from.TableReferences(1, 1),########
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.Aggregation(2),
                 query_constraints.subquery.NoSubquery(),
             ]
@@ -34,7 +34,7 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(4),
-            query_constraints.clause_from.TableReferences(1, 1),########
+            query_constraints.clause_from.TableReferences(2, 3),
             query_constraints.aggregation.Aggregation(3),
             query_constraints.subquery.Subqueries()
             

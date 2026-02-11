@@ -17,7 +17,7 @@ class Err105_OuterJoinCanBeReplacedByInnerJoin(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(1),
-                query_constraints.clause_from.TableReferences(),
+                query_constraints.clause_from.TableReferences(max_=2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
             ]
