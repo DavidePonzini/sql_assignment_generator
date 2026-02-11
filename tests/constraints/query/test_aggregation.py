@@ -4,8 +4,10 @@ from sql_assignment_generator.constraints.query.aggregation import NoAggregation
 from sql_assignment_generator.exceptions import ConstraintValidationError
 
 
-def test_no_aggregation_fail():
-    sql = "SELECT department, COUNT(*) FROM employees GROUP BY department;"
+@pytest.mark.parametrize("sql", [
+    "SELECT department, COUNT(*) FROM employees GROUP BY department;",
+])
+def test_no_aggregation_fail(sql):
     query = Query(sql)
 
     constraint = NoAggregation()
@@ -13,8 +15,10 @@ def test_no_aggregation_fail():
     with pytest.raises(ConstraintValidationError) as exc_info:
         constraint.validate(query)
 
-def test_no_aggregation_pass():
-    sql = "SELECT name, age FROM employees WHERE age > 30;"
+@pytest.mark.parametrize("sql", [
+    "SELECT name, age FROM employees WHERE age > 30;",
+])
+def test_no_aggregation_pass(sql):
     query = Query(sql)
 
     constraint = NoAggregation()
