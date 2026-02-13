@@ -29,6 +29,7 @@ def test_no_aggregation_pass():
     ("SELECT department, AVG(salary), MAX(age) FROM employees GROUP BY department;", 2, None, ['AVG', 'SUM']),
     ("SELECT department, AVG(salary), MAX(age), COUNT(*) FROM employees GROUP BY department;", 1, 2, ['AVG', 'MAX', 'COUNT']),
 ])
+
 def test_aggregation_fail(sql, min_, max_, allowed_functions):
     query = Query(sql)
 
@@ -44,6 +45,7 @@ def test_aggregation_fail(sql, min_, max_, allowed_functions):
     ("SELECT department, AVG(salary), MAX(age), COUNT(*) FROM employees GROUP BY department;", 3, 3, ['AVG', 'MAX', 'COUNT']),
     ("SELECT department, AVG(salary), MAX(age), COUNT(*) FROM employees GROUP BY department;", 2, 2, ['AVG', 'MAX']),
 ])
+
 def test_aggregation_pass(sql, min_, max_, allowed_functions):
     query = Query(sql)
 

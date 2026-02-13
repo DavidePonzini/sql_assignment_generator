@@ -16,16 +16,14 @@ class Err069_ExpressionInIncorrectClause(SqlErrorRequirements):
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                query_constraints.clause_where.Condition(1),
-                query_constraints.clause_having.Having(1,1),
+                query_constraints.clause_where.Condition_WhereHaving(1,2),
                 query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.subquery.NoSubquery()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 *constraints,
-                query_constraints.clause_where.Condition(3),
-                query_constraints.clause_having.Having(1,3),
+                query_constraints.clause_where.Condition_WhereHaving(1,3),
                 query_constraints.aggregation.Aggregation(),
                 query_constraints.subquery.NoSubquery()
             ]
@@ -33,8 +31,7 @@ class Err069_ExpressionInIncorrectClause(SqlErrorRequirements):
         # HARD
         return [
             *constraints,
-            query_constraints.clause_where.Condition(4),
-            query_constraints.clause_having.Having(2,3),
+            query_constraints.clause_where.Condition_WhereHaving(2,3),
             query_constraints.aggregation.Aggregation(),
             query_constraints.subquery.Subqueries()
         ]

@@ -19,7 +19,7 @@ class Err078_DistinctAsFunctionParameterWhereNotApplicable(SqlErrorRequirements)
                 query_constraints.clause_where.Condition(1),
                 query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.rows.Distinct(),
-                query_constraints.subquery.Subqueries(),
+                query_constraints.subquery.UnnestedSubqueries(),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.aggregation.Aggregation(allowed_functions=['COUNT'])
             ]

@@ -23,7 +23,6 @@ class Err041_DistinctInSumOrAvg(SqlErrorRequirements):
                 ]),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
-                query_constraints.clause_group_by.GroupBy(),
                 query_constraints.rows.Duplicates()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
