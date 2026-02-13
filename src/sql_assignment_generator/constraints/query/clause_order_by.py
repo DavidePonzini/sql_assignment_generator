@@ -15,13 +15,7 @@ class NoOrderBy(QueryConstraint):
 
             ob = curr_select.order_by
             if ob is not None:
-                if isinstance(ob, list):
-                    if len(ob) > 0:
-                        raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
-                elif hasattr(ob, 'expressions'):
-                    if len(ob.expressions) > 0:
-                        raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
-                else:
+                if (isinstance(ob, list) and len(ob) > 0) or (hasattr(ob, 'expressions') and len(ob.expressions) > 0):
                     raise ConstraintValidationError("Exercise must not have an ordering, NO ORDER BY.")
     
     @property
@@ -48,22 +42,20 @@ class OrderBy(QueryConstraint):
         '''
 
         order_bys: list[list[bool]] = []
+        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
 
-        for select in query.selects:
-            if select.order_by is None:
-                continue
+        for select in selects_collection:
+            curr_select = select[1] if isinstance(select, tuple) else select
+            if isinstance(curr_select, str) or curr_select.order_by is None: continue
 
             order_by_columns: list[bool] = []
-            for order in select.order_by:
-                # Determine if the ordering is ascending (True) or descending (False)
+            for order in curr_select.order_by:
                 is_ascending = True
                 if isinstance(order, exp.Ordered):
-                    if order.desc:
+                    if order.args.get("desc") is True:
                         is_ascending = False
                 order_by_columns.append(is_ascending)
-
             order_bys.append(order_by_columns)
-
         return order_bys
     
     def validate(self, query: Query) -> None:
@@ -73,11 +65,9 @@ class OrderBy(QueryConstraint):
             count = len(order_by)
 
             if self.max is None:
-                if count >= self.min:
-                    return
+                if count >= self.min: return
                 continue
-            if self.min <= count <= self.max:
-                return
+            if self.min <= count <= self.max: return
             continue
 
         raise ConstraintValidationError(

@@ -16,7 +16,7 @@ class TableReferences(QueryConstraint):
 
     def validate(self, query: Query):
         #obtain all SELECT blocks in the query (main and subqueries)
-        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
+        selects_collection = list(query.selects_collection.values()) if hasattr(query.selects, 'values') else query.selects
 
         for s in selects_collection:
             curr_select = s[1] if isinstance(s, tuple) else s
@@ -24,8 +24,18 @@ class TableReferences(QueryConstraint):
 
             #count how many different tables are referenced in the FROM/JOIN clauses of this SELECT block
             tables_in_this_block = []
-            for table in curr_select.referenced_tables:
-                tables_in_this_block.append(table.real_name)
+            select_ast = getattr(curr_select, 'ast', None)
+
+            if select_ast is not None:
+                #isolate the table of block to subquery
+                for table_node in select_ast.find_all(exp.Table):
+                    if table_node.find_ancestor(exp.Select) == select_ast:
+                        if table_node.find_ancestor(exp.From) or table_node.find_ancestor(exp.Join):
+                            tables_in_this_block.append(table_node.name.lower())
+            else:
+                #if ast is malformed use referenced_tables (select * FROM t1, t2)
+                for table in getattr(curr_select, 'referenced_tables', []):
+                    tables_in_this_block.append(table.real_name.lower())
 
             if not self.allow_self_join:
                 tables_in_this_block = list(set(tables_in_this_block))

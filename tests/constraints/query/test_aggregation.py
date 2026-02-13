@@ -3,6 +3,9 @@ from sqlscope import Query
 from sql_assignment_generator.constraints.query.aggregation import NoAggregation, Aggregation
 from sql_assignment_generator.exceptions import ConstraintValidationError
 
+# =================================================================
+# TEST NO AGGREGATION FAIL
+# =================================================================
 
 def test_no_aggregation_fail():
     sql = "SELECT department, COUNT(*) FROM employees GROUP BY department;"
@@ -13,6 +16,10 @@ def test_no_aggregation_fail():
     with pytest.raises(ConstraintValidationError) as exc_info:
         constraint.validate(query)
 
+# =================================================================
+# TEST NO AGGREGATION PASS
+# =================================================================
+
 def test_no_aggregation_pass():
     sql = "SELECT name, age FROM employees WHERE age > 30;"
     query = Query(sql)
@@ -22,6 +29,9 @@ def test_no_aggregation_pass():
     # Should not raise any exception
     constraint.validate(query)
 
+# =================================================================
+# TEST AGGREGATION FAIL
+# =================================================================
 @pytest.mark.parametrize("sql,min_,max_,allowed_functions", [
     ("SELECT name, age FROM employees WHERE age > 30;", 1, None, ['AVG', 'SUM', 'COUNT', 'MIN', 'MAX']),
     ("SELECT department, SUM(salary) FROM employees GROUP BY department;", 2, None, ['AVG', 'SUM', 'COUNT', 'MIN', 'MAX']),
@@ -38,6 +48,9 @@ def test_aggregation_fail(sql, min_, max_, allowed_functions):
     with pytest.raises(ConstraintValidationError) as exc_info:
         constraint.validate(query)
 
+# =================================================================
+# TEST AGGREGATION PASS
+# =================================================================
 @pytest.mark.parametrize("sql,min_,max_,allowed_functions", [
     ("SELECT department, SUM(salary) FROM employees GROUP BY department;", 1, None, ['AVG', 'SUM', 'COUNT', 'MIN', 'MAX']),
     ("SELECT department, AVG(salary), MAX(age) FROM employees GROUP BY department;", 2, None, ['AVG', 'SUM', 'COUNT', 'MIN', 'MAX']),

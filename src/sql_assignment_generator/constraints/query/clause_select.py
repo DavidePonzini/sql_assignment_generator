@@ -1,5 +1,6 @@
 from .base import QueryConstraint
 from sqlscope import Query
+from sqlglot import exp
 from ...exceptions import ConstraintValidationError
 
 class SelectedColumns(QueryConstraint):
@@ -39,10 +40,8 @@ class NoAlias(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> None:
-        output = query.main_query.output
-
-        for col in output.columns:
-            if col.name != col.real_name:
+        for expression in query.main_query.ast.expressions:
+            if isinstance(expression, exp.Alias):
                 raise ConstraintValidationError(
                     "Columns in SELECT must not be renamed (must not use aliases)."
                 )
@@ -63,12 +62,18 @@ class Alias(QueryConstraint):
 
 
     def validate(self, query: Query) -> None:
-        output = query.main_query.output
+        main_q = query.main_query
+        curr_select = main_q[1] if isinstance(main_q, tuple) else main_q
 
         alias_count = 0
-        for col in output.columns:
-            if col.name != col.real_name:
-                alias_count += 1
+        if hasattr(curr_select, 'ast') and curr_select.ast:
+            for expression in curr_select.ast.expressions:
+                if isinstance(expression, exp.Alias):
+                    alias_count += 1
+        else:
+            for col in curr_select.output.columns:
+                if col.name != col.real_name:
+                    alias_count += 1
 
         if self.max is None:
             if alias_count < self.min:

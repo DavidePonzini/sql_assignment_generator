@@ -14,9 +14,16 @@ class NoGroupBy(QueryConstraint):
 
             gb = curr_select.group_by
             if gb is not None:
-                if isinstance(gb, list) and len(gb) > 0:
+                has_columns = False
+                if isinstance(gb, list):
+                    has_columns = len(gb) > 0
+                elif hasattr(gb, 'expressions'):
+                    has_columns = len(gb.expressions) > 0
+                else:
+                    has_columns = bool(gb)
+
+                if has_columns:
                     raise ConstraintValidationError(self.description)
-                else: return
     
     @property
     def description(self) -> str:
