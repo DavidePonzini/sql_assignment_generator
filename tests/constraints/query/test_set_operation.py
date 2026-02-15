@@ -78,10 +78,10 @@ def test_no_union_fail(sql):
 
 @pytest.mark.parametrize("sql, is_all, min_, max_", [
     ("SELECT * FROM t1 UNION SELECT * FROM t2", False, 1, None), # 1 UNION (distinct), min 1
-    #("SELECT * FROM t1 UNION ALL SELECT * FROM t2", True, 1, None), # 1 UNION ALL, min 1
-    #("SELECT * FROM t1 UNION ALL SELECT * FROM t2 UNION SELECT * FROM t3", False, 1, 1), # 1 UNION (distinct) exists
-    #("SELECT * FROM t1 UNION ALL SELECT * FROM t2 UNION ALL SELECT * FROM t3", True, 2, 2), # 2 UNION ALL exist
-    #("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2 UNION ALL SELECT id FROM t3)", True, 1, 1), # 1 UNION ALL in subquery
+    ("SELECT * FROM t1 UNION ALL SELECT * FROM t2", True, 1, None), # 1 UNION ALL, min 1
+    ("SELECT DISTINCT * FROM t1 UNION ALL SELECT * FROM t2 UNION SELECT * FROM t3", False, 1, 1), # 1 UNION (distinct) exists
+    ("SELECT * FROM t1 UNION ALL SELECT * FROM t2 UNION ALL SELECT * FROM t3", True, 2, 2), # 2 UNION ALL exist
+    ("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2 UNION ALL SELECT id FROM t3)", True, 1, 1), # 1 UNION ALL in subquery
     ("SELECT * FROM (SELECT * FROM t1) AS sub1 UNION SELECT * FROM (SELECT * FROM t2) AS sub2", False, 1, 1) # 1 UNION out of subquery
 ])
 def test_union_of_type_pass(sql, is_all, min_, max_):
@@ -96,10 +96,10 @@ def test_union_of_type_pass(sql, is_all, min_, max_):
 
 @pytest.mark.parametrize("sql, is_all, min_, max_", [
     ("SELECT * FROM t1 UNION SELECT * FROM t2", True, 1, None), # Looking for UNION ALL, but found UNION (distinct)
-    #("SELECT * FROM t1 UNION ALL SELECT * FROM t2", False, 1, None), # Looking for UNION (distinct), but found UNION ALL
+    ("SELECT * FROM t1 UNION ALL SELECT * FROM t2", False, 1, None), # Looking for UNION (distinct), but found UNION ALL
     ("SELECT * FROM t1 UNION SELECT * FROM t2 UNION ALL SELECT * FROM t3", True, 2, None), # Found 1 UNION ALL, but 2 required
     ("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2 UNION SELECT id FROM t3)", True, 1, None), # Looking for ALL in subquery, found Distinct
-    #("SELECT * FROM (SELECT * FROM t1) AS sub1 UNION ALL SELECT * FROM (SELECT * FROM t2) AS sub2", False, 1, 1) # 1 wrong UNION out of subquery
+    ("SELECT * FROM (SELECT * FROM t1) AS sub1 UNION ALL SELECT * FROM (SELECT * FROM t2) AS sub2", False, 1, 1) # 1 wrong UNION out of subquery
 ])
 def test_union_of_type_fail(sql, is_all, min_, max_):
     query = Query(sql)

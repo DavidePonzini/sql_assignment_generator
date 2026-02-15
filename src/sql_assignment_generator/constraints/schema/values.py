@@ -14,8 +14,16 @@ class MinRows(SchemaConstraint):
     def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         table_row_counts = Counter()
 
+        for table in tables_sql:
+            table_node = table.find(exp.Table)
+            if table_node:
+                table_row_counts[table_node.name.lower()] = 0
+
+        # count row from insert
         for value in values_sql:
-            table_name = value.this.output_name.lower()
+            table_node = value.find(exp.Table)
+            if not table_node: continue
+            table_name = table_node.name.lower()
             values_node = value.expression
 
             # verify the format INSERT INTO ... VALUES ...

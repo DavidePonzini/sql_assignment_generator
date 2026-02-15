@@ -27,10 +27,9 @@ class Union(QueryConstraint):
         union_count = 0
         union_all_count = 0
 
-        sql = query.sql
-        ast = sqlglot.parse_one(sql)
-        for union_node in ast.find_all(exp.Union):
-            if union_node.args.get("all"):
+        ast = sqlglot.parse_one(query.sql, read = "postgres")
+        for union_node in ast.find_all(exp.Union):        
+            if not union_node.args.get("distinct"): # when use UNION ALL is created a param distinct initialized to False in case of union is True
                 union_all_count += 1
             else:
                 union_count += 1

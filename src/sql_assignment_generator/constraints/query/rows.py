@@ -10,8 +10,17 @@ class Duplicates(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> bool:
+        ast = parse_one(query.sql)
+        main_select = ast.find(exp.Select)
+        if main_select:
+            # there is DISTINCT
+            if main_select.args.get("distinct") is not None:
+                raise ConstraintValidationError(self.description)
+            # there is GROUP BY
+            if main_select.args.get("group") is not None:
+                raise ConstraintValidationError(self.description)
+    
         main_query = query.main_query
-
         output_constraints = main_query.output.unique_constraints
 
         if len(output_constraints) == 0: return
@@ -31,10 +40,13 @@ class NoDuplicates(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> bool:
+        ast = parse_one(query.sql)
+        main_select = ast.find(exp.Select)
+        if main_select and main_select.args.get("group") is not None:
+            return
+        
         main_query = query.main_query
-
         output_constraints = main_query.output.unique_constraints
-
         other_constraints = [c for c in output_constraints if c.constraint_type != ConstraintType.DISTINCT]
 
         if len(other_constraints) > 0: return

@@ -29,7 +29,7 @@ def test_duplicates_pass(sql):
 
 @pytest.mark.parametrize("sql", [
     "SELECT DISTINCT a FROM t", # DISTINCT forces uniqueness
-    #"SELECT a, COUNT(*) FROM t GROUP BY a", # GROUP BY forces uniqueness
+    "SELECT a, COUNT(*) FROM t GROUP BY a", # GROUP BY forces uniqueness
     "SELECT DISTINCT * FROM (SELECT a FROM t) AS sub" # Main query forces uniqueness on subquery results
 ])
 def test_duplicates_fail(sql):
@@ -43,7 +43,7 @@ def test_duplicates_fail(sql):
 # =================================================================
 
 @pytest.mark.parametrize("sql", [
-    #"SELECT a, AVG(b) FROM t GROUP BY a", # GROUP BY satisfies the 'other than DISTINCT' requirement
+    "SELECT a, AVG(b) FROM t GROUP BY a", # GROUP BY satisfies the 'other than DISTINCT' requirement
     "SELECT sub.id FROM (SELECT id FROM t) AS sub GROUP BY sub.id" # Subquery with group by in the main query
 ])
 
