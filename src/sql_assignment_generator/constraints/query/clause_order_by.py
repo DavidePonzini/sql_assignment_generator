@@ -1,5 +1,4 @@
 from .base import QueryConstraint
-from sqlglot import exp, parse_one
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
 
@@ -41,23 +40,27 @@ class OrderBy(QueryConstraint):
             whether each column in the ORDER BY clause is ascending (True) or descending (False).
         '''
 
-        order_bys: list[list[bool]] = []
-        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
+        order_bys = []
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            
+            if not hasattr(curr_select, 'order_by') or curr_select.order_by is None:
+                continue
 
-        for select in selects_collection:
-            curr_select = select[1] if isinstance(select, tuple) else select
-            if isinstance(curr_select, str) or curr_select.order_by is None: continue
+            block_results = []
+            for order_expr in curr_select.order_by:
+                is_desc = False
+                if hasattr(order_expr, 'args'):
+                    is_desc = order_expr.args.get("desc") is True
+                
+                block_results.append(not is_desc)
+            
+            if block_results:
+                order_bys.append(block_results)
 
-            order_by_columns: list[bool] = []
-            for order in curr_select.order_by:
-                is_ascending = True
-                if isinstance(order, exp.Ordered):
-                    if order.args.get("desc") is True:
-                        is_ascending = False
-                order_by_columns.append(is_ascending)
-            order_bys.append(order_by_columns)
         return order_bys
     
+
     def validate(self, query: Query) -> None:
         order_bys = self.find_order_bys(query)
 
@@ -92,16 +95,11 @@ class OrderByASC(OrderBy):
     def validate(self, query: Query) -> None:
         order_bys = self.find_order_bys(query)
 
-        for order_by in order_bys:
-            asc_count = sum(1 for is_asc in order_by if is_asc)
-
-            if self.max is None:
-                if asc_count >= self.min:
-                    return
-                continue
-            if self.min <= asc_count <= self.max:
+        for ob in order_bys:
+            asc_count = sum(1 for is_asc in ob if is_asc)
+            
+            if asc_count >= self.min and (self.max is None or asc_count <= self.max):
                 return
-            continue
 
         raise ConstraintValidationError(
             "Exercise does not satisfy the ORDER BY clause column count requirements."
@@ -124,26 +122,17 @@ class OrderByDESC(OrderBy):
     '''
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
-        order_nodes = list(ast.find_all(exp.Order))
+        order_bys = self.find_order_bys(query)
         
-        if not order_nodes:
-            raise ConstraintValidationError("No ORDER BY clause found, but at least one DESC column is required.")
-
-        for order_node in order_nodes:
-            desc_count = 0
-            for ordered_exp in order_node.expressions:
-                #controll if the expression has the 'desc' attribute set to True
-                if ordered_exp.args.get("desc") is True:
-                    desc_count += 1
+        for ob in order_bys:
+            desc_count = sum(1 for is_asc in ob if not is_asc)
             
-            if self.max is None:
-                if desc_count >= self.min: return
-            elif self.min <= desc_count <= self.max: return
+            if desc_count >= self.min and (self.max is None or desc_count <= self.max):
+                return
 
         raise ConstraintValidationError(
             f"Exercise does not satisfy the ORDER BY DESC requirements. "
-            f"Found {desc_count} descending columns, but required min: {self.min}. "
+            f"Found {[sum(1 for x in ob if not x) for ob in order_bys]} descending columns, but required min: {self.min}. "
             "Make sure to explicitly use the DESC keyword in the SQL query."
         )
     

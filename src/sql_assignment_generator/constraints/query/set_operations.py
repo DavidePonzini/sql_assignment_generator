@@ -2,7 +2,7 @@ from collections import Counter
 
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 import sqlglot
 from sqlscope import Query
 

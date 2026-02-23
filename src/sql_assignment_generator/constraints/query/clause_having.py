@@ -1,5 +1,4 @@
 from .base import QueryConstraint
-from sqlglot import exp
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
 
@@ -26,35 +25,27 @@ class Having(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        having_conditions: list[int] = []
+        having_condition_counts: list[int] = []
 
-        for select in query.selects:
-            if select.having is None:
-                continue
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            if not hasattr(curr_select, 'having') or curr_select.having is None: continue
 
-            conditions = 0
-            # count main HAVING condition
-            conditions += 1
+            connectors = 0
+            for node in curr_select.having.walk():
+                if hasattr(node, 'key') and node.key in ('and', 'or'): connectors += 1
+            
+            having_condition_counts.append(1 + connectors)
 
-            # count additional conditions connected by AND/OR
-            conditions += len(list(select.having.find_all((exp.And, exp.Or))))
-
-            having_conditions.append(conditions)
-
-        # check if any having condition count satisfies the min/max condition
-        for condition_count in having_conditions:
-            if self.max is None:
-                if condition_count >= self.min:
-                    return
-                continue
-            if self.min <= condition_count <= self.max:
-                return
-            continue
-
-        raise ConstraintValidationError(
-            "Exercise does not satisfy the HAVING clause condition count requirements."
-            f"HAVING clause condition counts found: {having_conditions}, required min: {self.min}, required max: {self.max}"
-        )
+        if not having_condition_counts:
+            raise ConstraintValidationError("No HAVING clause found in the query.")
+            
+        for count in having_condition_counts:
+            if count < self.min or (self.max is not None and count > self.max):
+                raise ConstraintValidationError(
+                    "Exercise does not satisfy the HAVING clause condition count requirements. "
+                    f"required min: {self.min}, max: {self.max if self.max else 'unlimited'}."
+                )
     
     @property
     def description(self) -> str:

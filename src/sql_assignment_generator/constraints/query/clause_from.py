@@ -15,46 +15,25 @@ class TableReferences(QueryConstraint):
         self.allow_self_join = allow_self_join
 
     def validate(self, query: Query):
-        #obtain all SELECT blocks in the query (main and subqueries)
-        selects_collection = list(query.selects_collection.values()) if hasattr(query.selects, 'values') else query.selects
+        referenced_tables: list[str] = []
 
-        for s in selects_collection:
-            curr_select = s[1] if isinstance(s, tuple) else s
-            if isinstance(curr_select, str): continue
+        for select in query.selects:
+            for table in select.referenced_tables:
+                referenced_tables.append(table.real_name)
 
-            #count how many different tables are referenced in the FROM/JOIN clauses of this SELECT block
-            tables_in_this_block = []
-            select_ast = getattr(curr_select, 'ast', None)
-
-            if select_ast is not None:
-                #isolate the table of block to subquery
-                for table_node in select_ast.find_all(exp.Table):
-                    if table_node.find_ancestor(exp.Select) == select_ast:
-                        if table_node.find_ancestor(exp.From) or table_node.find_ancestor(exp.Join):
-                            tables_in_this_block.append(table_node.name.lower())
-            else:
-                #if ast is malformed use referenced_tables (select * FROM t1, t2)
-                for table in getattr(curr_select, 'referenced_tables', []):
-                    tables_in_this_block.append(table.real_name.lower())
-
-            if not self.allow_self_join:
-                tables_in_this_block = list(set(tables_in_this_block))
+        if not self.allow_self_join:
+            referenced_tables = list(set(referenced_tables))
+        table_count = len(referenced_tables)
             
-            table_count = len(tables_in_this_block)
-
-            #validate single SELECT block based on min/max constraints
-            if self.max is None:
-                if table_count < self.min:
-                    raise ConstraintValidationError(
-                        f'A SELECT block in the query references {table_count} tables, '
-                        f'but at least {self.min} are required. Tables: {tables_in_this_block}'
-                    )
-            elif not (self.min <= table_count <= self.max):
+        if self.max is None:
+            if table_count < self.min:
                 raise ConstraintValidationError(
-                    f'A SELECT block in the query references {table_count} tables, '
-                    f'which is outside the allowed range of {self.min} to {self.max}. '
-                    f'Tables found in block: {tables_in_this_block}'
+                    f'Exercise references {table_count} different tables ({referenced_tables}), which is less than the required minimum of {self.min} tables.'
                 )
+        elif not (self.min <= table_count <= self.max):
+            raise ConstraintValidationError(
+                f'Exercise references {table_count} different tables ({referenced_tables}), which is not within the required range of {self.min} to {self.max} tables.'
+            )
 
     @property
     def description(self) -> str:

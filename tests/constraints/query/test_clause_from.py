@@ -32,8 +32,8 @@ def test_table_references_fail(sql, min_, max_, allow_self):
 @pytest.mark.parametrize("sql, min_, max_, allow_self", [
     ("SELECT * FROM t1", 1, 2, False), # 1 table and range 1-2
     ("SELECT * FROM t1 JOIN t2 ON t1.id = t2.id", 2, None, False), # 2 table in JOIN and min 2
-    ("SELECT * FROM t1, t2 ", 2, None, False), # 2 table in JOIN and min 2 (cartesian product) ################################################################
-    ("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2)", 1, 1, False), # 2 total table and each block has 1 (Main=1, Sub=1)   ################################################
+    ("SELECT * FROM t1, t2 ", 2, None, False), # 2 table in JOIN and min 2 (cartesian product)
+    ("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2)", 1, 2, False), # 2 total table and each block has 1 (Main=1, Sub=1)
     ("SELECT * FROM t1 a JOIN t1 b ON a.id = b.pid", 2, 2, True), # Self join (t1 ripetuta), se allow_self_join=True conta 2 riferimenti
 ])
 def test_table_references_pass(sql, min_, max_, allow_self):

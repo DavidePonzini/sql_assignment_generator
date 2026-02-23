@@ -1,6 +1,5 @@
 from .base import QueryConstraint
 from sqlscope import Query
-from sqlglot import exp
 from ...exceptions import ConstraintValidationError
 
 class SelectedColumns(QueryConstraint):
@@ -40,11 +39,15 @@ class NoAlias(QueryConstraint):
     '''
 
     def validate(self, query: Query) -> None:
-        for expression in query.main_query.ast.expressions:
-            if isinstance(expression, exp.Alias):
-                raise ConstraintValidationError(
-                    "Columns in SELECT must not be renamed (must not use aliases)."
-                )
+        main_q = query.main_query
+        curr_select = main_q[1] if isinstance(main_q, tuple) else main_q
+
+        if curr_select is None or isinstance(curr_select, str): return
+
+        if hasattr(curr_select, 'ast') and hasattr(curr_select.ast, 'expressions'):
+            for expr in curr_select.ast.expressions:
+                if expr.args.get("alias"):
+                    raise ConstraintValidationError(self.description)
 
     @property
     def description(self) -> str:
@@ -65,26 +68,23 @@ class Alias(QueryConstraint):
         main_q = query.main_query
         curr_select = main_q[1] if isinstance(main_q, tuple) else main_q
 
+        if curr_select is None or isinstance(curr_select, str): return
+
         alias_count = 0
-        if hasattr(curr_select, 'ast') and curr_select.ast:
-            for expression in curr_select.ast.expressions:
-                if isinstance(expression, exp.Alias):
-                    alias_count += 1
-        else:
-            for col in curr_select.output.columns:
-                if col.name != col.real_name:
+        if hasattr(curr_select, 'ast') and hasattr(curr_select.ast, 'expressions'):
+            for expr in curr_select.ast.expressions:
+                if expr.args.get("alias"):
                     alias_count += 1
 
-        if self.max is None:
-            if alias_count < self.min:
-                raise ConstraintValidationError(
-                    f"At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found."
-                )
-            return
-        
-        if not (self.min <= alias_count <= self.max):
+        if (self.max is None) and (alias_count < self.min):
             raise ConstraintValidationError(
-                f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found."
+                f"At least {self.min} columns in SELECT must be renamed using an alias (AS), "
+                f"but only {alias_count} were found."
+            )
+        elif not (self.max is None) and not (self.min <= alias_count <= self.max):
+            raise ConstraintValidationError(
+                f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), "
+                f"but {alias_count} were found."
             )
 
     @property

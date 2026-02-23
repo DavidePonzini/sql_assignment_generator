@@ -6,23 +6,14 @@ class NoGroupBy(QueryConstraint):
     '''Requires the absence of a GROUP BY clause.'''
 
     def validate(self, query: Query) -> None:
-        selects_collection = query.selects.values() if hasattr(query.selects, 'values') else query.selects 
-
-        for s in selects_collection:
+        for s in query.selects:
             curr_select = s[1] if isinstance(s, tuple) else s
-            if isinstance(curr_select, str): continue 
-
             gb = curr_select.group_by
-            if gb is not None:
-                has_columns = False
-                if isinstance(gb, list):
-                    has_columns = len(gb) > 0
-                elif hasattr(gb, 'expressions'):
-                    has_columns = len(gb.expressions) > 0
-                else:
-                    has_columns = bool(gb)
 
-                if has_columns:
+            if gb is not None:
+                if isinstance(gb, list) and len(gb) > 0:
+                    raise ConstraintValidationError(self.description)
+                elif bool(gb):
                     raise ConstraintValidationError(self.description)
     
     @property
@@ -37,28 +28,23 @@ class GroupBy(QueryConstraint):
         self.max = max_
     
     def validate(self, query: Query) -> None:
-        # NOTE: in case multiple SELECTs (UNION/subqueries), the constraint is satisfied if ANY of them satisfy the constraint
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            gb = curr_select.group_by
+            size = 0
 
-        group_sizes: list[int] = []
-
-        for select in query.selects:
-            if select.group_by is None:
-                continue
-            group_sizes.append(len(select.group_by))
-
-        # check if any group size satisfies the min/max condition
-        for group_size in group_sizes:
-            if self.max is None:
-                if group_size >= self.min:
-                    return
-                continue
-            if self.min <= group_size <= self.max:
-                return
-            continue
+            if gb is not None:
+                if isinstance(gb, list): size = len(gb)
+                elif bool(gb): size = 1
+            
+            if size > 0:
+                is_min_ok = size >= self.min
+                is_max_ok = (self.max is None or size <= self.max)
+                if is_min_ok and is_max_ok: return 
 
         raise ConstraintValidationError(
-            "Exercise does not satisfy the GROUP BY column count requirements."
-            f"GROUP BY column counts found: {group_sizes}, required min: {self.min}, required max: {self.max}"
+            "Exercise does not satisfy the GROUP BY column count requirements. "
+            f"GROUP BY column required min: {self.min}, max: {self.max if self.max else 'unlimited'}"
         )
 
     @property
@@ -68,4 +54,3 @@ class GroupBy(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require grouping by exactly {self.min} columns'
         return f'Exercise must require grouping by between {self.min} and {self.max} columns'
-
