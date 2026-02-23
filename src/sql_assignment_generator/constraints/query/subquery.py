@@ -1,7 +1,6 @@
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from .base import QueryConstraint
 from sqlscope import Query
-from sqlglot import parse_one, exp
 
 class NoSubquery(QueryConstraint):
     '''Requires the absence of subqueries in the SQL query.'''
@@ -77,15 +76,18 @@ class Subqueries(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> bool:
-        ast = parse_one(query.sql)
-        all_selects = list(ast.find_all(exp.Select))
-        total_subqueries = len(all_selects) - 1
+        select_blocks_count = 0
+
+        for s in query.selects:
+            curr = s[1] if isinstance(s, tuple) else s
+            if hasattr(curr, 'output'):
+                select_blocks_count += 1
+
+        total_subqueries = max(0, select_blocks_count - 1)
 
         if self.max is None:
-            if total_subqueries >= self.min: 
-                return
-        elif self.min <= total_subqueries <= self.max:
-            return
+            if total_subqueries >= self.min: return
+        elif self.min <= total_subqueries <= self.max: return
 
         raise ConstraintValidationError(
             f"Exercise does not have the required number of subqueries. "

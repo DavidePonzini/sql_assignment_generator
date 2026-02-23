@@ -37,13 +37,17 @@ class Condition(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
+        count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            if not hasattr(curr_select, 'ast') or curr_select.ast is None: continue
+            query_ast = curr_select.ast
 
-        wheres = list(ast.find_all(exp.Where))
-        ands = list(ast.find_all(exp.And))
-        ors = list(ast.find_all(exp.Or))
-        
-        count = len(wheres) + len(ands) + len(ors)
+            if query_ast.args.get("where"): count += 1
+
+            for node in query_ast.find_all((exp.And, exp.Or)):
+                if node.find_ancestor(exp.Select) == query_ast:
+                    count += 1
 
         if self.max is None:
             if count < self.min:
@@ -93,24 +97,28 @@ class StringComparison(QueryConstraint):
         self.allowed_operators = allowed_operators
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # look for all operator inside string
-        for comparison in ast.find_all(tuple(self.allowed_operators)):
-            if isinstance(comparison, (exp.Like, exp.ILike)):
-                # elementi in right must be a string
-                if comparison.expression.is_string:
-                    count += 1
-            else:
-                # one of the sides must be a string
-                left = comparison.left
-                right = comparison.right
-                is_left_str = isinstance(left, exp.Literal) and left.is_string
-                is_right_str = isinstance(right, exp.Literal) and right.is_string
+            for comparison in query_ast.find_all(tuple(self.allowed_operators)):
+                if comparison.find_ancestor(exp.Select) != query_ast:
+                    continue
 
-                if (is_left_str and not is_right_str) or (is_right_str and not is_left_str):
-                    count += 1
+                if isinstance(comparison, (exp.Like, exp.ILike)):
+                    # elementi in right must be a string
+                    if comparison.expression.is_string:
+                        count += 1
+                else:
+                    # one of the sides must be a string
+                    left = comparison.left
+                    right = comparison.right
+                    is_left_str = isinstance(left, exp.Literal) and left.is_string
+                    is_right_str = isinstance(right, exp.Literal) and right.is_string
+
+                    if (is_left_str and not is_right_str) or (is_right_str and not is_left_str):
+                        count += 1
 
         if self.max is None:
             if count < self.min:
@@ -145,19 +153,23 @@ class EmptyStringComparison(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # look for = e <> into query
-        for comparison in ast.find_all((exp.EQ, exp.NEQ)):
-            left = comparison.left
-            right = comparison.right
+            for comparison in query_ast.find_all((exp.EQ, exp.NEQ)):
+                if comparison.find_ancestor(exp.Select) != query_ast:
+                    continue
 
-            is_left_empty = isinstance(left, exp.Literal) and left.is_string and left.this == ""
-            is_right_empty = isinstance(right, exp.Literal) and right.is_string and right.this == ""
+                left = comparison.left
+                right = comparison.right
 
-            if (is_left_empty and not is_right_empty) or (is_right_empty and not is_left_empty):
-                count += 1
+                is_left_empty = isinstance(left, exp.Literal) and left.is_string and left.this == ""
+                is_right_empty = isinstance(right, exp.Literal) and right.is_string and right.this == ""
+
+                if (is_left_empty and not is_right_empty) or (is_right_empty and not is_left_empty):
+                    count += 1
 
         if self.max is None:
             if count < self.min:
@@ -190,19 +202,25 @@ class NullComparison(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # look for all 'IS'
-        for is_node in ast.find_all(exp.Is):
-            # verify NULL presence
-            if isinstance(is_node.expression, exp.Null):
-                # verify IS NULL (without NOT)
-                is_not_parent = isinstance(is_node.parent, exp.Not)
-                has_is_not_flag = is_node.args.get("is_not") is True
-                
-                if not is_not_parent and not has_is_not_flag:
-                    count += 1
+            # look for all 'IS'
+            for is_node in query_ast.find_all(exp.Is):
+                # Ensure we only count nodes belonging to this specific SELECT block
+                if is_node.find_ancestor(exp.Select) != query_ast:
+                    continue
+
+                # verify NULL presence
+                if isinstance(is_node.expression, exp.Null):
+                    # verify IS NULL (without NOT)
+                    is_not_parent = isinstance(is_node.parent, exp.Not)
+                    has_is_not_flag = is_node.args.get("is_not") is True
+                    
+                    if not is_not_parent and not has_is_not_flag:
+                        count += 1
 
         if self.max is None:
             if count < self.min:
@@ -235,18 +253,24 @@ class NotNullComparison(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # look for all 'IS'
-        for is_node in ast.find_all(exp.Is):
-            # verify NULL presence
-            if isinstance(is_node.expression, exp.Null):
-                # verify IS NOT NULL
-                is_not_parent = isinstance(is_node.parent, exp.Not)
-                has_is_not_flag = is_node.args.get("is_not") is True
-                
-                if is_not_parent or has_is_not_flag: count += 1
+            # look for all 'IS'
+            for is_node in query_ast.find_all(exp.Is):
+                if is_node.find_ancestor(exp.Select) != query_ast:
+                    continue
+
+                # verify NULL presence
+                if isinstance(is_node.expression, exp.Null):
+                    # verify IS NOT NULL
+                    is_not_parent = isinstance(is_node.parent, exp.Not)
+                    has_is_not_flag = is_node.args.get("is_not") is True
+                    
+                    if is_not_parent or has_is_not_flag: 
+                        count += 1
 
         if self.max is None:
             if count < self.min:
@@ -293,18 +317,21 @@ class Not(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
-        
-        # look for all node NOT inside query
-        not_nodes = list(ast.find_all(exp.Not))
-        
-        # IS NOT NULL is attribute of exp.Is, controll also this
-        is_not_null_count = 0
-        for is_node in ast.find_all(exp.Is):
-            if is_node.args.get("is_not"):
-                is_not_null_count += 1
-        
-        count = len(not_nodes) + is_not_null_count
+        count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
+
+            # look for all node NOT inside this SELECT block
+            for not_node in query_ast.find_all(exp.Not):
+                if not_node.find_ancestor(exp.Select) == query_ast:
+                    count += 1
+
+            # IS NOT NULL is attribute of exp.Is, control also this
+            for is_node in query_ast.find_all(exp.Is):
+                if is_node.find_ancestor(exp.Select) == query_ast:
+                    if is_node.args.get("is_not"):
+                        count += 1
 
         if self.max is None:
             if count < self.min:
@@ -333,14 +360,19 @@ class Exists(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # Cerchiamo tutti i nodi EXISTS nell'intera query (Main + Subqueries)
-        for exists_node in ast.find_all(exp.Exists):
-            #verify that there isn't NOT (e.g. NOT EXISTS)
-            if not isinstance(exists_node.parent, exp.Not):
-                count += 1
+            # loof for all EXISTS node 
+            for exists_node in query_ast.find_all(exp.Exists):
+                if exists_node.find_ancestor(exp.Select) != query_ast:
+                    continue
+
+                # verify that there isn't NOT (e.g. NOT EXISTS)
+                if not isinstance(exists_node.parent, exp.Not):
+                    count += 1
 
         if self.max is None:
             if count < self.min:
@@ -369,15 +401,20 @@ class NotExist(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
 
-        # look for all EXIST
-        for exists_node in ast.find_all(exp.Exists):
-            # verify if EXIST has NOT
-            p = exists_node.parent
-            if isinstance(p, exp.Paren): p = p.parent
-            if isinstance(p, exp.Not): count += 1
+            # look for all EXIST
+            for exists_node in query_ast.find_all(exp.Exists):
+                if exists_node.find_ancestor(exp.Select) != query_ast:
+                    continue
+
+                # verify if EXIST has NOT
+                p = exists_node.parent
+                if isinstance(p, exp.Paren): p = p.parent
+                if isinstance(p, exp.Not): count += 1
 
         if self.max is None:
             if count < self.min:
@@ -414,12 +451,17 @@ class MathOperators(QueryConstraint):
             exp.Mod   # %
         )
 
-        ast = parse_one(query.sql)
         count = 0
-        # look for all math operator in query
-        for op in ast.find_all(math_operators):
-            # verify if operator is in where clause
-            if op.find_ancestor(exp.Where): count += 1
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
+
+            where_clause = query_ast.args.get("where")
+            
+            if where_clause:
+                for op in where_clause.find_all(math_operators):
+                    if op.find_ancestor(exp.Select) == query_ast:
+                        count += 1
 
         if self.max is None:
             if count < self.min:
@@ -429,7 +471,7 @@ class MathOperators(QueryConstraint):
             return
         if not (self.min <= count <= self.max):
             raise ConstraintValidationError(
-                f'Query must require between {self.min} and {self.max} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
+                f'Query must require between {self.min} and {self.max} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions), but found {count}.'
             )
         
     @property
@@ -439,75 +481,6 @@ class MathOperators(QueryConstraint):
         if self.min == self.max:
             return f'Exercise must require exactly {self.min} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
         return f'Exercise must require between {self.min} and {self.max} mathematical operations (i.e. +, -, *, /, %) on rows (WHERE conditions).'
-
-#REMOVED ERROR 56 NOT USED
-# class ExistsNotExists_InNotIn(QueryConstraint):
-#     '''
-#     Requires the presence of a certain number of EXISTS/NOT EXISTS or IN/NOT IN operators in the WHERE clause of the SQL query.
-#     '''
-
-#     def __init__(self, min_pos: int = 1, min_neg: int = 1, max_pos: int | None = None, max_neg: int | None = None) -> None:
-#         self.min_pos = min_pos
-#         self.min_neg = min_neg
-#         self.max_pos = max_pos
-#         self.max_neg = max_neg
-
-#     def validate(self, query: Query) -> None:
-#         pos_count = 0
-#         neg_count = 0
-
-#         for select in query.main_query.selects:
-#             where = select.where
-#             if where is not None:
-#                 # Look for EXISTS and IN operators
-#                 for exists_node in where.find_all(exp.Exists):
-#                     if not isinstance(exists_node.parent, exp.Not):
-#                         pos_count += 1
-
-#                 for in_node in where.find_all(exp.In):
-#                     if not isinstance(in_node.parent, exp.Not):
-#                         pos_count += 1
-
-#                 # Look for NOT EXISTS and NOT IN operators
-#                 for not_node in where.find_all(exp.Not):
-#                     if isinstance(not_node.this, exp.Exists):
-#                         neg_count += 1
-#                     elif isinstance(not_node.this, exp.In):
-#                         neg_count += 1
-
-#         if self.max_pos is None:
-#             pos_valid = pos_count >= self.min_pos
-#         else:
-#             pos_valid = self.min_pos <= pos_count <= self.max_pos
-
-#         if self.max_neg is None:
-#             neg_valid = neg_count >= self.min_neg
-#         else:
-#             neg_valid = self.min_neg <= neg_count <= self.max_neg
-
-#         if not (pos_valid and neg_valid):
-#             raise ConstraintValidationError(
-#                 f'Query must require {self.description}. Found {pos_count} positive (EXISTS/IN) and {neg_count} negative (NOT EXISTS/NOT IN) operations.'
-#             )
-    
-#     @property
-#     def description(self) -> str:
-#         pos_desc = ""
-#         neg_desc = ""
-
-#         if self.max_pos is None:
-#             pos_desc = f'at least {self.min_pos} EXISTS or IN operations'
-#         elif self.min_pos == self.max_pos:
-#             pos_desc = f'exactly {self.min_pos} EXISTS or IN operations'
-#         else:
-#             pos_desc = f'between {self.min_pos} and {self.max_pos} EXISTS or IN operations'
-#         if self.max_neg is None:
-#             neg_desc = f'at least {self.min_neg} NOT EXISTS or NOT IN operations'
-#         elif self.min_neg == self.max_neg:
-#             neg_desc = f'exactly {self.min_neg} NOT EXISTS or NOT IN operations'
-#         else:
-#             neg_desc = f'between {self.min_neg} and {self.max_neg} NOT EXISTS or NOT IN operations'
-#         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
 
 class WildcardCharacters(QueryConstraint):
     '''
@@ -621,12 +594,13 @@ class Condition_WhereHaving(QueryConstraint):
         self.max = max_
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
         individual_clause_counts = []
         
-        for select in ast.find_all(exp.Select):
-            where = select.args.get("where")
-            having = select.args.get("having")
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
+            where = query_ast.args.get("where")
+            having = query_ast.args.get("having")
 
             if where is not None and having is not None:
                 raise ConstraintValidationError(
@@ -636,22 +610,18 @@ class Condition_WhereHaving(QueryConstraint):
 
             for clause in [where, having]:
                 if clause:
-                    count = 1 + len(list(clause.find_all((exp.And, exp.Or))))
-                    individual_clause_counts.append(count)
+                    connectors = [n for n in clause.find_all((exp.And, exp.Or)) if n.find_ancestor(exp.Select) == query_ast]
+                    individual_clause_counts.append(1 + len(connectors))
 
-        found_valid = False
         for c in individual_clause_counts:
             if self.max is None:
-                if c >= self.min: found_valid = True
-            elif self.min <= c <= self.max:
-                found_valid = True
-            if found_valid: break
+                if c >= self.min: return
+            elif self.min <= c <= self.max: return
 
-        if not found_valid:
-            raise ConstraintValidationError(
-                f'No valid WHERE or HAVING clause found with the required condition count ({self.min}-{self.max or "n"}).'
-            )
-
+        raise ConstraintValidationError(
+            f'No valid WHERE or HAVING clause found with the required condition count ({self.min}-{self.max or "n"}).'
+        )
+        
     @property
     def description(self) -> str:
         if self.max is None:
@@ -667,25 +637,29 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
         self.min_columns = min_columns
 
     def validate(self, query: Query) -> None:
-        ast = parse_one(query.sql)
-        
-        for select in ast.find_all(exp.Select):
-            where = select.args.get("where")
-            if where is None: continue
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
+            where = query_ast.args.get("where")
+            if where is None:
+                continue
 
             column_counter = Counter()
             predicates = (exp.EQ, exp.NEQ, exp.GT, exp.LT, exp.GTE, exp.LTE, exp.Like, exp.ILike, exp.Between)
-            
+
             for condition in where.find_all(predicates):
-                if condition.find_ancestor(exp.Select) != select: continue
-                
+                if condition.find_ancestor(exp.Select) != query_ast:
+                    continue
+
                 column = condition.this
                 if isinstance(column, exp.Column):
                     column_name = column.name.lower()
                     column_counter[column_name] += 1
 
-                multiple_conditions_columns = sum(1 for count in column_counter.values() if count > 1)
-                if multiple_conditions_columns >= self.min_columns: return
+            multiple_conditions_columns = sum(1 for count in column_counter.values() if count > 1)
+            if multiple_conditions_columns >= self.min_columns:
+                return
+
         raise ConstraintValidationError(
             f'Query must require at least {self.min_columns} columns to have multiple conditions on the same column in a single WHERE clause.'
         )
@@ -706,10 +680,13 @@ class InAnyAll(QueryConstraint):
         )
 
     def validate(self, query: 'Query') -> None:
-        ast = parse_one(query.sql)
-
-        found_nodes = list(ast.find_all((exp.In, exp.Any, exp.All)))
-        count = len(found_nodes)
+        count = 0
+        for s in query.selects:
+            curr_select = s[1] if isinstance(s, tuple) else s
+            query_ast = curr_select.ast
+            for node in query_ast.find_all((exp.In, exp.Any, exp.All)):
+                if node.find_ancestor(exp.Select) == query_ast:
+                    count += 1
 
         if count < self.min:
             error_msg = f'The query requires at least {self.min} operators among IN, ANY, or ALL, but only {count} were found.\n'
@@ -735,3 +712,73 @@ class InAnyAll(QueryConstraint):
 
         selected_constraints = [descriptions[option] for option in self.options]        
         return '\n'.join(selected_constraints)
+
+
+#REMOVED ERROR 56 NOT USED
+# class ExistsNotExists_InNotIn(QueryConstraint):
+#     '''
+#     Requires the presence of a certain number of EXISTS/NOT EXISTS or IN/NOT IN operators in the WHERE clause of the SQL query.
+#     '''
+
+#     def __init__(self, min_pos: int = 1, min_neg: int = 1, max_pos: int | None = None, max_neg: int | None = None) -> None:
+#         self.min_pos = min_pos
+#         self.min_neg = min_neg
+#         self.max_pos = max_pos
+#         self.max_neg = max_neg
+
+#     def validate(self, query: Query) -> None:
+#         pos_count = 0
+#         neg_count = 0
+
+#         for select in query.main_query.selects:
+#             where = select.where
+#             if where is not None:
+#                 # Look for EXISTS and IN operators
+#                 for exists_node in where.find_all(exp.Exists):
+#                     if not isinstance(exists_node.parent, exp.Not):
+#                         pos_count += 1
+
+#                 for in_node in where.find_all(exp.In):
+#                     if not isinstance(in_node.parent, exp.Not):
+#                         pos_count += 1
+
+#                 # Look for NOT EXISTS and NOT IN operators
+#                 for not_node in where.find_all(exp.Not):
+#                     if isinstance(not_node.this, exp.Exists):
+#                         neg_count += 1
+#                     elif isinstance(not_node.this, exp.In):
+#                         neg_count += 1
+
+#         if self.max_pos is None:
+#             pos_valid = pos_count >= self.min_pos
+#         else:
+#             pos_valid = self.min_pos <= pos_count <= self.max_pos
+
+#         if self.max_neg is None:
+#             neg_valid = neg_count >= self.min_neg
+#         else:
+#             neg_valid = self.min_neg <= neg_count <= self.max_neg
+
+#         if not (pos_valid and neg_valid):
+#             raise ConstraintValidationError(
+#                 f'Query must require {self.description}. Found {pos_count} positive (EXISTS/IN) and {neg_count} negative (NOT EXISTS/NOT IN) operations.'
+#             )
+    
+#     @property
+#     def description(self) -> str:
+#         pos_desc = ""
+#         neg_desc = ""
+
+#         if self.max_pos is None:
+#             pos_desc = f'at least {self.min_pos} EXISTS or IN operations'
+#         elif self.min_pos == self.max_pos:
+#             pos_desc = f'exactly {self.min_pos} EXISTS or IN operations'
+#         else:
+#             pos_desc = f'between {self.min_pos} and {self.max_pos} EXISTS or IN operations'
+#         if self.max_neg is None:
+#             neg_desc = f'at least {self.min_neg} NOT EXISTS or NOT IN operations'
+#         elif self.min_neg == self.max_neg:
+#             neg_desc = f'exactly {self.min_neg} NOT EXISTS or NOT IN operations'
+#         else:
+#             neg_desc = f'between {self.min_neg} and {self.max_neg} NOT EXISTS or NOT IN operations'
+#         return f'Exercise must require {pos_desc} and {neg_desc} on rows (WHERE conditions).'
