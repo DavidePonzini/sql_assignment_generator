@@ -5,13 +5,7 @@ from sqlscope import build_catalog_from_sql
 from sql_assignment_generator.constraints.schema.values import MinRows
 from sql_assignment_generator.exceptions import ConstraintValidationError
 
-# Helper function to convert raw SQL strings into the lists of AST nodes 
-# expected by the schema constraint validator.
-def prepare_schema_ast(create_sqls: list[str], insert_sqls: list[str]):
-    tables_ast = [sqlglot.parse_one(sql, read="postgres") for sql in create_sqls]
-    values_ast = [sqlglot.parse_one(sql, read="postgres") for sql in insert_sqls]
-    catalog = build_catalog_from_sql("; ".join(create_sqls))
-    return catalog, tables_ast, values_ast
+from . import prepare_catalog
 
 # =================================================================
 # TEST MIN ROWS PASS
@@ -34,7 +28,7 @@ def prepare_schema_ast(create_sqls: list[str], insert_sqls: list[str]):
 ])
 
 def test_min_rows_pass(create_sqls, insert_sqls, min_val):
-    catalog, tables_ast, values_ast = prepare_schema_ast(create_sqls, insert_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls, insert_sqls)
     constraint = MinRows(min_=min_val)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -44,17 +38,28 @@ def test_min_rows_pass(create_sqls, insert_sqls, min_val):
 # =================================================================
 
 @pytest.mark.parametrize("create_sqls, insert_sqls, min_val", [
-    (["CREATE TABLE t1 (id INT PRIMARY KEY)"], ["INSERT INTO t1 (id) VALUES (1), (2)"], 3),# Table has only 2 rows, 3 required
+    # Table has only 2 rows, 3 required
+    (
+        ["CREATE TABLE t1 (id INT PRIMARY KEY)"],
+        ["INSERT INTO t1 (id) VALUES (1), (2)"],
+        3
+    ),
+    # One table passes, but the other fails
     (
         ["CREATE TABLE t1 (id INT PRIMARY KEY)", "CREATE TABLE t2 (id INT PRIMARY KEY)"],
         ["INSERT INTO t1 (id) VALUES (1), (2), (3)", "INSERT INTO t2 (id) VALUES (1)"],
         3
-    ),# One table passes, but the other fails
-    (["CREATE TABLE t1 (id INT PRIMARY KEY)"], [], 1)# No rows found at all, but min > 0
+    ),
+    # No rows found at all, but min > 0
+    (
+        ["CREATE TABLE t1 (id INT PRIMARY KEY)"],
+        [],
+        1
+    )
 ])
 
 def test_min_rows_fail(create_sqls, insert_sqls, min_val):
-    catalog, tables_ast, values_ast = prepare_schema_ast(create_sqls, insert_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls, insert_sqls)
     constraint = MinRows(min_=min_val)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)

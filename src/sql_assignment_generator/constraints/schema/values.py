@@ -4,6 +4,7 @@ from sqlglot import exp
 from ...exceptions import ConstraintMergeError, ConstraintValidationError
 from sqlscope import Catalog
 
+import dav_tools
 
 class MinRows(SchemaConstraint):
     '''Requires that EACH table found in the insert list has a specific minimum number of rows inserted.'''
@@ -15,13 +16,16 @@ class MinRows(SchemaConstraint):
         table_row_counts = Counter()
 
         for value in values_sql:
-            table_name = value.this.output_name.lower()
+
+            table_name = value.this.this.name.lower()
             values_node = value.expression
 
             # verify the format INSERT INTO ... VALUES ...
             if isinstance(values_node, exp.Values):     # list of insert row: (val1), (val2)...
                 rows_in_statement = len(values_node.expressions)
                 table_row_counts[table_name] += rows_in_statement
+
+        dav_tools.messages.debug(f"DEBUG: Row counts per table for MinRows constraint: {table_row_counts}")
 
         # if no tables found but min > 0, fail
         if not table_row_counts and self.min > 0:

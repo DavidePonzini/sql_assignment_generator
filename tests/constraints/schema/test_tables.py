@@ -1,6 +1,4 @@
 import pytest
-import sqlglot
-from sqlscope import build_catalog_from_sql
 from sql_assignment_generator.exceptions import ConstraintValidationError
 from sql_assignment_generator.constraints.schema.tables import (
     MinTables, 
@@ -10,13 +8,8 @@ from sql_assignment_generator.constraints.schema.tables import (
     SameColumnNames
 )
 
-# Helper function to prepare the environment for validation
-def prepare_schema(create_sqls: list[str]):
-    tables_ast = [sqlglot.parse_one(sql, read="postgres") for sql in create_sqls]
-    # Build catalog to provide metadata about PKs, FKs, and columns
-    catalog = build_catalog_from_sql("; ".join(create_sqls))
-    # values_sql is not used by these specific constraints but required by the signature
-    return catalog, tables_ast, []
+from . import prepare_catalog
+
 
 # =================================================================
 # TEST MIN TABLES PASS
@@ -28,7 +21,7 @@ def prepare_schema(create_sqls: list[str]):
 ])
 
 def test_min_tables_pass(create_sqls, min_val):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinTables(min_tables=min_val)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -41,7 +34,7 @@ def test_min_tables_pass(create_sqls, min_val):
 ])
 
 def test_min_tables_fail(create_sqls, min_val):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinTables(min_tables=min_val)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
@@ -57,7 +50,7 @@ def test_min_tables_fail(create_sqls, min_val):
 ])
 
 def test_min_checks_pass(create_sqls, min_val):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinChecks(min_=min_val)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -67,7 +60,7 @@ def test_min_checks_pass(create_sqls, min_val):
 
 def test_min_checks_fail():
     create_sqls = ["CREATE TABLE t1 (id INT PRIMARY KEY)"]
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinChecks(min_=1)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
@@ -83,7 +76,7 @@ def test_min_checks_fail():
 ])
 
 def test_min_columns_pass(create_sqls, cols, tabs):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinColumns(columns=cols, tables=tabs)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -93,7 +86,7 @@ def test_min_columns_pass(create_sqls, cols, tabs):
 
 def test_min_columns_fail():
     create_sqls = ["CREATE TABLE t1 (a INT PRIMARY KEY, b INT, c INT)", "CREATE TABLE t2 (a INT PRIMARY KEY)"] # Only 1 table has 3 columns, but we require 2 tables to have 3 columns
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = MinColumns(columns=3, tables=2)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
@@ -109,7 +102,7 @@ def test_min_columns_fail():
 ])
 
 def test_complex_column_name_pass(create_sqls):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = ComplexColumnName(min_columns=1)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -119,7 +112,7 @@ def test_complex_column_name_pass(create_sqls):
 
 def test_complex_column_name_fail():
     create_sqls = ["CREATE TABLE t1 (short_name INT PRIMARY KEY, LongNameWithoutUnderscore INT)"] # "short_name" is under 15 chars, "LongNameWithoutUnderscore" has no '_'
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = ComplexColumnName(min_columns=1)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
@@ -141,7 +134,7 @@ def test_complex_column_name_fail():
 ])
 
 def test_same_column_names_pass(create_sqls, pairs):
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = SameColumnNames(pairs=pairs)
     constraint.validate(catalog, tables_ast, values_ast)
 
@@ -155,7 +148,7 @@ def test_same_column_names_fail():
         "CREATE TABLE t1 (id INT PRIMARY KEY, val INT)",
         "CREATE TABLE t2 (other_id INT PRIMARY KEY, id INT REFERENCES t1(id))"
     ]
-    catalog, tables_ast, values_ast = prepare_schema(create_sqls)
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
     constraint = SameColumnNames(pairs=1)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
