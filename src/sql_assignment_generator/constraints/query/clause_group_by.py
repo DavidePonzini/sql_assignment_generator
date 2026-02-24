@@ -8,8 +8,8 @@ class NoGroupBy(QueryConstraint):
     def validate(self, query: Query) -> None:
         #look for node GROUP BY in query
         for select in query.selects:
-            if select.group_by is not None:
-                raise ConstraintValidationError("Exercise requires grouping, which is not allowed.")
+            if len(select.group_by) > 0:
+                raise ConstraintValidationError("Exercise must not contain a GROUP BY clause, but it does.")
     
     @property
     def description(self) -> str:
@@ -28,7 +28,7 @@ class GroupBy(QueryConstraint):
         group_sizes: list[int] = []
 
         for select in query.selects:
-            if select.group_by is None:
+            if len(select.group_by) == 0:
                 continue
             group_sizes.append(len(select.group_by))
 
@@ -43,7 +43,7 @@ class GroupBy(QueryConstraint):
             continue
 
         raise ConstraintValidationError(
-            "Exercise does not satisfy the GROUP BY column count requirements."
+            f"Exercise does not satisfy the GROUP BY column count requirements."
             f"GROUP BY column counts found: {group_sizes}, required min: {self.min}, required max: {self.max}"
         )
 
