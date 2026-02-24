@@ -106,18 +106,16 @@ class SelfJoin(QueryConstraint):
     Requires the presence of a Self JOIN (joining a table with itself).
     '''
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         # iterate in main query and in subquery
         for select in query.selects:
-            # extract name table and count all occurrence
+            # extract name table and count all occurrences
             table_names = [table.real_name for table in select.referenced_tables]
             counts = Counter(table_names)
-            
-            # table is repeat more than 1 
-            if any(count > 1 for count in counts.values()):
-                return True
-        
-        return False
+
+            # require at least one table to be referenced more than once (self join) 
+            if not any(count > 1 for count in counts.values()):
+                raise ConstraintValidationError("Exercise must require a SELF JOIN operation (joining a table to itself), but it does not.")
     
     @property
     def description(self) -> str:
