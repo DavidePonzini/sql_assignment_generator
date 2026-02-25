@@ -14,6 +14,7 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
+        (SqlErrors.SYN_22_OMITTING_THE_SEMICOLON, DifficultyLevel.EASY),
         (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
     ]*3
 

@@ -45,22 +45,29 @@ def generate_assignment(
     Returns:
         Assignment: The generated assignment (stable order).
     '''
+    
+    # filter only supported errors
+    supported_errors: list[tuple[SqlErrors, DifficultyLevel]] = []
+    for error, difficulty in errors:
+        if error in ERROR_REQUIREMENTS_MAP:
+            supported_errors.append((error, difficulty))
+        else:
+            dav_tools.messages.warning(f'Skipping unsupported error: {error.name}')
 
-    dav_tools.messages.info(f'Starting assignment generation for {len(errors)} exercises...')
+    if not supported_errors:
+        raise ValueError('No supported errors provided for assignment generation.')
 
     if domain is None:
         domain = random_domain()
 
     if shuffle_exercises:
         random.shuffle(errors)
+    
+
+    dav_tools.messages.info(f'Starting assignment generation for {len(supported_errors)} exercises (out of {len(errors)} requested)')
 
     # convert SqlErrors -> SqlErrorRequirements, keeping difficulty levels
-    requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = []
-    for error, difficulty in errors:
-        if error not in ERROR_REQUIREMENTS_MAP:
-            raise NotImplementedError(f'Error requirements not implemented for error: {error.name}')
-        
-        requirements.append((error, ERROR_REQUIREMENTS_MAP[error], difficulty))
+    requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = [(error, ERROR_REQUIREMENTS_MAP[error], difficulty) for error, difficulty in supported_errors]
 
     # initialize requirements and extra details
     dataset_requirements: list[SchemaConstraint] = []
@@ -126,7 +133,7 @@ def generate_assignment(
         return (idx, None)
 
     # Pre-allocate so we can preserve ordering no matter completion order.
-    ordered_results: list[Exercise | None] = [None] * len(errors)
+    ordered_results: list[Exercise | None] = [None] * len(supported_errors)
 
     if max_workers == 1:
         for idx, (error, requirement, difficulty) in enumerate(requirements):
@@ -144,10 +151,10 @@ def generate_assignment(
 
     exercises: list[Exercise] = [ex for ex in ordered_results if ex is not None]
 
-    if len(exercises) < len(errors):
-        dav_tools.messages.warning(f'Finished generating exercises with some failures. Generated {len(exercises)} out of {len(errors)} requested.')
+    if len(exercises) < len(supported_errors):
+        dav_tools.messages.warning(f'Finished generating exercises with some failures. Generated: {len(exercises)}. Unsupported: {len(errors) - len(supported_errors)}. Failed: {len(supported_errors) - len(exercises)}.')
     else:
-        dav_tools.messages.success(f'Successfully generated all {len(exercises)} exercises.')
+        dav_tools.messages.success(f'Successfully generated all {len(exercises)} exercises. Unsupported: {len(errors) - len(supported_errors)}.')
 
     return Assignment(
         dataset=dataset,
