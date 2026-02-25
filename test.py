@@ -1,8 +1,9 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
-from sql_assignment_generator.difficulty_level import DifficultyLevel
-from sql_error_categorizer import SqlErrors
-from sql_assignment_generator import generate_assignment
+from src.sql_assignment_generator.difficulty_level import DifficultyLevel
+from src.sql_assignment_generator import generate_assignment
+
+from sql_error_taxonomy import SqlErrors
 from dotenv import load_dotenv
 import dav_tools
 
@@ -13,13 +14,8 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.MEDIUM),
-        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
-        (SqlErrors.SYN_4_UNDEFINED_COLUMN, DifficultyLevel.HARD),
-        (SqlErrors.SYN_7_UNDEFINED_OBJECT, DifficultyLevel.HARD),
-        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.EASY),
-        (SqlErrors.SEM_40_TAUTOLOGICAL_OR_INCONSISTENT_EXPRESSION, DifficultyLevel.MEDIUM),
-    ]
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+    ]*3
 
     assignment = generate_assignment(errors, domain)
     
@@ -51,7 +47,7 @@ if __name__ == '__main__':
         )
         for solution in exercise.solutions:
             dav_tools.messages.message(
-                solution,
+                solution.sql,
                 default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
                 icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
                 icon='SOL',

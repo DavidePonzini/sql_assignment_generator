@@ -1,0 +1,83 @@
+from sqlscope import Query
+from .base import QueryConstraint
+from sqlglot import exp
+from ...exceptions import ConstraintValidationError
+
+
+class NoAggregation(QueryConstraint):
+    '''Requires the absence of aggregation functions in the SQL query.'''
+
+    def validate(self, query: Query) -> None:
+        for select in query.selects:
+            query_ast = select.ast
+            aggregations_found = list(query_ast.find_all(exp.AggFunc))
+            if len(aggregations_found) > 0:
+                raise ConstraintValidationError(
+                    "Exercise must not require any aggregation operations. "
+                    f'Found aggregations: {[agg.sql() for agg in aggregations_found]}'
+                )
+    
+    @property
+    def description(self) -> str:
+        return "Exercise must not require any aggregation operations."
+
+class Aggregation(QueryConstraint):
+    '''
+    Requires the presence of aggregation functions in the SQL query.
+    
+    Args:
+        min (int): Minimum number of aggregation functions required. Default is 1.
+        max (int | None): Maximum number of aggregation functions allowed. Default is None (no maximum).
+        allowed_functions (list[str]): List of allowed aggregation function names (e.g., 'AVG', 'COUNT', 'SUM', 'MAX', 'MIN').
+    '''
+
+    def __init__(self, min_: int = 1, max_: int | None = None, *, allowed_functions: list[str] = ['AVG', 'COUNT', 'SUM', 'MAX', 'MIN'] ) -> None:
+        self.min = min_
+        self.max = max_
+
+        # normalize allowed functions to uppercase
+        self.allowed_functions = [func.upper() for func in allowed_functions]
+
+        # map allowed function names to sqlglot expression types
+        self.allowed_exps: list[type[exp.AggFunc]] = []
+        if 'AVG' in self.allowed_functions:
+            self.allowed_exps.append(exp.Avg)
+        if 'COUNT' in self.allowed_functions:
+            self.allowed_exps.append(exp.Count)
+        if 'SUM' in self.allowed_functions:
+            self.allowed_exps.append(exp.Sum)
+        if 'MAX' in self.allowed_functions:
+            self.allowed_exps.append(exp.Max)
+        if 'MIN' in self.allowed_functions:
+            self.allowed_exps.append(exp.Min)
+
+    def validate(self, query: Query) -> None:
+        all_aggregations_found = []
+
+        for select in query.selects:
+            select = select.strip_subqueries()      # get rid of subqueries to avoid double counting
+            query_ast = select.ast
+            aggregations_found = list(query_ast.find_all(tuple(self.allowed_exps)))
+            all_aggregations_found.extend(aggregations_found)
+
+        count = len(all_aggregations_found)
+        if self.max is None:
+            if count < self.min:
+                raise ConstraintValidationError(
+                    f'Exercise requires at least {self.min} aggregation function(s), but only {count} found: {[agg.sql() for agg in all_aggregations_found]}.'
+                )
+        elif not (self.min <= count <= self.max):
+            raise ConstraintValidationError(
+                f'Exercise requires between {self.min} and {self.max} aggregation function(s), but {count} found: {[agg.sql() for agg in all_aggregations_found]}.'
+            )
+    
+    @property
+    def description(self) -> str:
+        functions = ', '.join(self.allowed_functions)
+
+        if self.max is None:
+            return f'Exercise must require at least {self.min} aggregation function(s) of type(s): {functions}'
+        elif self.min == self.max:
+            return f'Exercise must require exactly {self.min} aggregation function(s) of type(s): {functions}'
+        else:
+            return f'Exercise must require between {self.min} and {self.max} aggregation function(s) of type(s): {functions}'

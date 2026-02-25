@@ -36,10 +36,13 @@ build: $(VENV) .env
 uninstall: $(VENV)
 	$(VENV_BIN)/python -m pip uninstall -y $(NAME)
 
+test: install
+	$(VENV_BIN)/python -m pytest
+
 documentation:
 	make html SPHINXBUILD="../$(VENV_BIN)/sphinx-build" -C docs/
 
-upload: build documentation
+upload: test documentation
 	$(VENV_BIN)/python -m pip install --upgrade twine
 	$(VENV_BIN)/python -m twine upload --verbose dist/*
 
