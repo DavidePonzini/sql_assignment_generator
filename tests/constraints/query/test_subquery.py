@@ -1,6 +1,6 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.subquery import NoSubquery, UnnestedSubqueries, NestedSubqueries
+from sql_assignment_generator.constraints.query.subquery import NoSubquery, Subqueries, NestedSubqueries, NoNesting
 from sql_assignment_generator.exceptions import ConstraintValidationError
 
 # =================================================================
@@ -36,7 +36,38 @@ def test_no_subquery_fail(sql):
         constraint.validate(query)
 
 # =================================================================
-# TEST UNNESTED SUBQUERIES PASS
+# TEST NO NESTING PASS
+# =================================================================
+@pytest.mark.parametrize("sql", [
+    "SELECT * FROM t WHERE id IN (SELECT id FROM t2)", # 1 subquery, no nesting
+    "SELECT * FROM t WHERE id IN (SELECT id FROM t2) AND x > ALL (SELECT x FROM t3)", # 2 subqueries, no nesting
+    "SELECT * FROM (SELECT id FROM t1) AS sub", # 1 subquery in FROM, no nesting
+    "SELECT a, (SELECT b FROM t2 LIMIT 1) FROM t1", # 1 subquery in SELECT, no nesting
+    "SELECT a FROM t1 WHERE x = 1 GROUP BY a HAVING COUNT(*) > (SELECT AVG(count) FROM t)" # 1 subquery in HAVING, no nesting
+])
+def test_no_nesting_pass(sql):
+    query = Query(sql)
+    constraint = NoNesting()
+    constraint.validate(query)
+
+# =================================================================
+# TEST NO NESTING FAIL
+# =================================================================
+
+@pytest.mark.parametrize("sql", [
+    "SELECT * FROM t WHERE id IN (SELECT id FROM t2 WHERE x IN (SELECT x FROM t3))", # 2 subqueries, 1 nesting
+    "SELECT * FROM t WHERE id IN (SELECT id FROM t2) AND x > ALL (SELECT x FROM t3) AND id IN (SELECT id FROM t4 WHERE x > ANY (SELECT x FROM t5))", # 3 subqueries, 1 nesting (t4 contains nested t5)
+    "SELECT a FROM t1 WHERE x = 1 GROUP BY a HAVING COUNT(*) > (SELECT AVG(count) FROM t WHERE y IN (SELECT y FROM t2))" # 2 subqueries, 1 nesting (subquery in HAVING contains nested subquery in WHERE)
+])
+def test_no_nesting_fail(sql):
+    query = Query(sql)
+    constraint = NoNesting()
+    with pytest.raises(ConstraintValidationError) as exc_info:
+        constraint.validate(query)
+
+
+# =================================================================
+# TEST SUBQUERIES PASS
 # =================================================================
 
 @pytest.mark.parametrize("sql, min_, max_", [
@@ -51,11 +82,11 @@ def test_no_subquery_fail(sql):
 
 def test_unnested_subqueries_pass(sql, min_, max_):
     query = Query(sql)
-    constraint = UnnestedSubqueries(min_=min_, max_=max_)
+    constraint = Subqueries(min_=min_, max_=max_)
     constraint.validate(query)
 
 # =================================================================
-# TEST UNNESTED SUBQUERIES FAIL
+# TEST SUBQUERIES FAIL
 # =================================================================
 
 @pytest.mark.parametrize("sql, min_, max_", [
@@ -67,7 +98,7 @@ def test_unnested_subqueries_pass(sql, min_, max_):
 
 def test_unnested_subqueries_fail(sql, min_, max_):
     query = Query(sql)
-    constraint = UnnestedSubqueries(min_=min_, max_=max_)
+    constraint = Subqueries(min_=min_, max_=max_)
     with pytest.raises(ConstraintValidationError) as exc_info:
         constraint.validate(query)
 

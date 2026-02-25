@@ -3,22 +3,15 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                *constraints,
                query_constraints.clause_where.Exists(),
-               query_constraints.subquery.NestedSubqueries(1,1),
+               query_constraints.subquery.Subqueries(1,1),
+               query_constraints.subquery.NoNesting(),
                query_constraints.rows.Duplicates(),
                query_constraints.clause_having.NoHaving() 
             ]
@@ -26,7 +19,7 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
             return [
                 *constraints,
                 query_constraints.clause_where.Exists(1),
-                query_constraints.subquery.NestedSubqueries(1,1),
+                query_constraints.subquery.Subqueries(1,2),
                 query_constraints.rows.Duplicates(),
                 query_constraints.aggregation.Aggregation()
             ]
@@ -34,13 +27,13 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
         return [
             *constraints,
                 query_constraints.clause_where.Exists(2),
-                query_constraints.subquery.NestedSubqueries(1,1),
+                query_constraints.subquery.Subqueries(1,2),
                 query_constraints.rows.Duplicates(),
                 query_constraints.aggregation.Aggregation(2)
         ]
 
     def exercise_extra_details(self) -> str:
-        return 'The exercise must have EXISTS with only one column in SELECT and WITHOUT DISTINCT.'
+        return 'The exercise must have EXISTS with only one column in SELECT and must not use DISTINCT.'
 
     def dataset_extra_details(self) -> str:
-        return ''
+        return 'Insert duplicate rows in the relevant tables.'

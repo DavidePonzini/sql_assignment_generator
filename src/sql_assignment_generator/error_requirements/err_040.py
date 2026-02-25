@@ -4,27 +4,33 @@ from ..difficulty_level import DifficultyLevel
 
 class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        constraints = super().schema_constraints(difficulty)
+        constraints = super().dataset_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
-                schema_constraints.MinChecks(1)
+                *constraints,
+                schema_constraints.tables.MinChecks(1)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return[
-                schema_constraints.MinChecks(2)
+                *constraints,
+                schema_constraints.tables.MinChecks(2)
             ]
         
         # HARD
         return [
-            schema_constraints.MinChecks(3)
+            *constraints,
+            schema_constraints.tables.MinChecks(3)
         ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+        
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
                 query_constraints.clause_where.MultipleConditionsOnSameColumn(1),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_having.NoHaving()
             ]
@@ -41,12 +47,9 @@ class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.MultipleConditionsOnSameColumn(2),
             query_constraints.aggregation.Aggregation(2),
-            query_constraints.subquery.NestedSubqueries()
+            query_constraints.subquery.Subqueries()
         ]
 
     def exercise_extra_details(self) -> str:
-        return "Solution query must have MULTIPLE CONDITION on the SAME COLUMN " \
-         "(e.g. p.age < 18 OR p.age >= 0 this represent one column with MULTIPLE CONDITION)."
-
-    def dataset_extra_details(self) -> str:
-        return ''
+        return "Exercise should require multiple conditions on the same column " \
+         "(e.g. p.age < 18 OR p.age >= 0 this represent one column with multiple conditions)."

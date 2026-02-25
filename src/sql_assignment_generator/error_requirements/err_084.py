@@ -3,21 +3,14 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err084_UnncessaryJoin(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
+        constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
-            constraints = super().exercise_constraints(difficulty)
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(2),
-                query_constraints.clause_from.TableReferences(1, 1),########
+                query_constraints.clause_from.TableReferences(1, 1),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
             ]
@@ -25,7 +18,7 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.Condition(3),
-                query_constraints.clause_from.TableReferences(1, 1),########
+                query_constraints.clause_from.TableReferences(1, 2),
                 query_constraints.aggregation.Aggregation(2),
                 query_constraints.subquery.NoSubquery(),
             ]
@@ -34,14 +27,14 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(4),
-            query_constraints.clause_from.TableReferences(1, 1),########
+            query_constraints.clause_from.TableReferences(2, 3),
             query_constraints.aggregation.Aggregation(3),
-            query_constraints.subquery.NestedSubqueries()
+            query_constraints.subquery.Subqueries()
             
         ]
 
     def exercise_extra_details(self) -> str:
-        return 'In the solution query must be selected ONLY FOREIGN KEY column for at least one table in select.'
+        return 'The exercise should require selecting ONLY FOREIGN KEY column for at least one of the tables in the FROM clause.'
 
     def dataset_extra_details(self) -> str:
-        return 'In TABLE CREATION must be FOREIGN KEY relationship between tables.'
+        return 'In the CREATE TABLE statements, there must be FOREIGN KEY relationship between tables.'

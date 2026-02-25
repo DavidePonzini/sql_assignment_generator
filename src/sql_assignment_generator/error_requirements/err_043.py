@@ -3,20 +3,14 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err043_WildcardsWithoutLike(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
                 query_constraints.clause_where.WildcardLength(1),
+                query_constraints.clause_from.TableReferences(0, 1),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery()
                 
@@ -34,11 +28,8 @@ class Err043_WildcardsWithoutLike(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.WildcardLength(3),
             query_constraints.aggregation.Aggregation(),
-            query_constraints.subquery.NestedSubqueries()
+            query_constraints.subquery.Subqueries()
         ]
 
     def exercise_extra_details(self) -> str:
         return 'In the exercise there are WILDCARD with whole words longer than 5 characters.'
-
-    def dataset_extra_details(self) -> str:
-        return ''

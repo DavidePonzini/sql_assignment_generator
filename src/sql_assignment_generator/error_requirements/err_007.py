@@ -5,24 +5,26 @@ from ..difficulty_level import DifficultyLevel
 class Err007_UndefinedObject(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
         constraints = super().dataset_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
-                schema_constraints.tables.ComplexColumnName(min_tables=2)
+                schema_constraints.tables.ComplexColumnName(2)
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return[
                 *constraints,
-                schema_constraints.tables.ComplexColumnName(min_tables=4)
+                schema_constraints.tables.ComplexColumnName(4)
             ]
         # HARD
         return [
             *constraints,
-            schema_constraints.tables.ComplexColumnName(min_tables=8)
+            schema_constraints.tables.ComplexColumnName(8)
         ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
@@ -41,12 +43,6 @@ class Err007_UndefinedObject(SqlErrorRequirements):
         # HARD
         return [
             query_constraints.clause_where.Condition(2),
-            query_constraints.subquery.NestedSubqueries(),
+            query_constraints.subquery.Subqueries(),
             query_constraints.aggregation.Aggregation()
         ]
-
-    def exercise_extra_details(self) -> str:
-        return ''
-
-    def dataset_extra_details(self) -> str:
-        return ''

@@ -3,16 +3,9 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err011_OmittingQuotesAroundCharacterData(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
@@ -33,12 +26,9 @@ class Err011_OmittingQuotesAroundCharacterData(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.StringComparison(3),
-            query_constraints.subquery.NestedSubqueries(),
+            query_constraints.subquery.Subqueries(),
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return ''
-
     def dataset_extra_details(self) -> str:
-        return 'All the dataset column must have string attributes.'
+        return 'All the dataset tables must have at least one string attribute.'

@@ -15,8 +15,20 @@ class NoSubquery(QueryConstraint):
     @property
     def description(self) -> str:
         return "Exercise must not require any subqueries."
+    
+class NoNesting(QueryConstraint):
+    '''Requires the absence of nested subqueries in the SQL query.'''
+    def validate(self, query: Query) -> None:
+        for select in query.selects:
+            for subquery, sql, depth in select.subqueries:
+                if depth >= 2:
+                    raise ConstraintValidationError('Exercise must not require any nested subqueries, but at least one nested subquery was found in the query.')
 
-class UnnestedSubqueries(QueryConstraint):
+    @property
+    def description(self) -> str:
+        return "Exercise must not require any nested subqueries."
+
+class Subqueries(QueryConstraint):
     '''
     Requires the presence of a certain number of unnested subqueries in the SQL query.
     Unnested subqueries are subqueries that are not nested inside another subquery.

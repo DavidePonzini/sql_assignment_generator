@@ -3,20 +3,14 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err099_UnnecessaryColumnInOrderByClause(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                *constraints,
                 query_constraints.clause_where.Condition(2),
+                query_constraints.clause_from.TableReferences(1,2),
                 query_constraints.clause_having.NoHaving(),
                 query_constraints.subquery.NoSubquery(),
                 query_constraints.clause_order_by.OrderBy(1) 
@@ -33,13 +27,7 @@ class Err099_UnnecessaryColumnInOrderByClause(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(3),
-            query_constraints.subquery.NestedSubqueries(),
+            query_constraints.subquery.Subqueries(),
             query_constraints.clause_order_by.OrderBy(3),
             query_constraints.aggregation.Aggregation()
         ]
-
-    def exercise_extra_details(self) -> str:
-        return ''
-
-    def dataset_extra_details(self) -> str:
-        return ''

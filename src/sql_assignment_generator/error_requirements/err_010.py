@@ -3,16 +3,9 @@ from ..constraints import schema as schema_constraints, query as query_constrain
 from ..difficulty_level import DifficultyLevel
 
 class Err010_Synonyms(SqlErrorRequirements):
-    def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
-        if difficulty == DifficultyLevel.EASY:
-            return []
-        if difficulty == DifficultyLevel.MEDIUM:
-            return[]
-        # HARD
-        return []
-
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
+
         if difficulty == DifficultyLevel.EASY:
             return [
                 *constraints,
@@ -33,13 +26,10 @@ class Err010_Synonyms(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(3),
-            query_constraints.subquery.NestedSubqueries(),
+            query_constraints.subquery.Subqueries(),
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return ''
-
     def dataset_extra_details(self) -> str:
         return 'The identifier column name must NOT be <entity>_id; pick a plausible synonym instead (e.g., <entity>_code, <entity>_key, <entity>_ref, <entity>_number,  etc). ' \
-        'Additionally, I  want  naming conventions NOT to be consistent across tables; different  tables must have different naming conventions for similar concepts: e.g. if Table1 uses (first_name, last_name), Table2 uses (name, surname)'
+        'Additionally, I want naming conventions NOT to be consistent across tables; different tables must have different naming conventions for similar concepts: e.g. if Table1 uses (first_name, last_name), Table2 uses (name, surname)'
