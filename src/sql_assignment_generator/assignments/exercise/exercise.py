@@ -84,8 +84,8 @@ class Exercise:
                 )
 
                 assert isinstance(answer_refinement, llm.models.RemoveHints)
-                dav_tools.messages.debug(f"Old Request: {answer.request}")
-                dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
+                # dav_tools.messages.debug(f"Old Request: {answer.request}")
+                # dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
                 answer.request = answer_refinement.request_without_hints
 
                 return Exercise(

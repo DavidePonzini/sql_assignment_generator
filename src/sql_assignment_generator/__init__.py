@@ -46,6 +46,8 @@ def generate_assignment(
         Assignment: The generated assignment (stable order).
     '''
 
+    dav_tools.messages.info(f'Starting assignment generation for {len(errors)} exercises...')
+
     if domain is None:
         domain = random_domain()
 
@@ -141,6 +143,11 @@ def generate_assignment(
                 ordered_results[idx] = ex
 
     exercises: list[Exercise] = [ex for ex in ordered_results if ex is not None]
+
+    if len(exercises) < len(errors):
+        dav_tools.messages.warning(f'Finished generating exercises with some failures. Generated {len(exercises)} out of {len(errors)} requested.')
+    else:
+        dav_tools.messages.success(f'Successfully generated all {len(exercises)} exercises.')
 
     return Assignment(
         dataset=dataset,
