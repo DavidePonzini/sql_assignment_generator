@@ -88,8 +88,6 @@ class Exercise:
                 dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
                 answer.request = answer_refinement.request_without_hints
 
-                dav_tools.messages.success(f"Exercise '{title}' generated and validated successfully.")
-                
                 return Exercise(
                     title=title,
                     request=answer.request,

@@ -86,7 +86,6 @@ class Dataset:
         messages.add_message_user(prompt_text)
         
         for attempt in range(max_attempts):
-            messages.print_chat()
             try:
                 answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
@@ -112,7 +111,6 @@ class Dataset:
                 insert_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_inserts]
 
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
-                dav_tools.messages.debug(f'Generated Catalog: {catalog}')
 
                 # check if constraints are satisfied
                 errors = []
@@ -125,8 +123,6 @@ class Dataset:
 
                 # no errors, return dataset
                 if not errors:
-                    dav_tools.messages.success(f"Dataset generated and validated successfully at attempt {attempt + 1}.")
-
                     result = Dataset(
                         create_commands=create_commands,
                         insert_commands=insert_commands,

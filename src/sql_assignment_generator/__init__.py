@@ -69,6 +69,8 @@ def generate_assignment(
         req.dataset_extra_details()
         for _, req, _ in requirements
     ]
+    dataset_extra_details = [detail for detail in dataset_extra_details if detail.strip()]  # filter out empty details
+    dataset_extra_details = list(set(dataset_extra_details))  # deduplicate details
 
     dav_tools.messages.info(f'Generating dataset for domain: {domain}')
     dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details)
