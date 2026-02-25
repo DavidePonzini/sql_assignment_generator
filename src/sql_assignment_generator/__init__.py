@@ -24,6 +24,8 @@ def generate_assignment(
         *,
         shuffle_exercises: bool = False,
         naming_func: Callable[[SqlErrors, DifficultyLevel], str] = lambda error, difficulty: f'{error.name} - {difficulty.name}',
+        max_dataset_attempts: int = 3,
+        max_exercise_attempts: int = 3,
         max_unique_attempts: int = 3,
         max_workers: int | None = None
     ) -> Assignment:
@@ -39,6 +41,8 @@ def generate_assignment(
         domain (str | None): The domain for the assignments. If None, a random domain will be selected.
         shuffle_exercises (bool): Whether to shuffle exercises to prevent ordering bias (shuffles input order).
         naming_func (Callable[[SqlErrors, DifficultyLevel], str]): Generates exercise titles.
+        max_dataset_attempts (int): Maximum retries for generating a valid dataset before skipping.
+        max_exercise_attempts (int): Maximum retries for generating a valid exercise before skipping.
         max_unique_attempts (int): Maximum retries to avoid duplicate solutions per (error, difficulty).
         max_workers (int | None): Thread pool size. If None, uses ThreadPoolExecutor default.
 
@@ -82,7 +86,7 @@ def generate_assignment(
     dataset_extra_details = list(set(dataset_extra_details))  # deduplicate details
 
     dav_tools.messages.info(f'Generating dataset for domain: {domain}')
-    dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details)
+    dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details, max_attempts=max_dataset_attempts)
 
     generated_solutions_hashes: set[str] = set()
     hashes_lock = threading.Lock()
@@ -105,7 +109,7 @@ def generate_assignment(
 
         for attempt in range(max_unique_attempts):
             try:
-                generated_exercise = Exercise.generate(error, difficulty, constraints, extra_details, dataset=dataset, title=title)
+                generated_exercise = Exercise.generate(error, difficulty, constraints, extra_details, dataset=dataset, title=title, max_attempts=max_exercise_attempts)
             except ExerciseGenerationError:
                 with log_lock:
                     dav_tools.messages.warning(f'{title}: Skipping exercise generation for {error.name} due to validation failures.')
