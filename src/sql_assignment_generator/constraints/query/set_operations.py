@@ -3,6 +3,7 @@ from .base import QueryConstraint
 from sqlglot import Expression, exp
 import sqlglot
 from sqlscope import Query
+from ...exceptions import ConstraintValidationError
 
 class Union(QueryConstraint):
     '''
@@ -28,22 +29,25 @@ class Union(QueryConstraint):
         sql = query.sql
         ast = sqlglot.parse_one(sql)
         for union_node in ast.find_all(exp.Union):
-            if union_node.args.get("all"):
-                union_all_count += 1
-            else:
+            if union_node.args.get("distinct"):
                 union_count += 1
+            else:
+                union_all_count += 1
 
         return union_count, union_all_count
 
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         union_count, union_all_count = self.count_unions(query)
         total_unions = union_count + union_all_count
 
         if self.max is None:
-            return total_unions >= self.min
-        return self.min <= total_unions <= self.max
-
+            if total_unions < self.min:
+                raise ConstraintValidationError(f'Exercise must require at least {self.min} UNION operations.')
+        else:
+            if not (self.min <= total_unions <= self.max):
+                raise ConstraintValidationError(f'Exercise must require between {self.min} and {self.max} UNION operations.')
+            
     
     @property
     def description(self) -> str:
@@ -78,14 +82,28 @@ class UnionOfType(Union):
         super().__init__(min_, max_)
         self.all = all
 
-    def validate(self, query: Query) -> bool:
+    def validate(self, query: Query) -> None:
         union_count, union_all_count = self.count_unions(query)
 
-        if not self.all:  # 'UNION'
-            count = union_count
-        else:  # 'UNION ALL'
+        if self.all:    # 'UNION ALL'
             count = union_all_count
+        else:           # 'UNION'
+            count = union_count
 
+        union_type = 'UNION ALL' if self.all else 'UNION'
         if self.max is None:
-            return count >= self.min
-        return self.min <= count <= self.max
+            if count < self.min:
+                raise ConstraintValidationError(f'Exercise must require at least {self.min} {union_type} operations.')
+        else:
+            if not (self.min <= count <= self.max):
+                raise ConstraintValidationError(f'Exercise must require between {self.min} and {self.max} {union_type} operations.')
+            
+    @property
+    def description(self) -> str:
+        union_type = 'UNION ALL' if self.all else 'UNION'
+        if self.max is None:
+            return f'Exercise must require at least {self.min} {union_type} operations.'
+        elif self.min == self.max:
+            return f'Exercise must require exactly {self.min} {union_type} operations.'
+        else:
+            return f'Exercise must require between {self.min} and {self.max} {union_type} operations.'
