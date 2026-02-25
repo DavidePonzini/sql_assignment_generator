@@ -36,4 +36,4 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
         return 'The exercise must have EXISTS with only one column in SELECT and must not use DISTINCT.'
 
     def dataset_extra_details(self) -> str:
-        return 'Insert duplicate rows in the relevant tables.'
+        return 'INSERT INTO statements must be used to populate the tables with data that contains duplicate values, so that the DISTINCT keyword is necessary to eliminate duplicates from the query results. The dataset should be designed such that without DISTINCT, the query would return duplicate rows, and with DISTINCT, it would return a unique set of rows.'
