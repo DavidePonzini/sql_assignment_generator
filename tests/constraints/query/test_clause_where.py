@@ -13,7 +13,6 @@ from sql_assignment_generator.constraints.query.clause_where import (
     MathOperators, 
     WildcardCharacters, 
     WildcardLength, 
-    Condition_WhereHaving, 
     MultipleConditionsOnSameColumn,
     InAnyAll
 )
@@ -467,44 +466,6 @@ def test_wildcard_length_fail(sql, min_val, max_val):
     query = Query(sql)
     constraint = WildcardLength(min_=min_val, max_=max_val)
     with pytest.raises(ConstraintValidationError):
-        constraint.validate(query)
-
-# =================================================================
-# TEST WHERE_HAVING PASS
-# =================================================================
-
-@pytest.mark.parametrize("sql, min_, max_", [
-    ("SELECT * FROM t WHERE a = 1 AND b = 2", 2, None),
-    ("SELECT a FROM t GROUP BY a HAVING SUM(b) > 100 OR AVG(b) < 10", 2, None),
-    ("SELECT * FROM t WHERE a=1 AND b=2 OR c=3", 2, None),
-    ("SELECT * FROM t1 WHERE id IN (SELECT id FROM t2 WHERE x=1 AND y=2)", 2, 2),
-    ("SELECT * FROM t1 HAVING SUM(a) > (SELECT SUM(b) FROM t2 HAVING count(*) > 1)", 1, 1),
-    ("SELECT * FROM t1 WHERE a=1 OR b=2 UNION SELECT * FROM t1 WHERE c=3", 2, None),
-])
-
-def test_where_having_pass(sql, min_, max_):
-    query = Query(sql)
-    constraint = Condition_WhereHaving(min_=min_, max_=max_)
-    constraint.validate(query)
-
-
-# =================================================================
-# TEST WHERE_HAVING FAIL
-# =================================================================
-
-@pytest.mark.parametrize("sql, min_, max_", [
-    ("SELECT a FROM t WHERE b > 0 GROUP BY a HAVING COUNT(*) > 5", 2, None), 
-    ("SELECT a FROM t WHERE b > 0 GROUP BY a HAVING COUNT(*) > 5", 1, None),
-    ("SELECT * FROM t WHERE a = 1 AND b = 2", 1, 1),
-    ("SELECT * FROM t", 1, None),
-    ("SELECT * FROM t WHERE a=1 UNION SELECT * FROM t WHERE b=2", 2, None),
-    ("SELECT * FROM t1 WHERE a=1 AND id IN (SELECT id FROM t2 WHERE b=2)", 3, None),
-])
-
-def test_where_having_fail(sql, min_, max_):
-    query = Query(sql)
-    constraint = Condition_WhereHaving(min_=min_, max_=max_)
-    with pytest.raises(ConstraintValidationError) as exc_info:
         constraint.validate(query)
 
 # =================================================================

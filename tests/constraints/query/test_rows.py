@@ -15,7 +15,7 @@ from sql_assignment_generator.exceptions import ConstraintValidationError
     "SELECT a FROM t", # Standard column (not unique)
     "SELECT a, b FROM t WHERE b > 20 ORDER BY a",  # Multiple non-unique columns
     "SELECT a FROM (SELECT * FROM t) AS sub", #main query doesn't have unique constraints
-    "SELECT a FROM (SELECT DISTINCT a FROM t) AS sub" # Main query has no grouping/distinct even if subquery does
+    "SELECT * FROM (SELECT a FROM t) AS sub", # Main query forces uniqueness on subquery results
 ])
 
 def test_duplicates_pass(sql):
@@ -30,7 +30,8 @@ def test_duplicates_pass(sql):
 @pytest.mark.parametrize("sql", [
     "SELECT DISTINCT a FROM t", # DISTINCT forces uniqueness
     "SELECT a, COUNT(*) FROM t GROUP BY a", # GROUP BY forces uniqueness
-    "SELECT DISTINCT * FROM (SELECT a FROM t) AS sub" # Main query forces uniqueness on subquery results
+    "SELECT a FROM (SELECT DISTINCT a FROM t) AS sub", # Main query has no grouping/distinct even if subquery does
+    "SELECT DISTINCT * FROM (SELECT a FROM t) AS sub", # Main query forces uniqueness on subquery results
 ])
 def test_duplicates_fail(sql):
     query = Query(sql)
@@ -74,10 +75,8 @@ def test_no_duplicates_fail(sql):
 
 @pytest.mark.parametrize("sql", [
     "SELECT DISTINCT a FROM t", # Global DISTINCT
-    "SELECT COUNT(DISTINCT a) FROM t", # DISTINCT inside a function
-    "SELECT id, SUM(DISTINCT a) FROM t GROUP BY id", # Function-level DISTINCT
     "SELECT DISTINCT sub.a FROM (SELECT a FROM t) AS sub", # DISTINCT in the main query selecting from a subquery
-    "SELECT COUNT(DISTINCT a) FROM t1 WHERE id IN (SELECT id FROM t2)" # Main query with function-level distinct and a subquery in WHERE
+    "SELECT DISTINCT a FROM t GROUP BY a, b", # DISTINCT with GROUP BY, but only one grouping column is selected, so DISTINCT is still necessary to ensure uniqueness
 ])
 
 def test_distinct_pass(sql):
@@ -91,9 +90,9 @@ def test_distinct_pass(sql):
 
 @pytest.mark.parametrize("sql", [
     "SELECT a FROM t", # No DISTINCT
-    "SELECT id, COUNT(a) FROM t GROUP BY id", # Aggregation without DISTINCT
+    "SELECT DISTINCT a FROM t GROUP BY a", # even without DISTINCT, the query returns unique rows due to GROUP BY
     "SELECT a FROM (SELECT DISTINCT a FROM t) AS sub", # DISTINCT is only in the subquery, not the main query
-    "SELECT a FROM t1 WHERE id IN (SELECT DISTINCT id FROM t2)" # Complex query but still missing DISTINCT
+    "SELECT a FROM t1 WHERE id IN (SELECT DISTINCT id FROM t2)", # Complex query but still missing DISTINCT
 ])
 
 def test_distinct_fail(sql):

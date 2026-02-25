@@ -40,6 +40,10 @@ class Condition(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting conditions in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 count = 1  # Start with 1 for the initial condition
@@ -99,6 +103,10 @@ class StringComparison(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting conditions in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+
             where = select.where
             if where is not None:
                 count = 0
@@ -162,6 +170,10 @@ class EmptyStringComparison(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting conditions in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+
             where = select.where
             if where is not None:
                 count = 0
@@ -216,6 +228,10 @@ class NullComparison(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting conditions in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+
             where = select.where
             if where is not None:
                 count = 0
@@ -264,6 +280,10 @@ class NotNullComparison(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting conditions in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+
             where = select.where
             if where is not None:
                 count = 0
@@ -326,6 +346,10 @@ class Not(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+                
             where = select.where
             if where is not None:
                 count = 0
@@ -367,6 +391,10 @@ class Exists(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 count = 0
@@ -410,6 +438,10 @@ class NotExist(QueryConstraint):
         condition_count: list[int] = []
 
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 count = 0
@@ -460,6 +492,10 @@ class MathOperators(QueryConstraint):
         )
 
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 count = 0
@@ -506,6 +542,10 @@ class ExistsNotExists_InNotIn(QueryConstraint):
         neg_count = 0
 
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 # Look for EXISTS and IN operators
@@ -575,6 +615,10 @@ class WildcardCharacters(QueryConstraint):
         '''True if the wildcard contains all required characters with required counts, False if it's an invalid wildcard.'''
         
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is None:
                 continue
@@ -614,6 +658,10 @@ class WildcardLength(QueryConstraint):
         wildcard_lengths: dict[str, int] = {}
     
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 for like in where.find_all((exp.Like, exp.ILike)):
@@ -660,59 +708,6 @@ class WildcardLength(QueryConstraint):
             return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with exactly {self.min} non-special characters.'
         return f'Exercise must require all LIKE operations on rows (WHERE conditions) to have wildcards with between {self.min} and {self.max} non-special characters.'
 
-class Condition_WhereHaving(QueryConstraint):
-    '''
-    Requires the presence of a certain number of conditions in either WHERE or HAVING clauses of the SQL query.
-    Any kind of condition is accepted.
-    '''
-
-    def __init__(self, min_: int = 1, max_: int | None = None) -> None:
-        self.min = min_
-        self.max = max_
-
-    def validate(self, query: Query) -> None:
-        condition_count: list[int] = []
-
-        for select in query.main_query.selects:
-            where = select.where
-            having = select.having
-            total_conditions = 0
-
-            if where is not None:
-                count = 1  # Start with 1 for the initial condition
-                count += len(list(where.find_all(exp.And)))
-                count += len(list(where.find_all(exp.Or)))
-                total_conditions += count
-
-            if having is not None:
-                count = 1  # Start with 1 for the initial condition
-                count += len(list(having.find_all(exp.And)))
-                count += len(list(having.find_all(exp.Or)))
-                total_conditions += count
-
-            if total_conditions > 0:
-                condition_count.append(total_conditions)
-
-        count: int = sum(condition_count)
-        if self.max is None:
-            if count < self.min:
-                raise ConstraintValidationError(
-                    f'Query must require at least {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions), but only {count} were found.'
-                )
-            return
-        if not (self.min <= count <= self.max):
-            raise ConstraintValidationError(
-                f'Query must require between {self.min} and {self.max} comparisons on rows (WHERE conditions) or groups (HAVING conditions), but found {count}.'
-            )
-
-    @property
-    def description(self) -> str:
-        if self.max is None:
-            return f'Exercise must require at least {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
-        if self.min == self.max:
-            return f'Exercise must require exactly {self.min} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
-        return f'Exercise must require between {self.min} and {self.max} comparisons on rows (WHERE conditions) or groups (HAVING conditions).'
-
 class MultipleConditionsOnSameColumn(QueryConstraint):
     '''Requires multiple conditions on the same column in the WHERE clause of the SQL query.'''
 
@@ -721,6 +716,10 @@ class MultipleConditionsOnSameColumn(QueryConstraint):
 
     def validate(self, query: Query) -> None:
         for select in query.main_query.selects:
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
+            
             where = select.where
             if where is not None:
                 column_counter = Counter()
@@ -746,7 +745,7 @@ class InAnyAll(QueryConstraint):
     '''
     Requires the presence of a certain number of IN, ANY, or ALL operators in the SQL query.
     '''
-    def __init__(self, min_: int = 1 ) -> None:
+    def __init__(self, min_: int = 1) -> None:
         self.min = min_
         self.options = random.sample(
             ['IN', 'ANY', 'ALL'],
@@ -757,10 +756,19 @@ class InAnyAll(QueryConstraint):
         count = 0
 
         for select in query.main_query.selects:
-            select = select.strip_subqueries()  # prevent double counting of subqueries
+            # avoid counting NOT operators in subqueries for this constraint,
+            # since they will be counted separately when the validator visits those subqueries
+            select = select.strip_subqueries()
 
+            if select.ast is None:
+                # bogus SELECT, created by strip_subqueries - it has no AST
+                continue
+            
             exps = select.ast.find_all((exp.In, exp.Any, exp.All))
             count += len(list(exps))
+
+        import dav_tools
+        dav_tools.messages.debug(count)
 
         if count < self.min:
             error_msg = ''
