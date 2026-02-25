@@ -18,7 +18,7 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
             return [
                *constraints,
                query_constraints.clause_where.Exists(),
-               query_constraints.subquery.Subqueries(1,1),
+               query_constraints.subquery.NestedSubqueries(1,1),
                query_constraints.rows.Duplicates(),
                query_constraints.clause_having.NoHaving() 
             ]
@@ -26,7 +26,7 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
             return [
                 *constraints,
                 query_constraints.clause_where.Exists(1),
-                query_constraints.subquery.Subqueries(1,1),
+                query_constraints.subquery.NestedSubqueries(1,1),
                 query_constraints.rows.Duplicates(),
                 query_constraints.aggregation.Aggregation()
             ]
@@ -34,7 +34,7 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
         return [
             *constraints,
                 query_constraints.clause_where.Exists(2),
-                query_constraints.subquery.Subqueries(1,1),
+                query_constraints.subquery.NestedSubqueries(1,1),
                 query_constraints.rows.Duplicates(),
                 query_constraints.aggregation.Aggregation(2)
         ]

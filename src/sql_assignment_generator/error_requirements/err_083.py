@@ -36,7 +36,7 @@ class Err083_UnnecessaryDistinctInSelectClause(SqlErrorRequirements):
         return [
             query_constraints.clause_where.Condition(4),
             query_constraints.aggregation.Aggregation(3),
-            query_constraints.subquery.Subqueries(),
+            query_constraints.subquery.NestedSubqueries(),
             query_constraints.rows.Duplicates(),
         ]
 

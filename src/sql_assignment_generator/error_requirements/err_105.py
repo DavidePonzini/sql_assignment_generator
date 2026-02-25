@@ -36,7 +36,7 @@ class Err105_OuterJoinCanBeReplacedByInnerJoin(SqlErrorRequirements):
                 query_constraints.clause_where.Condition(3),
                 query_constraints.clause_from.TableReferences(2),
                 query_constraints.aggregation.Aggregation(),
-                query_constraints.subquery.Subqueries()
+                query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

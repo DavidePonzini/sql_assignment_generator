@@ -40,7 +40,7 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
                 query_constraints.aggregation.NoAggregation(),
                 query_constraints.clause_group_by.GroupBy(3),
                 query_constraints.rows.Duplicates(),
-                query_constraints.subquery.Subqueries()
+                query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

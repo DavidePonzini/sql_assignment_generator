@@ -36,7 +36,7 @@ class Err097_GroupByCanBeReplacedWithDistinct(SqlErrorRequirements):
             query_constraints.clause_where.Condition(3),
             query_constraints.rows.Distinct(),
             query_constraints.clause_group_by.NoGroupBy(),
-            query_constraints.subquery.Subqueries() 
+            query_constraints.subquery.NestedSubqueries() 
         ]
 
     def exercise_extra_details(self) -> str:

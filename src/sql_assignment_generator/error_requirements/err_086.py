@@ -35,7 +35,7 @@ class Err086_CorrelationNamesAreAlwaysIdentical(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.Condition(4),
             query_constraints.clause_from.SelfJoin(),
-            query_constraints.subquery.Subqueries(),
+            query_constraints.subquery.NestedSubqueries(),
             query_constraints.aggregation.Aggregation(2)
         ]
 

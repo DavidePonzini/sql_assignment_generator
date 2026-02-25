@@ -35,7 +35,7 @@ class Err098_UnionByCanReplacedByOr(SqlErrorRequirements):
             query_constraints.clause_where.Condition(3),
             query_constraints.set_operations.NoUnion(),
             query_constraints.aggregation.Aggregation(),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

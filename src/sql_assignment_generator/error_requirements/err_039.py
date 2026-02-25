@@ -40,7 +40,7 @@ class Err039_AndInsteadOfOr(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.MultipleConditionsOnSameColumn(3),
             query_constraints.aggregation.Aggregation(2),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

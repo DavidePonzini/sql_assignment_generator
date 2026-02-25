@@ -49,7 +49,7 @@ class Err045_MixingGT0WithIsNotNullOrEmptyStringWithNull(SqlErrorRequirements):
                 query_constraints.clause_where.EmptyStringComparison
             ]),
             query_constraints.aggregation.Aggregation(),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
 

@@ -33,7 +33,7 @@ class Err010_Synonyms(SqlErrorRequirements):
         return [
             *constraints,
             query_constraints.clause_where.Condition(3),
-            query_constraints.subquery.Subqueries(),
+            query_constraints.subquery.NestedSubqueries(),
             query_constraints.aggregation.Aggregation()
         ]
 

@@ -34,7 +34,7 @@ class Err044_IncorrectWildcard(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.WildcardLength(3),
             query_constraints.aggregation.Aggregation(),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

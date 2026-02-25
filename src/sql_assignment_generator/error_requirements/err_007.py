@@ -41,7 +41,7 @@ class Err007_UndefinedObject(SqlErrorRequirements):
         # HARD
         return [
             query_constraints.clause_where.Condition(2),
-            query_constraints.subquery.Subqueries(),
+            query_constraints.subquery.NestedSubqueries(),
             query_constraints.aggregation.Aggregation()
         ]
 

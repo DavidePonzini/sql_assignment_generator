@@ -34,7 +34,7 @@ class Err091_UnnessaryAggregateFunction(SqlErrorRequirements):
             *constraints,
                 query_constraints.clause_where.Condition(3),
                 query_constraints.aggregation.NoAggregation(),
-                query_constraints.subquery.Subqueries()
+                query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

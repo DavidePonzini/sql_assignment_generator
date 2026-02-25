@@ -41,7 +41,7 @@ class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
             *constraints,
             query_constraints.clause_where.MultipleConditionsOnSameColumn(2),
             query_constraints.aggregation.Aggregation(2),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

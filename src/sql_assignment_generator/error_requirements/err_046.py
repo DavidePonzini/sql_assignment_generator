@@ -17,21 +17,21 @@ class Err046_NullInInAnyAllSubquery(SqlErrorRequirements):
             return [
                 *constraints,
                 query_constraints.clause_where.InAnyAll(1),
-                query_constraints.subquery.Subqueries(),
+                query_constraints.subquery.NestedSubqueries(),
                 query_constraints.clause_having.NoHaving()
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 *constraints,
                 query_constraints.clause_where.InAnyAll(2),
-                query_constraints.subquery.Subqueries(),
+                query_constraints.subquery.NestedSubqueries(),
             ]
         
         # HARD
         return [
             *constraints,
             query_constraints.clause_where.InAnyAll(3),
-            query_constraints.subquery.Subqueries(),
+            query_constraints.subquery.NestedSubqueries(),
             query_constraints.aggregation.Aggregation()
         ]
 

@@ -37,7 +37,7 @@ class Err088_LikeWithoutWildcards(SqlErrorRequirements):
             query_constraints.clause_where.Condition(3),
             query_constraints.clause_where.NoLike(),
             query_constraints.aggregation.Aggregation(2),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
 
         ]
 

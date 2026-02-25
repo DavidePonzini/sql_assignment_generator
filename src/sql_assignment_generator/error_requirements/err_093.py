@@ -35,7 +35,7 @@ class Err093_UnnecessaryArgumentOfCount(SqlErrorRequirements):
             query_constraints.clause_where.Condition(3),
             query_constraints.aggregation.Aggregation(1, allowed_functions=["COUNT"]),
             query_constraints.clause_having.NoHaving(),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
         ]
 
     def exercise_extra_details(self) -> str:

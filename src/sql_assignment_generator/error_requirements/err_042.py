@@ -40,7 +40,7 @@ class Err042_DistinctThatMightRemoveImportantDuplicates(SqlErrorRequirements):
             query_constraints.aggregation.NoAggregation(),
             query_constraints.clause_group_by.NoGroupBy(),
             query_constraints.rows.Duplicates(),
-            query_constraints.subquery.Subqueries()
+            query_constraints.subquery.NestedSubqueries()
             
         ]
 
