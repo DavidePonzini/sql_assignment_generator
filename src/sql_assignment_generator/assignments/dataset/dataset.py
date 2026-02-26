@@ -121,7 +121,8 @@ class Dataset:
         messages.add_message_user(prompt_text)
         
         for attempt in range(max_attempts):
-            messages.print_chat()
+            # messages.print_chat()
+            
             try:
                 answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
