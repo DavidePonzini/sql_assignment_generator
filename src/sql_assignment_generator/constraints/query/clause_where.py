@@ -1015,6 +1015,6 @@ class InAnyAll(QueryConstraint):
         
         for option in self.options:
             selected_constraints += descriptions[option]
-            selected_constraints += TranslatableText('\n', it='\n')     # must add a NL for each language
+            selected_constraints += '\n'
         
         return selected_constraints.strip()

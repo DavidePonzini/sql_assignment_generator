@@ -9,7 +9,7 @@ from ...constraints import QueryConstraint
 from ...difficulty_level import DifficultyLevel
 from ... import llm
 from ...exceptions import ExerciseGenerationError, SQLParsingError, ConstraintValidationError
-
+from ...translatable_text import TranslatableText
 
 @dataclass
 class Exercise:
@@ -40,6 +40,7 @@ class Exercise:
         dataset: Dataset,
         title: str,
         sql_dialect: str,
+        language: str,
         max_attempts: int = 3,
     ) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''
@@ -48,7 +49,8 @@ class Exercise:
         messages.add_message_user(strings.prompt_generate(
             dataset_str=dataset.to_sql_no_context(),
             extra_details=extra_details,
-            constraints=constraints
+            constraints=constraints,
+            language=language
         ))
 
         for attempt in range(max_attempts):
@@ -60,7 +62,13 @@ class Exercise:
                 try:
                     query = Query(answer.solution, catalog=dataset.catalog)
                 except Exception as e:
-                    raise SQLParsingError(f"Generated SQL solution contains syntax errors: {e}", answer.solution)
+                    raise SQLParsingError(
+                        TranslatableText(
+                            f"Generated SQL solution contains syntax errors: {e}",
+                            it=f"La soluzione SQL generata contiene errori di sintassi: {e}"
+                        ).get(language),
+                        answer.solution
+                    )
 
                 # constraint validation
                 constraint_errors = []
@@ -69,16 +77,16 @@ class Exercise:
                     try:
                         constraint.validate(query)
                     except ConstraintValidationError:
-                        constraint_errors.append(constraint.description)
+                        constraint_errors.append(constraint.description.get(language))
 
                 if constraint_errors:
                     dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
-                    messages.add_message_user(strings.feedback_validation_errors(constraint_errors))
+                    messages.add_message_user(strings.feedback_validation_errors(constraint_errors, language=language))
                     continue
 
                 # refine natural language request to remove hints
                 messages_refinement = llm.Message()
-                messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, query))
+                messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, query, language=language))
                 answer_refinement = llm.generate_answer(
                     messages_refinement,
                     json_format=llm.models.RemoveHints
@@ -98,6 +106,11 @@ class Exercise:
                 )
             except Exception as e:
                 dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")
-                messages.add_message_user(f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.")
+                messages.add_message_user(
+                    TranslatableText(
+                        f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.",
+                        it=f"Si è verificato un errore: {str(e)}. Per favore rigenera JSON/SQL valido."
+                    ).get(language)
+                )
 
         raise ExerciseGenerationError(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')

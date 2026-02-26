@@ -105,7 +105,8 @@ def generate_assignment(
             sql_dialect=sql_dialect,
             constraints=dataset_requirements,
             extra_details=dataset_extra_details,
-            max_attempts=max_dataset_attempts
+            language=language,
+            max_attempts=max_dataset_attempts,
         )
     else:
         dataset = Dataset.from_sql(
@@ -142,7 +143,8 @@ def generate_assignment(
                     sql_dialect=sql_dialect,
                     dataset=dataset,
                     title=title,
-                    max_attempts=max_exercise_attempts
+                    max_attempts=max_exercise_attempts,
+                    language=language
                 )
             except ExerciseGenerationError:
                 with log_lock:

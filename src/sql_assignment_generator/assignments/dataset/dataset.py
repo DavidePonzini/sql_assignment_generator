@@ -10,6 +10,7 @@ from ...constraints.schema import SchemaConstraint
 from ... import llm
 from ...constraints import SchemaConstraint, schema as schema_constraints
 from ...exceptions import SQLParsingError, ConstraintValidationError, DatasetGenerationError
+from ...translatable_text import TranslatableText
 
 
 @dataclass
@@ -99,6 +100,7 @@ class Dataset:
         constraints: Sequence[SchemaConstraint],
         extra_details: list[str] = [],
         *,
+        language: str,
         max_attempts: int = 5
     ) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
@@ -109,7 +111,8 @@ class Dataset:
         prompt_text = strings.prompt_generate(
             domain=domain,
             extra_details=extra_details,
-            constraints=constraints
+            constraints=constraints,
+            language=language
         )
 
         # query LLM to generate dataset
@@ -117,6 +120,7 @@ class Dataset:
         messages.add_message_user(prompt_text)
         
         for attempt in range(max_attempts):
+            messages.print_chat()
             try:
                 answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
@@ -128,7 +132,13 @@ class Dataset:
                         parsed = sqlglot.parse_one(create_table, read=sql_dialect)
                         parsed_tables.append(parsed)
                     except Exception as e:
-                        raise SQLParsingError(f"Syntax error in CREATE TABLE generated: {e}", create_table)
+                        raise SQLParsingError(
+                            TranslatableText(
+                                f"Syntax error in CREATE TABLE generated: {e}",
+                                it=f"Errore di sintassi nella CREATE TABLE generata: {e}"
+                            ).get(language),
+                            create_table
+                        )
                 create_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_tables]
 
                 # parse INSERT INTOs
@@ -138,7 +148,13 @@ class Dataset:
                         parsed = sqlglot.parse_one(create_table, read=sql_dialect)
                         parsed_inserts.append(parsed)
                     except Exception as e:
-                        raise SQLParsingError(f"Syntax error in INSERT COMMANDS generated: {e}", create_table)
+                        raise SQLParsingError(
+                            TranslatableText(
+                                f"Syntax error in INSERT COMMANDS generated: {e}",
+                                it=f"Errore di sintassi nei comandi INSERT generati: {e}"
+                            ).get(language),
+                            create_table
+                        )
                 insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_inserts]
 
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
@@ -149,7 +165,7 @@ class Dataset:
                     try:
                         constraint.validate(catalog, parsed_tables, parsed_inserts)
                     except ConstraintValidationError as e:
-                        errors.append(str(e))
+                        errors.append(e.get(language=language))
                         continue
 
                 # no errors, return dataset
@@ -167,10 +183,15 @@ class Dataset:
                 
                 dav_tools.messages.error(f'Validation failed for attempt {attempt + 1}. Missing requirements: {", ".join(errors)}')
                 
-                messages.add_message_user(strings.feedback_constraint_violations(errors))
+                messages.add_message_user(strings.feedback_constraint_violations(errors, language=language))
 
             except SQLParsingError as e:
                 dav_tools.messages.error(f"Error during generation (Attempt {attempt + 1}): {e}")
-                messages.add_message_user(f"SQL code is not syntactically valid: {str(e)}. Please regenerate valid SQL.")
+                messages.add_message_user(
+                    TranslatableText(
+                        f"Generated SQL code is not syntactically valid: {str(e)}. Please regenerate valid SQL.",
+                        it=f"Il codice SQL generato non è sintatticamente valido: {str(e)}. Per favore, rigenera un SQL valido."
+                    ).get(language)
+                )
         
         raise DatasetGenerationError(f'Failed to generate a valid dataset after {max_attempts} attempts.')

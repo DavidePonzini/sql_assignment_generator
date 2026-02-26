@@ -18,7 +18,7 @@ if __name__ == '__main__':
         (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
     ]*3
 
-    assignment = generate_assignment(errors, domain=domain)
+    assignment = generate_assignment(errors, domain=domain, language='it')
     
     dav_tools.messages.message(
         '-' * 50,

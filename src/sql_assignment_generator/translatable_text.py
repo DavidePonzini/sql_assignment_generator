@@ -24,15 +24,23 @@ class TranslatableText:
         return result
     
     def __add__(self, other):
-        if not isinstance(other, TranslatableText):
-            return NotImplemented
+        if isinstance(other, TranslatableText):
+            combined_translations = {
+                lang: self.translations.get(lang, '') + other.translations.get(lang, '')
+                for lang in set(self.translations) | set(other.translations)
+            }
         
-        combined_translations = {
-            lang: self.translations.get(lang, '') + other.translations.get(lang, '')
-            for lang in set(self.translations) | set(other.translations)
-        }
+            return TranslatableText(**combined_translations)
         
-        return TranslatableText(**combined_translations)
+        if isinstance(other, str):
+            combined_translations = {
+                lang: text + other
+                for lang, text in self.translations.items()
+            }
+
+            return TranslatableText(**combined_translations)
+        
+        return NotImplemented
     
     def strip(self) -> 'TranslatableText':
         '''Return a new TranslatableText with leading and trailing whitespace removed from all translations.'''
