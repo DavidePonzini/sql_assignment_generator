@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 import dav_tools
 import sqlglot
+from sqlglot import exp
 from sqlscope import Catalog, build_catalog_from_sql
 
 from . import strings
@@ -63,6 +64,34 @@ class Dataset:
 
         return strings.to_sql_format(schema=schema, create_cmds=create_cmds, insert_cmds=insert_cmds)
     
+    @staticmethod
+    def from_sql(sql_str: str) -> 'Dataset':
+        '''Create a Dataset instance from a raw SQL string containing CREATE TABLE and INSERT INTO commands.'''
+    
+        try:
+            parsed = sqlglot.parse(sql_str, read="postgres")
+            create_commands = []
+            insert_commands = []
+
+            for statement in parsed:
+                if isinstance(statement, exp.Create):
+                    if statement.kind is not None and statement.kind.upper() != 'TABLE':
+                        continue  # skip non-table creation statements, e.g. CREATE SCHEMA
+                    create_commands.append(f'{statement.sql()};')
+                elif isinstance(statement, exp.Insert):
+                    insert_commands.append(f'{statement.sql()};')
+
+            if not create_commands:
+                raise ValueError("No CREATE TABLE commands found in the provided SQL string.")
+        except Exception as e:
+            raise SQLParsingError(f"Error parsing SQL string: {e}", sql_str)
+
+        return Dataset(
+            create_commands=create_commands,
+            insert_commands=insert_commands,
+            domain="CUSTOM_DATASET"
+        )
+        
     @staticmethod
     def generate(domain: str,
                  constraints: Sequence[SchemaConstraint],

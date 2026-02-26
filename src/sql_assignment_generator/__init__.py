@@ -20,8 +20,9 @@ from sql_error_taxonomy import SqlErrors
 
 def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],
-        domain: str | None = None,
         *,
+        domain: str | None = None,
+        dataset_str: str | None = None,
         shuffle_exercises: bool = False,
         naming_func: Callable[[SqlErrors, DifficultyLevel], str] = lambda error, difficulty: f'{error.name} - {difficulty.name}',
         max_dataset_attempts: int = 3,
@@ -39,6 +40,7 @@ def generate_assignment(
     Args:
         errors (list[tuple[SqlErrors, DifficultyLevel]]): A list of (error, difficulty) pairs.
         domain (str | None): The domain for the assignments. If None, a random domain will be selected.
+        dataset_str (str | None): Optional SQL string to use as the dataset. If provided, it will be used instead of generating a new dataset.
         shuffle_exercises (bool): Whether to shuffle exercises to prevent ordering bias (shuffles input order).
         naming_func (Callable[[SqlErrors, DifficultyLevel], str]): Generates exercise titles.
         max_dataset_attempts (int): Maximum retries for generating a valid dataset before skipping.
@@ -61,9 +63,6 @@ def generate_assignment(
     if not supported_errors:
         raise ValueError('No supported errors provided for assignment generation.')
 
-    if domain is None:
-        domain = random_domain()
-
     if shuffle_exercises:
         random.shuffle(errors)
     
@@ -73,20 +72,26 @@ def generate_assignment(
     # convert SqlErrors -> SqlErrorRequirements, keeping difficulty levels
     requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = [(error, ERROR_REQUIREMENTS_MAP[error], difficulty) for error, difficulty in supported_errors]
 
-    # initialize requirements and extra details
-    dataset_requirements: list[SchemaConstraint] = []
-    for _, req, difficulty in requirements:
-        dataset_requirements.extend(req.dataset_constraints(difficulty))
+    if not dataset_str:
+        # No dataset string provided, so we need to generate a dataset based on the requirements of the exercises.
+        if domain is None:
+            domain = random_domain()
 
-    dataset_extra_details: list[str] = [
-        req.dataset_extra_details()
-        for _, req, _ in requirements
-    ]
-    dataset_extra_details = [detail for detail in dataset_extra_details if detail.strip()]  # filter out empty details
-    dataset_extra_details = list(set(dataset_extra_details))  # deduplicate details
+        dataset_requirements: list[SchemaConstraint] = []
+        for _, req, difficulty in requirements:
+            dataset_requirements.extend(req.dataset_constraints(difficulty))
 
-    dav_tools.messages.info(f'Generating dataset for domain: {domain}')
-    dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details, max_attempts=max_dataset_attempts)
+        dataset_extra_details: list[str] = [
+            req.dataset_extra_details()
+            for _, req, _ in requirements
+        ]
+        dataset_extra_details = [detail for detail in dataset_extra_details if detail.strip()]  # filter out empty details
+        dataset_extra_details = list(set(dataset_extra_details))  # deduplicate details
+
+        dav_tools.messages.info(f'Generating dataset for domain: {domain}')
+        dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details, max_attempts=max_dataset_attempts)
+    else:
+        dataset = Dataset.from_sql(dataset_str)
 
     generated_solutions_hashes: set[str] = set()
     hashes_lock = threading.Lock()
