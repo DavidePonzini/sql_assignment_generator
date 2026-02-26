@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err073_MissingAsFromSelect(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -35,5 +36,8 @@ class Err073_MissingAsFromSelect(SqlErrorRequirements):
             query_constraints.subquery.Subqueries() 
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must ask to rename all column in SELECT.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'The exercise must ask to rename all column in SELECT.',
+            it='L\'esercizio deve chiedere di rinominare tutte le colonne nella clausola SELECT.'
+        )

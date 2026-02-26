@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err015_AggregateFunctionsCannotBeNested(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,6 +31,8 @@ class Err015_AggregateFunctionsCannotBeNested(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation(2)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "Generate a query in natural language that seems to involve one AGGREGATION " \
-        "inside another (e.g. 'the book that has the maximum number of sales' -- and the database doesn't store the sales count)."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "Generate a query in natural language that seems to involve one AGGREGATION inside another (e.g. 'the book that has the maximum number of sales' -- and the database doesn't store the sales count).",
+            it="Genera una query in linguaggio naturale che sembra coinvolgere un AGGREGATO dentro un altro (es. 'il libro che ha il massimo numero di vendite' -- e il database non memorizza il conteggio delle vendite)."
+        )

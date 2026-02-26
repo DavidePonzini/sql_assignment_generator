@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err035_IsWhereNotApplicable(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,5 +31,8 @@ class Err035_IsWhereNotApplicable(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "The exercise must require equality comparisons (i.e. '=') in WHERE conditions"
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise must require equality comparisons (i.e. '=') in WHERE conditions",
+            it="L'esercizio deve richiedere confronti di uguaglianza (cioè '=') nelle condizioni WHERE"
+        )

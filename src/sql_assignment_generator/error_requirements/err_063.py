@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err063_ImproperNestingOfExpressions(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -29,11 +30,9 @@ class Err063_ImproperNestingOfExpressions(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return (
-            "The WHERE clause must require nested logical expressions where parentheses are mandatory "
-            "to ensure correct operator precedence (e.g., '(condition1 OR condition2) AND condition3'). "
-            "The logic must be realistic and the parentheses must be essential for the query's "
-            "correctness, not redundant."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The WHERE clause must require nested logical expressions where parentheses are mandatory to ensure correct operator precedence (e.g., '(condition1 OR condition2) AND condition3'). The logic must be realistic and the parentheses must be essential for the query's correctness, not redundant.",
+            it="La clausola WHERE deve richiedere espressioni logiche annidate dove le parentesi sono obbligatorie per garantire la corretta precedenza degli operatori (es. '(condizione1 OR condizione2) AND condizione3'). La logica deve essere realistica e le parentesi devono essere essenziali per la correttezza della query, non ridondanti."
         )
     

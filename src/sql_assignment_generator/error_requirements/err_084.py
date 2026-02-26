@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err084_UnncessaryJoin(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -33,8 +34,14 @@ class Err084_UnncessaryJoin(SqlErrorRequirements):
             
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise should require selecting ONLY FOREIGN KEY column for at least one of the tables in the FROM clause.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise should require selecting ONLY FOREIGN KEY column for at least one of the tables in the FROM clause.",
+            it="L'esercizio dovrebbe richiedere la selezione SOLO della colonna chiave esterna per almeno una delle tabelle nella clausola FROM."
+        )
 
-    def dataset_extra_details(self) -> str:
-        return 'In the CREATE TABLE statements, there must be FOREIGN KEY relationship between tables.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "In the CREATE TABLE statements, there must be FOREIGN KEY relationship between tables.",
+            it="Nelle istruzioni CREATE TABLE, deve esserci una relazione di chiave esterna tra le tabelle."
+        )

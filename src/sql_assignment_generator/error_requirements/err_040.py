@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
 from ..constraints import schema as schema_constraints, query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
@@ -50,6 +51,10 @@ class Err040_ImpliedTautologicalOrInconsistentExpressions(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "Exercise should require multiple conditions on the same column " \
-         "(e.g. p.age < 18 OR p.age >= 0 this represent one column with multiple conditions)."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "Exercise should require multiple conditions on the same column " \
+            "(e.g. p.age < 18 AND p.age >= 0 this represent one column with multiple conditions).",
+            it="L'esercizio deve richiedere condizioni multiple sulla stessa colonna " \
+               "(es. p.età < 18 AND p.età >= 0 questo rappresenta una colonna con più condizioni)."
+        )

@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err021_ComparisonWithNull(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,5 +31,8 @@ class Err021_ComparisonWithNull(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation(2)
         ]
 
-    def dataset_extra_details(self) -> str:
-        return 'Some non-key columns in the dataset must have NULL values.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "Some non-key columns in the dataset must have NULL values.",
+            it="Alcune colonne non chiave nel dataset devono avere valori NULL."
+        )

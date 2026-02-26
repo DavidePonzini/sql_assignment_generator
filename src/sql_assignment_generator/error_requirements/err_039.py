@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err039_AndInsteadOfOr(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,7 +31,12 @@ class Err039_AndInsteadOfOr(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "The exercise must require multiple OR conditions on the same column " \
-        "(e.g. p.bornCity='Rome' OR p.bornCity='Genoa'. This represent one column with multiple conditions). " \
-        "It is mandatory use the parentesis to give precedence to a separate condition. "
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise must require multiple OR conditions on the same column " \
+            "(e.g. p.bornCity='Rome' OR p.bornCity='Genoa'. This represent one column with multiple conditions). " \
+            "It is mandatory use the parentesis to give precedence to a separate condition. ",
+            it="L'esercizio deve richiedere condizioni OR multiple sulla stessa colonna " \
+               "(es. p.cittàNascita='Roma' OR p.cittàNascita='Genova'. Questo rappresenta una colonna con più condizioni). " \
+               "E' obbligatorio usare le parentesi per dare precedenza a una condizione separata."
+        )

@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err077_IncorrectOrderingOfRows(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -33,5 +34,8 @@ class Err077_IncorrectOrderingOfRows(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "The natural language query ABSOLUTELY MUST NOT HAVE text 'in descending order' or similar."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The natural language query ABSOLUTELY MUST NOT HAVE text 'in descending order' or similar.",
+            it="La richiesta in linguaggio naturale NON DEVE contenere testo come 'in ordine decrescente' o simili."
+        )

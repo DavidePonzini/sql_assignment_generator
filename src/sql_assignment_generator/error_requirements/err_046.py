@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err046_NullInInAnyAllSubquery(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -27,8 +28,14 @@ class Err046_NullInInAnyAllSubquery(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must involve a subquery that returns at least one nullable value.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'The exercise must involve a subquery that returns at least one nullable value.',
+            it='L\'esercizio deve coinvolgere una subquery che restituisce almeno un valore NULL.'
+        )
 
-    def dataset_extra_details(self) -> str:
-        return 'Dataset must contain NULL values.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'Dataset must contain NULL values.',
+            it='Il dataset deve contenere valori NULL.'
+        )

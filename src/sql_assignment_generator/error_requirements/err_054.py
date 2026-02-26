@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err054_MissingNot(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -33,5 +34,8 @@ class Err054_MissingNot(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise should require multiple NOT conditions in WHERE clauses'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'The exercise should require multiple NOT conditions in WHERE clauses',
+            it='L\'esercizio deve richiedere più condizioni NOT nelle clausole WHERE'
+        )

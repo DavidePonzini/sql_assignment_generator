@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err026_TooManyColumnsInSubquery(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,6 +31,8 @@ class Err026_TooManyColumnsInSubquery(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation(2)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "The exercise should require comparing each row with " \
-        "a value from the same row or subset of rows (e.g. 'WHERE balance <comparison operator> (SELECT balance ... WHERE name = 'John')')"
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise should require comparing each row with a value from the same row or subset of rows (e.g. 'WHERE balance <comparison operator> (SELECT balance ... WHERE name = 'John')')",
+            it="L'esercizio dovrebbe richiedere il confronto di ogni riga con un valore della stessa riga o di un sottoinsieme di righe (es. 'WHERE bilancio <operatore di confronto> (SELECT bilancio ... WHERE nome = 'Mario')')"
+        )

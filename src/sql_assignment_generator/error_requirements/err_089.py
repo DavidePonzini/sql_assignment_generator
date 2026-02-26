@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -32,8 +33,14 @@ class Err089_UnnecessarilyComplicatedSelectInExistsSubquery(SqlErrorRequirements
                 query_constraints.aggregation.Aggregation(2)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must have EXISTS with only one column in SELECT and must not use DISTINCT.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise must have EXISTS with only one column in SELECT and must not use DISTINCT.",
+            it="L'esercizio deve avere EXISTS con una sola colonna nella SELECT e non deve usare DISTINCT."
+        )
 
-    def dataset_extra_details(self) -> str:
-        return 'INSERT INTO statements must be used to populate the tables with data that contains duplicate values, so that the DISTINCT keyword is necessary to eliminate duplicates from the query results. The dataset should be designed such that without DISTINCT, the query would return duplicate rows, and with DISTINCT, it would return a unique set of rows.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "INSERT INTO statements must be used to populate the tables with data that contains duplicate values, so that the DISTINCT keyword is necessary to eliminate duplicates from the query results. The dataset should be designed such that without DISTINCT, the query would return duplicate rows, and with DISTINCT, it would return a unique set of rows.",
+            it="Le istruzioni INSERT INTO devono essere utilizzate per popolare le tabelle con dati che contengono valori duplicati, in modo che la parola chiave DISTINCT sia necessaria per eliminare i duplicati dai risultati della query. Il dataset dovrebbe essere progettato in modo tale che senza DISTINCT la query restituisca righe duplicate e con DISTINCT restituisca un insieme unico di righe."
+        )

@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err043_WildcardsWithoutLike(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -31,5 +32,8 @@ class Err043_WildcardsWithoutLike(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'In the exercise there are WILDCARD with whole words longer than 5 characters.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'In the exercise there are WILDCARD with whole words longer than 5 characters.',
+            it='Nell\'esercizio ci sono WILDCARD con parole intere più lunghe di 5 caratteri.'
+        )

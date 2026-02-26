@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
 from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err053_ExtraneousNot(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,5 +31,8 @@ class Err053_ExtraneousNot(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation(2)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must require at least one WHERE condition without NOT"'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'The exercise must require at least one WHERE condition without NOT.',
+            it='L\'esercizio deve richiedere almeno una condizione WHERE senza NOT.'
+        )

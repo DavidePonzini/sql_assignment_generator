@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err011_OmittingQuotesAroundCharacterData(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,5 +31,8 @@ class Err011_OmittingQuotesAroundCharacterData(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def dataset_extra_details(self) -> str:
-        return 'All the dataset tables must have at least one string attribute.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'All the dataset tables must have at least one string attribute.',
+            it='Tutte le tabelle del dataset devono avere almeno un attributo di tipo stringa.'
+        )

@@ -1,5 +1,5 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
 
 class Err074_MissingColumnFromOrderByClause(SqlErrorRequirements):

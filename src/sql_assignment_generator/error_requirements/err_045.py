@@ -1,8 +1,8 @@
 import random
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
-
+from ..translatable_text import TranslatableText
 class Err045_MixingGT0WithIsNotNullOrEmptyStringWithNull(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
@@ -38,5 +38,8 @@ class Err045_MixingGT0WithIsNotNullOrEmptyStringWithNull(SqlErrorRequirements):
         ]
 
 
-    def dataset_extra_details(self) -> str:
-        return 'Table must have some NULL, non-NULL, and NUMERIC attributes. Some string values must also be empty strings.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'Table must have some NULL, non-NULL, and NUMERIC attributes. Some string values must also be empty strings.',
+            it='La tabella deve avere alcuni valori NULL, non NULL e NUMERIC. Alcuni valori stringa devono essere anche stringhe vuote.'
+        )

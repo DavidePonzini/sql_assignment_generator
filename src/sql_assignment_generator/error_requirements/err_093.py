@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err093_UnnecessaryArgumentOfCount(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -31,5 +32,8 @@ class Err093_UnnecessaryArgumentOfCount(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise should require aggregation count with a star, i.e., COUNT(*).'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise should require aggregation count with a star, i.e., COUNT(*).",
+            it="L'esercizio deve richiedere l'aggregazione count con un asterisco, ovvero COUNT(*)."
+        )

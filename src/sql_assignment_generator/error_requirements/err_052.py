@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err052_OrInsteadOfAnd(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -30,5 +31,8 @@ class Err052_OrInsteadOfAnd(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "Solution query must have multiple AND conditions (e.g. p.film='Eragon' AND p.type='Fantasy')."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "Solution query must have multiple AND conditions (e.g. p.film='Eragon' AND p.type='Fantasy').",
+            it="La query soluzione deve avere più condizioni AND (es. p.film='Eragon' AND p.type='Fantasy')."
+        )

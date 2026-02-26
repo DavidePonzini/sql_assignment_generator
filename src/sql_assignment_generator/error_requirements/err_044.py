@@ -1,11 +1,12 @@
 import random
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err044_IncorrectWildcard(SqlErrorRequirements):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, language: str):
+        super().__init__(language=language)
         self._selected_symbols = ''
 
     def _prepare_symbols(self, difficulty: DifficultyLevel):
@@ -53,6 +54,8 @@ class Err044_IncorrectWildcard(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        symbols_str = ' and '.join([f'\'{s}\'' for s in self._selected_symbols])
-        return f'''Creates queries that must include {symbols_str} symbol in LIKE wildcard.'''
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            f'Creates queries that must include the following symbols in LIKE wildcard: {" and ".join(self._selected_symbols)}',
+            it=f'Crea query che devono includere i seguenti simboli nei wildcard di LIKE: {" e ".join(self._selected_symbols)}'
+        )

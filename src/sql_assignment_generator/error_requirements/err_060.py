@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err060_JoinOnIncorrectColumn(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -32,9 +33,14 @@ class Err060_JoinOnIncorrectColumn(SqlErrorRequirements):
             query_constraints.clause_from.TableReferences(3)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "Solution MUST USE composite FOREIGN KEY in join " \
-        "(e.g. column1 a JOIN column2 b ON (a.col1= b.col1) AND (a.col2 = b.col2))"
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "Solution MUST USE composite FOREIGN KEY in join (e.g. column1 a JOIN column2 b ON (a.col1= b.col1) AND (a.col2 = b.col2))",
+            it="La soluzione DEVE USARE una chiave esterna composta in un join (es. column1 a JOIN column2 b ON (a.col1= b.col1) AND (a.col2 = b.col2))"
+        )
 
-    def dataset_extra_details(self) -> str:
-        return 'Composite foreign keys must be used in CREATE TABLE statements'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'Composite foreign keys must be used in CREATE TABLE statements',
+            it='Le chiavi esterne composte devono essere usate nelle istruzioni CREATE TABLE'
+        )

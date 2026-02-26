@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err098_UnionByCanReplacedByOr(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -32,6 +33,9 @@ class Err098_UnionByCanReplacedByOr(SqlErrorRequirements):
             query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must require having in the WHERE clause two different conditions connected by OR on the same column'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise must require having in the WHERE clause two different conditions connected by OR on the same column",
+            it="L'esercizio deve richiedere di avere nella clausola WHERE due condizioni diverse collegate da OR sulla stessa colonna"
+        )
     

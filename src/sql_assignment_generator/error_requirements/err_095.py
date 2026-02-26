@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -37,8 +38,14 @@ class Err095_GroupByWithSingletonGroups(SqlErrorRequirements):
                 query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The exercise must require grouping on non-unique columns, i.e., columns that can have duplicate values.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The exercise must require grouping on non-unique columns, i.e., columns that can have duplicate values.",
+            it="L'esercizio deve richiedere il raggruppamento su colonne non uniche, ovvero colonne che possono avere valori duplicati."
+        )
 
-    def dataset_extra_details(self) -> str:
-        return 'INSERT INTO statements must be used to populate the tables with data that contains duplicate values for columns which are used in the GROUP BY clause.'
+    def dataset_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "INSERT INTO statements must be used to populate the tables with data that contains duplicate values for columns which are used in the GROUP BY clause.",
+            it="Le istruzioni INSERT INTO devono essere utilizzate per popolare le tabelle con dati che contengono valori duplicati per colonne che sono utilizzate nella clausola GROUP BY."
+        )

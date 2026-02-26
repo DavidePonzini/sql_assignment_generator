@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err105_OuterJoinCanBeReplacedByInnerJoin(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -32,5 +33,8 @@ class Err105_OuterJoinCanBeReplacedByInnerJoin(SqlErrorRequirements):
                 query_constraints.subquery.Subqueries()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'The natural language request must use the word left or right'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The natural language request must use the word left or right",
+            it="La richiesta in linguaggio naturale deve usare la parola sinistra/o o destra/o"
+        )

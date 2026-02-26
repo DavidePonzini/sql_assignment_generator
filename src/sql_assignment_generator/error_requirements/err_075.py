@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
-from ..constraints import schema as schema_constraints, query as query_constraints
+from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err075_IncorrectColumnInOrderByClause(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
@@ -37,6 +38,8 @@ class Err075_IncorrectColumnInOrderByClause(SqlErrorRequirements):
             query_constraints.clause_select.SelectedColumns(3)
         ]
 
-    def exercise_extra_details(self) -> str:
-        return "The natural language request must INDIRECTLY define the order in " \
-        "which the values should appear in the result table, which the student will need to insert into ORDER BY."
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            "The natural language request must INDIRECTLY define the order in which the values should appear in the result table, which the student will need to insert into ORDER BY.",
+            it="La richiesta in linguaggio naturale deve definire INDIRETTAMENTE l'ordine in cui i valori dovrebbero apparire nella tabella risultante, che lo studente dovrà inserire nella clausola ORDER BY."
+        )

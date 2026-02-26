@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
 from ..constraints import schema as schema_constraints, query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err004_UndefinedColumn(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
@@ -49,5 +50,8 @@ class Err004_UndefinedColumn(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation()
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'This exercise should require students to reference a large number of columns in solution.'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'This exercise should require students to reference a large number of columns in solution.',
+            it='Questo esercizio dovrebbe richiedere agli studenti di fare riferimento a un gran numero di colonne nella soluzione.'
+        )
