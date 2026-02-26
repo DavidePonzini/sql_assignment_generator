@@ -5,6 +5,7 @@ from sqlscope import Catalog
 
 class SchemaConstraint(BaseConstraint):
     '''Base class for schema-related constraints.'''
+
     @abstractmethod
     def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         '''

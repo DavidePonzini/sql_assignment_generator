@@ -1,9 +1,9 @@
-from collections import Counter
 from .base import QueryConstraint
-from sqlglot import Expression, exp
+from sqlglot import exp
 import sqlglot
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
+from ...translatable_text import TranslatableText
 
 class Union(QueryConstraint):
     '''
@@ -29,7 +29,7 @@ class Union(QueryConstraint):
         sql = query.sql
         ast = sqlglot.parse_one(sql)
         for union_node in ast.find_all(exp.Union):
-            if union_node.args.get("distinct"):
+            if union_node.args.get('distinct'):
                 union_count += 1
             else:
                 union_all_count += 1
@@ -43,20 +43,39 @@ class Union(QueryConstraint):
 
         if self.max is None:
             if total_unions < self.min:
-                raise ConstraintValidationError(f'Exercise must require at least {self.min} UNION operations.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Exercise must require at least {self.min} UNION operations.',
+                        it=f'L\'esercizio deve richiedere almeno {self.min} operazioni UNION.'
+                    )
+                )
         else:
             if not (self.min <= total_unions <= self.max):
-                raise ConstraintValidationError(f'Exercise must require between {self.min} and {self.max} UNION operations.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Exercise must require between {self.min} and {self.max} UNION operations.',
+                        it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} operazioni UNION.'
+                    )
+                )
             
     
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f'Exercise must require at least {self.min} UNION operations.'
+            return TranslatableText(
+                f'Exercise must require at least {self.min} UNION operations.',
+                it=f'L\'esercizio deve richiedere almeno {self.min} operazioni UNION.'
+            )
         elif self.min == self.max:
-            return f'Exercise must require exactly {self.min} UNION operations.'
+            return TranslatableText(
+                f'Exercise must require exactly {self.min} UNION operations.',
+                it=f'L\'esercizio deve richiedere esattamente {self.min} operazioni UNION.'
+            )
         else:
-            return f'Exercise must require between {self.min} and {self.max} UNION operations.'
+            return TranslatableText(
+                f'Exercise must require between {self.min} and {self.max} UNION operations.',
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} operazioni UNION.'
+            )
         
 class NoUnion(Union):
     '''Ensures that the query does not contain any UNION operations.'''
@@ -65,8 +84,11 @@ class NoUnion(Union):
         super().__init__(min_=0, max_=0)
 
     @property
-    def description(self) -> str:
-        return "Exercise must not require combining results from multiple queries (i.e., no UNION operations)."
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            'Exercise must not require combining results from multiple queries (i.e., no UNION operations).',
+            it='L\'esercizio non deve richiedere combinare risultati da più query (i.e., nessuna operazione UNION).'
+        )
 
 class UnionOfType(Union):
     '''
@@ -93,17 +115,36 @@ class UnionOfType(Union):
         union_type = 'UNION ALL' if self.all else 'UNION'
         if self.max is None:
             if count < self.min:
-                raise ConstraintValidationError(f'Exercise must require at least {self.min} {union_type} operations.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Exercise must require at least {self.min} {union_type} operations.',
+                        it=f'L\'esercizio deve richiedere almeno {self.min} operazioni {union_type}.'
+                    )
+                )
         else:
             if not (self.min <= count <= self.max):
-                raise ConstraintValidationError(f'Exercise must require between {self.min} and {self.max} {union_type} operations.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Exercise must require between {self.min} and {self.max} {union_type} operations.',
+                        it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} operazioni {union_type}.'
+                    )
+                )
             
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         union_type = 'UNION ALL' if self.all else 'UNION'
         if self.max is None:
-            return f'Exercise must require at least {self.min} {union_type} operations.'
+            return TranslatableText(
+                f'Exercise must require at least {self.min} {union_type} operations.',
+                it=f'L\'esercizio deve richiedere almeno {self.min} operazioni {union_type}.'
+            )
         elif self.min == self.max:
-            return f'Exercise must require exactly {self.min} {union_type} operations.'
+            return TranslatableText(
+                f'Exercise must require exactly {self.min} {union_type} operations.',
+                it=f'L\'esercizio deve richiedere esattamente {self.min} operazioni {union_type}.'
+            )
         else:
-            return f'Exercise must require between {self.min} and {self.max} {union_type} operations.'
+            return TranslatableText(
+                f'Exercise must require between {self.min} and {self.max} {union_type} operations.',
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} operazioni {union_type}.'
+            )

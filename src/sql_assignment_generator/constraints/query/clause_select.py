@@ -1,6 +1,7 @@
 from .base import QueryConstraint
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
+from ...translatable_text import TranslatableText
 
 class SelectedColumns(QueryConstraint):
     '''Requires a specific number of columns in the main SELECT clause.'''
@@ -17,21 +18,36 @@ class SelectedColumns(QueryConstraint):
         if self.max is None:
             if columns < self.min:
                 raise ConstraintValidationError(
-                    f'Query must select at least {self.min} columns, but selected {columns} columns.'
+                    TranslatableText(
+                        f'Query must select at least {self.min} columns, but selected {columns} columns.',
+                        it=f'La query deve selezionare almeno {self.min} colonne, ma ne ha selezionate {columns}.'
+                    )
                 )
             return
         if not (self.min <= columns <= self.max):
             raise ConstraintValidationError(
-                f'Query must select between {self.min} and {self.max} columns, but selected {columns} columns.'
+                TranslatableText(
+                    f'Query must select between {self.min} and {self.max} columns, but selected {columns} columns.',
+                    it=f'La query deve selezionare tra {self.min} e {self.max} colonne, ma ne ha selezionate {columns}.'
+                )
             )
 
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f'Query must select at least {self.min} columns'
+            return TranslatableText(
+                f'Query must select at least {self.min} columns',
+                it=f'La query deve selezionare almeno {self.min} colonne'
+            )
         if self.min == self.max:
-            return f'Query must select exactly {self.min} columns'
-        return f'Query must select between {self.min} and {self.max} columns'
+            return TranslatableText(
+                f'Query must select exactly {self.min} columns',
+                it=f'La query deve selezionare esattamente {self.min} colonne'
+            )
+        return TranslatableText(
+            f'Query must select between {self.min} and {self.max} columns',
+            it=f'La query deve selezionare tra {self.min} e {self.max} colonne'
+        )
 
 class NoAlias(QueryConstraint):
     '''
@@ -44,12 +60,18 @@ class NoAlias(QueryConstraint):
         for col in output.columns:
             if col.name != col.real_name:
                 raise ConstraintValidationError(
-                    "Columns in SELECT must not be renamed (must not use aliases)."
+                    TranslatableText(
+                        'Columns in SELECT must not be renamed (must not use aliases).',
+                        it='Le colonne nella SELECT non devono essere rinominate (non devono usare alias).'
+                    )
                 )
 
     @property
-    def description(self) -> str:
-        return "Columns in SELECT must not be renamed (must not use aliases)"
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            'Columns in SELECT must not be renamed (must not use aliases).',
+            it='Le colonne nella SELECT non devono essere rinominate (non devono usare alias).'
+        )
 
 class Alias(QueryConstraint):
     '''
@@ -57,7 +79,6 @@ class Alias(QueryConstraint):
     '''
 
     def __init__(self, min_: int, max_: int | None = None) -> None:
-        super().__init__()
         self.min = min_
         self.max = max_
 
@@ -73,19 +94,34 @@ class Alias(QueryConstraint):
         if self.max is None:
             if alias_count < self.min:
                 raise ConstraintValidationError(
-                    f"At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found."
+                    TranslatableText(
+                        f'At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found.',
+                        it=f'Almeno {self.min} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate solo {alias_count}.'
+                    )
                 )
             return
         
         if not (self.min <= alias_count <= self.max):
             raise ConstraintValidationError(
-                f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found."
+                TranslatableText(
+                    f'Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found.',
+                    it=f'Tra {self.min} e {self.max} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate {alias_count}.'
+                )
             )
 
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f"At least {self.min} columns in SELECT must be renamed using an alias (AS)"
+            return TranslatableText(
+                f'At least {self.min} columns in SELECT must be renamed using an alias (AS)',
+                it=f'Almeno {self.min} colonne nella SELECT devono essere rinominate usando un alias (AS)'
+            )
         if self.min == self.max:
-            return f"Exactly {self.min} columns in SELECT must be renamed using an alias (AS)"
-        return f"Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS)"
+            return TranslatableText(
+                f'Exactly {self.min} columns in SELECT must be renamed using an alias (AS)',
+                it=f'Esattamente {self.min} colonne nella SELECT devono essere rinominate usando un alias (AS)'
+            )
+        return TranslatableText(
+            f'Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS)',
+            it=f'Tra {self.min} e {self.max} colonne nella SELECT devono essere rinominate usando un alias (AS)'
+        )

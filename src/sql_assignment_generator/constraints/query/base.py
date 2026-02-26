@@ -5,7 +5,7 @@ from sqlscope import Query
 
 class QueryConstraint(BaseConstraint):
     '''Base class for query-related constraints.'''
-    
+
     @abstractmethod
     def validate(self, query: Query) -> None:
         '''

@@ -22,6 +22,7 @@ def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],
         sql_dialect: str = 'postgres',
         *,
+        language: str = 'en',
         domain: str | None = None,
         dataset_str: str | None = None,
         shuffle_exercises: bool = False,
@@ -40,7 +41,9 @@ def generate_assignment(
 
     Args:
         errors (list[tuple[SqlErrors, DifficultyLevel]]): A list of (error, difficulty) pairs.
+        sql_dialect (str): The SQL dialect to use for generating the dataset and exercises (e.g., 'postgres', 'mysql').
         domain (str | None): The domain for the assignments. If None, a random domain will be selected.
+        language (str): The language for the assignment generation (e.g., 'en' for English).
         dataset_str (str | None): Optional SQL string to use as the dataset. If provided, it will be used instead of generating a new dataset.
         shuffle_exercises (bool): Whether to shuffle exercises to prevent ordering bias (shuffles input order).
         naming_func (Callable[[SqlErrors, DifficultyLevel], str]): Generates exercise titles.
@@ -71,19 +74,26 @@ def generate_assignment(
     dav_tools.messages.info(f'Starting assignment generation for {len(supported_errors)} exercises (out of {len(errors)} requested)')
 
     # convert SqlErrors -> SqlErrorRequirements, keeping difficulty levels
-    requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = [(error, ERROR_REQUIREMENTS_MAP[error], difficulty) for error, difficulty in supported_errors]
+    requirements: list[tuple[SqlErrors, SqlErrorRequirements, DifficultyLevel]] = [
+        (
+            error,
+            ERROR_REQUIREMENTS_MAP[error](language=language),
+            difficulty
+        )
+        for error, difficulty in supported_errors
+    ]
 
     if not dataset_str:
         # No dataset string provided, so we need to generate a dataset based on the requirements of the exercises.
         if domain is None:
-            domain = random_domain()
+            domain = random_domain(language=language)
 
         dataset_requirements: list[SchemaConstraint] = []
         for _, req, difficulty in requirements:
             dataset_requirements.extend(req.dataset_constraints(difficulty))
 
         dataset_extra_details: list[str] = [
-            req.dataset_extra_details()
+            req.dataset_extra_details().get(language=language)
             for _, req, _ in requirements
         ]
         dataset_extra_details = [detail for detail in dataset_extra_details if detail.strip()]  # filter out empty details
@@ -165,12 +175,25 @@ def generate_assignment(
 
     if max_workers == 1:
         for idx, (error, requirement, difficulty) in enumerate(requirements):
-            i, ex = _worker(idx, error, difficulty, requirement.exercise_constraints(difficulty), requirement.exercise_extra_details())
+            i, ex = _worker(
+                idx=idx,
+                error=error,
+                difficulty=difficulty,
+                constraints=requirement.exercise_constraints(difficulty),
+                extra_details=requirement.exercise_extra_details().get(language=language)
+            )
             ordered_results[i] = ex
     else:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
-                executor.submit(_worker, idx, error, difficulty, requirement.exercise_constraints(difficulty), requirement.exercise_extra_details())
+                executor.submit(
+                    _worker,
+                    idx=idx,
+                    error=error,
+                    difficulty=difficulty,
+                    constraints=requirement.exercise_constraints(difficulty),
+                    extra_details=requirement.exercise_extra_details().get(language=language)
+                )
                 for idx, (error, requirement, difficulty) in enumerate(requirements)
             ]
             for fut in as_completed(futures):

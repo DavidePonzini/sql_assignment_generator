@@ -3,6 +3,7 @@ from .base import SchemaConstraint
 from sqlglot import exp 
 from ...exceptions import ConstraintMergeError, ConstraintValidationError
 from sqlscope import Catalog
+from ...translatable_text import TranslatableText
 
 class MinRows(SchemaConstraint):
     '''Requires that EACH table found in the insert list has a specific minimum number of rows inserted.'''
@@ -25,16 +26,29 @@ class MinRows(SchemaConstraint):
 
         # if no tables found but min > 0, fail
         if not table_row_counts and self.min > 0:
-            raise ConstraintValidationError(f'No rows found for any table, which is less than the required minimum of {self.min} rows per table.')
+            raise ConstraintValidationError(
+                TranslatableText(
+                    f'No rows found for any table, which is less than the required minimum of {self.min} rows per table.',
+                    it=f'Nessuna riga trovata per nessuna tabella, che è meno del minimo richiesto di {self.min} righe per tabella.'
+                )
+            )
 
         # check each table meets minimum row requirement
         for table_name, count in table_row_counts.items():
             if count < self.min:
-                raise ConstraintValidationError(f'Table "{table_name}" has {count} rows, which is less than the required minimum of {self.min} rows.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Table "{table_name}" has {count} rows, which is less than the required minimum of {self.min} rows.',
+                        it=f'La tabella "{table_name}" ha {count} righe, che è meno del minimo richiesto di {self.min} righe.'
+                    )
+                )
 
     @property
-    def description(self) -> str:
-        return f'Dataset must have at least {self.min} rows of data for each table.'
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'Dataset must have at least {self.min} rows of data for each table.',
+            it=f'Il dataset deve avere almeno {self.min} righe di dati per ogni tabella.'
+        )
     
     def merge(self, other: SchemaConstraint) -> 'MinRows':
         if not isinstance(other, MinRows):

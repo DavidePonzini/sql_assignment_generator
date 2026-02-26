@@ -2,9 +2,13 @@ from ..difficulty_level import DifficultyLevel
 from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints
 from abc import ABC
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class SqlErrorRequirements(ABC):
     '''Requirements for generating an assignment likely to trigger a specific error'''
+
+    def __init__(self, language: str) -> None:
+        self.language = language
     
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[SchemaConstraint]:
         '''Constraints the dataset must satisfy to likely trigger the error.'''
@@ -32,10 +36,10 @@ class SqlErrorRequirements(ABC):
         '''Constraints the exercise must satisfy to likely trigger the error.'''
         return []
 
-    def exercise_extra_details(self) -> str:
+    def exercise_extra_details(self) -> TranslatableText:
         '''Additional details or instructions for the exercise.'''
-        return ''
+        return TranslatableText()
 
-    def dataset_extra_details(self) -> str:
+    def dataset_extra_details(self) -> TranslatableText:
         '''Additional details or instructions for the dataset.'''
-        return ''
+        return TranslatableText()

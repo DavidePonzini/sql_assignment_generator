@@ -4,6 +4,7 @@ from sqlscope import Catalog
 from sqlscope.catalog.constraint import ConstraintType
 from ...exceptions import ConstraintMergeError, ConstraintValidationError
 from collections import Counter
+from ...translatable_text import TranslatableText
 
 class MinTables(SchemaConstraint):
     '''Requires the schema to have a specific number of tables.'''
@@ -15,11 +16,19 @@ class MinTables(SchemaConstraint):
         table_count = len(tables_sql)
 
         if table_count < self.min_tables:
-            raise ConstraintValidationError(f'Schema has {table_count} tables, which is less than the required minimum of {self.min_tables} tables.')
+            raise ConstraintValidationError(
+                TranslatableText(
+                    f'Schema has {table_count} tables, which is less than the required minimum of {self.min_tables} tables.',
+                    it=f'Lo schema ha {table_count} tabelle, che è meno del minimo richiesto di {self.min_tables} tabelle.'
+                )
+            )
 
     @property
-    def description(self) -> str:
-        return f'Schema must be comprised of at least {self.min_tables} tables'
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'Schema must be comprised of at least {self.min_tables} tables',
+            it=f'Lo schema deve essere composto da almeno {self.min_tables} tabelle'
+        )
     
     def merge(self, other: SchemaConstraint) -> 'MinTables':
         if not isinstance(other, MinTables):
@@ -43,19 +52,38 @@ class MinChecks(SchemaConstraint):
 
         if self.max is None:
             if total_checks < self.min:
-                raise ConstraintValidationError(f'Schema has {total_checks} CHECK constraints, which is less than the required minimum of {self.min}.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Schema has {total_checks} CHECK constraints, which is less than the required minimum of {self.min}.',
+                        it=f'Lo schema ha {total_checks} constraint CHECK, che è meno del minimo richiesto di {self.min}.'
+                    )
+                )
         else:
             if not (self.min <= total_checks <= self.max):
-                raise ConstraintValidationError(f'Schema has {total_checks} CHECK constraints, which is not within the required range of {self.min} to {self.max}.')
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Schema has {total_checks} CHECK constraints, which is not within the required range of {self.min} to {self.max}.',
+                        it=f'Lo schema ha {total_checks} constraint CHECK, che non è compreso nell\'intervallo richiesto di {self.min} a {self.max}.'
+                    )
+                )
         
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None: 
-            return f'Schema must have minimum {self.min} CHECK constraints'
+            return TranslatableText(
+                f'Schema must have minimum {self.min} CHECK constraints',
+                it=f'Lo schema deve avere almeno {self.min} constraint CHECK'
+            )
         elif self.min == self.max: 
-            return f'Schema must have exactly {self.min} CHECK constraints'
+            return TranslatableText(
+                f'Schema must have exactly {self.min} CHECK constraints',
+                it=f'Lo schema deve avere esattamente {self.min} constraint CHECK'
+            )
         else: 
-            return f'Schema must have between {self.min} and {self.max} CHECK constraints'
+            return TranslatableText(
+                f'Schema must have between {self.min} and {self.max} CHECK constraints',
+                it=f'Lo schema deve avere tra {self.min} e {self.max} constraint CHECK'
+            )
         
     def merge(self, other: SchemaConstraint) -> 'MinChecks':
         if not isinstance(other, MinChecks):
@@ -94,11 +122,19 @@ class MinColumns(SchemaConstraint):
                     valid_tables_count += 1
         
         if valid_tables_count < self.tables:
-            raise ConstraintValidationError(f'Schema has {valid_tables_count} tables with at least {self.columns} columns, which is less than the required minimum of {self.tables} tables.')
+            raise ConstraintValidationError(
+                TranslatableText(
+                    f'Schema has {valid_tables_count} tables with at least {self.columns} columns, which is less than the required minimum of {self.tables} tables.',
+                    it=f'Lo schema ha {valid_tables_count} tabelle con almeno {self.columns} colonne, che è meno del minimo richiesto di {self.tables} tabelle.'
+                )
+            )
 
     @property
-    def description(self) -> str:
-        return f'Schema must have at least {self.tables} tables with at least {self.columns} columns'
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'Schema must have at least {self.tables} tables with at least {self.columns} columns',
+            it=f'Lo schema deve avere almeno {self.tables} tabelle con almeno {self.columns} colonne'
+        )
 
     def merge(self, other: SchemaConstraint) -> 'MinColumns':
         if not isinstance(other, MinColumns):
@@ -110,7 +146,7 @@ class MinColumns(SchemaConstraint):
 
         return MinColumns(
             tables=merged_min_tables,
-            columns=merged_min_columns
+            columns=merged_min_columns,
         )
     
 class ComplexColumnName(SchemaConstraint):
@@ -139,13 +175,19 @@ class ComplexColumnName(SchemaConstraint):
 
         if len(complex_cols_found) < self.min_columns:
             raise ConstraintValidationError(
-                f'Schema has {len(complex_cols_found)} columns with complex names ({complex_cols_found}), '
-                f'which is less than the required minimum of {self.min_columns}.'
+                TranslatableText(
+                    f'Schema has {len(complex_cols_found)} columns with complex names ({complex_cols_found}), which is less than the required minimum of {self.min_columns}.',
+                    it=f'Lo schema ha {len(complex_cols_found)} colonne con nomi complessi ({complex_cols_found}), che è meno del minimo richiesto di {self.min_columns}.'
+                )
             )
     
     @property
-    def description(self) -> str:
-        return f'Schema must have at least {self.min_columns} columns with complex and lengthy names (length >= 15 and containing "_")'
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'Schema must have at least {self.min_columns} columns with complex and lengthy names (length >= 15 and containing "_")',
+            it=f'Lo schema deve avere almeno {self.min_columns} colonne con nomi complessi e lunghi (lunghezza >= 15 e contenente "_")'
+        )
+
     def merge(self, other: SchemaConstraint) -> 'ComplexColumnName':
         if not isinstance(other, ComplexColumnName):
             raise ConstraintMergeError(self, other)
@@ -188,14 +230,22 @@ class SameColumnNames(SchemaConstraint):
         tables_with_same_col_names = sum(1 for count in name_counts.values() if count >= 2)
         if tables_with_same_col_names < self.pairs:
             raise ConstraintValidationError(
-                f'Schema has {tables_with_same_col_names} pair(s) of non-key columns with the same name, '
-                f'which is less than the required minimum of {self.pairs} pair(s).'
-                f'Current column name counts: {name_counts}. Columns not counted are part of PKs/FKs.'
+                TranslatableText(
+                    f'Schema has {tables_with_same_col_names} pair(s) of non-key columns with the same name, '
+                    f'which is less than the required minimum of {self.pairs} pair(s).'
+                    f'Current column name counts: {name_counts}. Columns not counted are part of PKs/FKs.',
+                    it=f'Lo schema ha {tables_with_same_col_names} coppia/e di colonne non chiave con lo stesso nome, '
+                    f'che è meno del minimo richiesto di {self.pairs} coppia/e.'
+                    f'Conteggio corrente dei nomi delle colonne: {name_counts}. Le colonne non conteggiate fanno parte di PK/FK.'
+                )
             )
     
     @property
-    def description(self) -> str:
-        return f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name but different semantic meaning'
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name but different semantic meaning',
+            it=f'Nel CREATE TABLE deve avere almeno {self.pairs} coppia/e di colonne non chiave (PK o FK) con lo stesso nome ma significato semantico diverso'
+        )
 
     def merge(self, other: SchemaConstraint) -> 'SameColumnNames':
         if not isinstance(other, SameColumnNames):

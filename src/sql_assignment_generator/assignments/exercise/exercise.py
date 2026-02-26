@@ -35,11 +35,11 @@ class Exercise:
         error: SqlErrors,
         difficulty: DifficultyLevel,
         constraints: list[QueryConstraint],
+        *,
         extra_details: str,
-        sql_dialect: str,
         dataset: Dataset,
         title: str,
-        *,
+        sql_dialect: str,
         max_attempts: int = 3,
     ) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''

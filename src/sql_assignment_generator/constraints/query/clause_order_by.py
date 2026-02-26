@@ -2,6 +2,7 @@ from .base import QueryConstraint
 from sqlglot import exp
 from sqlscope import Query
 from ...exceptions import ConstraintValidationError
+from ...translatable_text import TranslatableText
 
 class NoOrderBy(QueryConstraint):
     '''Requires the absence of an ORDER BY clause.'''
@@ -9,11 +10,19 @@ class NoOrderBy(QueryConstraint):
     def validate(self, query: Query) -> None:
         for select in query.selects:
             if len(select.order_by) > 0:
-                raise ConstraintValidationError("Exercise must not require ordering (i.e., no ORDER BY clause).")
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        'Exercise must not require ordering (i.e., no ORDER BY clause).',
+                        it='L\'esercizio non deve richiedere ordinamento (i.e., nessuna clausola ORDER BY).'
+                    )
+                )
     
     @property
-    def description(self) -> str:
-        return "Exercise must not require ordering (i.e., no ORDER BY clause)."
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            'Exercise must not require ordering (i.e., no ORDER BY clause).',
+            it='L\'esercizio non deve richiedere ordinamento (i.e., nessuna clausola ORDER BY).'
+        )
 
 class OrderBy(QueryConstraint):
     '''
@@ -68,18 +77,31 @@ class OrderBy(QueryConstraint):
             continue
 
         raise ConstraintValidationError(
-            "Exercise does not satisfy the ORDER BY clause column count requirements."
-            f"ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}"
+            TranslatableText(
+                f'Exercise does not satisfy the ORDER BY clause column count requirements.'
+                f'ORDER BY clause column counts found: {[len(ob) for ob in order_bys]}, required min: {self.min}, required max: {self.max}',
+                it=f'L\'esercizio non soddisfa i requisiti sul numero di colonne ORDER BY.'
+                f'Conti delle colonne ORDER BY trovate: {[len(ob) for ob in order_bys]}, min richiesto: {self.min}, max richiesto: {self.max}'
+            )
         )
     
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f'Exercise must require ordering by at least {self.min} columns.'
+            return TranslatableText(
+                f'Exercise must require ordering by at least {self.min} columns.',
+                it=f'L\'esercizio deve richiedere ordinamento per almeno {self.min} colonne.'
+            )
         elif self.min == self.max:
-            return f'Exercise must require ordering by exactly {self.min} columns.'
+            return TranslatableText(
+                f'Exercise must require ordering by exactly {self.min} columns.',
+                it=f'L\'esercizio deve richiedere ordinamento per esattamente {self.min} colonne.'
+            )
         else:
-            return f'Exercise must require ordering by between {self.min} and {self.max} columns.'
+            return TranslatableText(
+                f'Exercise must require ordering by between {self.min} and {self.max} columns.',
+                it=f'L\'esercizio deve richiedere ordinamento tra {self.min} e {self.max} colonne.'
+            )
         
 class OrderByASC(OrderBy):
     '''
@@ -104,22 +126,43 @@ class OrderByASC(OrderBy):
                 return
             continue
 
-        error_msg = 'Exercise does not satisfy the ORDER BY clause column count requirements.'
-        error_msg += f' ORDER BY clause column counts found: {asc_counts}, required min: {self.min}'
+        error_msg = TranslatableText(
+            f'Exercise does not satisfy the ORDER BY clause column count requirements.',
+            it=f'L\'esercizio non soddisfa i requisiti sul numero di colonne ORDER BY.'
+        )
+        error_msg += TranslatableText(
+            f' ORDER BY clause column counts found: {asc_counts}, required min: {self.min}',
+            it=f' Conti delle colonne ORDER BY trovate: {asc_counts}, min richiesto: {self.min}'
+        )
         if self.max is not None:
-            error_msg += f', required max: {self.max}.'
-        error_msg += ' Only ascending columns are counted.'
+            error_msg += TranslatableText(
+                f', required max: {self.max}.',
+                it=f', max richiesto: {self.max}.'
+            )
+        error_msg += TranslatableText(
+            ' Only ascending columns are counted.',
+            it=' Solo le colonne in ordine crescente sono conteggiate.'
+        )
 
         raise ConstraintValidationError(error_msg)
     
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f'Exercise must require at least {self.min} columns in ORDER BY to be in ascending order.'
+            return TranslatableText(
+                f'Exercise must require at least {self.min} columns in ORDER BY to be in ascending order.',
+                it=f'L\'esercizio deve richiedere almeno {self.min} colonne in ORDER BY per essere in ordine crescente.'
+            )
         elif self.min == self.max:
-            return f'Exercise must require exactly {self.min} columns in ORDER BY to be in ascending order.'
+            return TranslatableText(
+                f'Exercise must require exactly {self.min} columns in ORDER BY to be in ascending order.',
+                it=f'L\'esercizio deve richiedere esattamente {self.min} colonne in ORDER BY per essere in ordine crescente.'
+            )
         else:
-            return f'Exercise must require between {self.min} and {self.max} columns in ORDER BY to be in ascending order.'
+            return TranslatableText(
+                f'Exercise must require between {self.min} and {self.max} columns in ORDER BY to be in ascending order.',
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} colonne in ORDER BY per essere in ordine crescente.'
+            )
         
 class OrderByDESC(OrderBy):
     '''
@@ -142,19 +185,40 @@ class OrderByDESC(OrderBy):
                 return
             continue
 
-        error_msg = 'Exercise does not satisfy the ORDER BY clause column count requirements.'
-        error_msg += f' ORDER BY clause column counts found: {desc_counts}, required min: {self.min}'
+        error_msg = TranslatableText(
+            f'Exercise does not satisfy the ORDER BY clause column count requirements.',
+            it=f'L\'esercizio non soddisfa i requisiti sul numero di colonne ORDER BY.'
+        )
+        error_msg += TranslatableText(
+            f' ORDER BY clause column counts found: {desc_counts}, required min: {self.min}',
+            it=f' Conti delle colonne ORDER BY trovate: {desc_counts}, min richiesto: {self.min}'
+        )
         if self.max is not None:
-            error_msg += f', required max: {self.max}.'
-        error_msg += ' Only descending columns are counted.'
+            error_msg += TranslatableText(
+                f', required max: {self.max}.',
+                it=f', max richiesto: {self.max}.'
+            )
+        error_msg += TranslatableText(
+            ' Only descending columns are counted.',
+            it=' Solo le colonne in ordine decrescente sono conteggiate.'
+        )
 
         raise ConstraintValidationError(error_msg)
     
     @property
-    def description(self) -> str:
+    def description(self) -> TranslatableText:
         if self.max is None:
-            return f'Exercise must require at least {self.min} columns in ORDER BY to be in descending order.'
+            return TranslatableText(
+                f'Exercise must require at least {self.min} columns in ORDER BY to be in descending order.',
+                it=f'L\'esercizio deve richiedere almeno {self.min} colonne in ORDER BY per essere in ordine decrescente.'
+            )
         elif self.min == self.max:
-            return f'Exercise must require exactly {self.min} columns in ORDER BY to be in descending order.'
+            return TranslatableText(
+                f'Exercise must require exactly {self.min} columns in ORDER BY to be in descending order.',
+                it=f'L\'esercizio deve richiedere esattamente {self.min} colonne in ORDER BY per essere in ordine decrescente.'
+            )
         else:
-            return f'Exercise must require between {self.min} and {self.max} columns in ORDER BY to be in descending order.'
+            return TranslatableText(
+                f'Exercise must require between {self.min} and {self.max} columns in ORDER BY to be in descending order.',
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} colonne in ORDER BY per essere in ordine decrescente.'
+            )

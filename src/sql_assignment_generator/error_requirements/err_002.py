@@ -1,6 +1,7 @@
 from .base import SqlErrorRequirements
 from ..constraints import schema as schema_constraints, query as query_constraints
 from ..difficulty_level import DifficultyLevel
+from ..translatable_text import TranslatableText
 
 class Err002_AmbiguousColumn(SqlErrorRequirements):
     def dataset_constraints(self, difficulty: DifficultyLevel) -> list[schema_constraints.SchemaConstraint]:
@@ -52,5 +53,8 @@ class Err002_AmbiguousColumn(SqlErrorRequirements):
             query_constraints.aggregation.Aggregation(),
         ]
 
-    def exercise_extra_details(self) -> str:
-        return 'This exercise should require students to reference a non-key column (neither PKs nor FKs) present in both tables'
+    def exercise_extra_details(self) -> TranslatableText:
+        return TranslatableText(
+            'This exercise should require students to reference a non-key column (neither PKs nor FKs) present in both tables',
+            it='Questo esercizio dovrebbe richiedere agli studenti di fare riferimento a una colonna non chiave (né PK né FK) presente in entrambe le tabelle'
+        )

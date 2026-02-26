@@ -1,6 +1,14 @@
+from .translatable_text import TranslatableText
+
 class ConstraintValidationError(Exception):
     '''Custom exception for constraint validation errors.'''
-    pass
+    
+    def __init__(self, text: TranslatableText) -> None:
+        super().__init__(text.get())
+        self.text = text
+
+    def get(self, language: str) -> str:
+        return self.text.get(language=language)
 
 class SQLParsingError(Exception):
     '''Custom exception for SQL parsing errors.'''
