@@ -112,7 +112,8 @@ class Dataset:
             domain=domain,
             extra_details=extra_details,
             constraints=constraints,
-            language=language
+            sql_dialect=sql_dialect,
+            language=language,
         )
 
         # query LLM to generate dataset

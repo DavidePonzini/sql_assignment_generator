@@ -7,6 +7,7 @@ def prompt_generate(
         extra_details: str,
         constraints: list[QueryConstraint],
         *,
+        sql_dialect: str,
         language: str
     ) -> str:
 
@@ -26,7 +27,7 @@ def prompt_generate(
 {dataset_str}
 
 ### GUIDELINES ###
-Generate a SQL exercise based on the dataset above.
+Generate a {sql_dialect} SQL exercise based on the dataset above.
 {extra_details_formatted}
 
 ### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
@@ -43,7 +44,7 @@ Generate a SQL exercise based on the dataset above.
 {dataset_str}
 
 ### LINEE GUIDA ###
-Genera un esercizio SQL basato sul dataset sopra.
+Genera un esercizio SQL {sql_dialect} basato sul dataset sopra.
 {extra_details_formatted}
 
 ### REQUISITI OBBLIGATORI PER L'ESERCIZIO ###

@@ -21,6 +21,7 @@ def prompt_generate(
         extra_details: list[str],
         constraints: Sequence[SchemaConstraint],
         *,
+        sql_dialect: str,
         language: str
     ) -> str:
     formatted_constraints = '\n'.join(f'- {c.description.get(language)}' for c in constraints)
@@ -40,7 +41,7 @@ def prompt_generate(
     
     return TranslatableText(
         f'''
-Generate a SQL dataset about the following domain: "{domain}".
+Generate a {sql_dialect} SQL dataset about the following domain: "{domain}".
 {extra_details_str}
 
 MANDATORY CONSTRAINTS:
@@ -68,7 +69,7 @@ INSERT INTO tableName(<all columns except SERIAL/AUTO_INCREMENT>) VALUES
 For each table, insert at least 5 rows of data.
 Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
 ''',
-        it=f'''Genera un dataset SQL sul seguente dominio: "{domain}".
+        it=f'''Genera un dataset SQL {sql_dialect} sul seguente dominio: "{domain}".
 {extra_details_str}
 
 CONSTRAINT OBBLIGATORIE:

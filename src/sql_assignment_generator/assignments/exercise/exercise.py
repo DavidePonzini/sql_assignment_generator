@@ -50,7 +50,8 @@ class Exercise:
             dataset_str=dataset.to_sql_no_context(),
             extra_details=extra_details,
             constraints=constraints,
-            language=language
+            sql_dialect=sql_dialect,
+            language=language,
         ))
 
         for attempt in range(max_attempts):
