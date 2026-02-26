@@ -36,6 +36,7 @@ class Exercise:
         difficulty: DifficultyLevel,
         constraints: list[QueryConstraint],
         extra_details: str,
+        sql_dialect: str,
         dataset: Dataset,
         title: str,
         *,

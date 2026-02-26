@@ -65,11 +65,11 @@ class Dataset:
         return strings.to_sql_format(schema=schema, create_cmds=create_cmds, insert_cmds=insert_cmds)
     
     @staticmethod
-    def from_sql(sql_str: str) -> 'Dataset':
+    def from_sql(sql_str: str, sql_dialect: str) -> 'Dataset':
         '''Create a Dataset instance from a raw SQL string containing CREATE TABLE and INSERT INTO commands.'''
     
         try:
-            parsed = sqlglot.parse(sql_str, read="postgres")
+            parsed = sqlglot.parse(sql_str, read=sql_dialect)
             create_commands = []
             insert_commands = []
 
@@ -93,12 +93,14 @@ class Dataset:
         )
         
     @staticmethod
-    def generate(domain: str,
-                 constraints: Sequence[SchemaConstraint],
-                 extra_details: list[str] = [],
-                 *,
-                 max_attempts: int = 5
-        ) -> 'Dataset':
+    def generate(
+        domain: str,
+        sql_dialect: str,
+        constraints: Sequence[SchemaConstraint],
+        extra_details: list[str] = [],
+        *,
+        max_attempts: int = 5
+    ) -> 'Dataset':
         '''Generate a SQL dataset based on the specified parameters.'''
 
         # merge similar constraints
@@ -123,21 +125,21 @@ class Dataset:
                 parsed_tables = []
                 for create_table in answer.schema_tables:
                     try:
-                        parsed = sqlglot.parse_one(create_table, read="postgres")
+                        parsed = sqlglot.parse_one(create_table, read=sql_dialect)
                         parsed_tables.append(parsed)
                     except Exception as e:
                         raise SQLParsingError(f"Syntax error in CREATE TABLE generated: {e}", create_table)
-                create_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_tables]
+                create_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_tables]
 
                 # parse INSERT INTOs
                 parsed_inserts = []
                 for create_table in answer.insert_commands:
                     try:
-                        parsed = sqlglot.parse_one(create_table, read="postgres")
+                        parsed = sqlglot.parse_one(create_table, read=sql_dialect)
                         parsed_inserts.append(parsed)
                     except Exception as e:
                         raise SQLParsingError(f"Syntax error in INSERT COMMANDS generated: {e}", create_table)
-                insert_commands = [f'{cmd.sql(pretty=True, dialect="postgres")};' for cmd in parsed_inserts]
+                insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_inserts]
 
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
 

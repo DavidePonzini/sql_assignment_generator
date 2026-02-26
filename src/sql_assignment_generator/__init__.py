@@ -20,6 +20,7 @@ from sql_error_taxonomy import SqlErrors
 
 def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],
+        sql_dialect: str = 'postgres',
         *,
         domain: str | None = None,
         dataset_str: str | None = None,
@@ -89,9 +90,18 @@ def generate_assignment(
         dataset_extra_details = list(set(dataset_extra_details))  # deduplicate details
 
         dav_tools.messages.info(f'Generating dataset for domain: {domain}')
-        dataset = Dataset.generate(domain, dataset_requirements, dataset_extra_details, max_attempts=max_dataset_attempts)
+        dataset = Dataset.generate(
+            domain=domain,
+            sql_dialect=sql_dialect,
+            constraints=dataset_requirements,
+            extra_details=dataset_extra_details,
+            max_attempts=max_dataset_attempts
+        )
     else:
-        dataset = Dataset.from_sql(dataset_str)
+        dataset = Dataset.from_sql(
+            sql_str=dataset_str,
+            sql_dialect=sql_dialect
+        )
 
     generated_solutions_hashes: set[str] = set()
     hashes_lock = threading.Lock()
@@ -114,7 +124,16 @@ def generate_assignment(
 
         for attempt in range(max_unique_attempts):
             try:
-                generated_exercise = Exercise.generate(error, difficulty, constraints, extra_details, dataset=dataset, title=title, max_attempts=max_exercise_attempts)
+                generated_exercise = Exercise.generate(
+                    error=error,
+                    difficulty=difficulty,
+                    constraints=constraints,
+                    extra_details=extra_details,
+                    sql_dialect=sql_dialect,
+                    dataset=dataset,
+                    title=title,
+                    max_attempts=max_exercise_attempts
+                )
             except ExerciseGenerationError:
                 with log_lock:
                     dav_tools.messages.warning(f'{title}: Skipping exercise generation for {error.name} due to validation failures.')
