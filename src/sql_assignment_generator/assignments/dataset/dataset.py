@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from collections.abc import Sequence
 from dataclasses import dataclass
 import dav_tools
@@ -11,6 +12,57 @@ from ... import llm
 from ...constraints import SchemaConstraint, schema as schema_constraints
 from ...exceptions import SQLParsingError, ConstraintValidationError, DatasetGenerationError
 from ...translatable_text import TranslatableText
+
+
+def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> list[str]:
+    '''
+    Merge multiple INSERT statements for the same table into a single multi-row INSERT.
+    Returns the resulting list of SQL strings.
+    '''
+    grouped: OrderedDict[str, list[exp.Insert]] = OrderedDict()
+    for insert in parsed_inserts:
+        table_name = insert.this.this.name.lower()
+        grouped.setdefault(table_name, []).append(insert)
+
+    result = []
+    for table_name, inserts in grouped.items():
+        if len(inserts) == 1:
+            result.append(f'{inserts[0].sql(pretty=True, dialect=sql_dialect)};')
+        else:
+            # Check that all INSERTs have matching column lists before merging
+            first = inserts[0]
+            first_columns = (
+                tuple(col.sql() for col in first.this.expressions)
+                if isinstance(first.this, exp.Schema)
+                else None
+            )
+            columns_match = all(
+                (
+                    isinstance(ins.this, exp.Schema)
+                    and tuple(col.sql() for col in ins.this.expressions) == first_columns
+                )
+                if first_columns is not None
+                else not isinstance(ins.this, exp.Schema)
+                for ins in inserts
+            )
+
+            if not columns_match:
+                # Column lists differ — keep separate, let constraint handle it
+                for insert in inserts:
+                    result.append(f'{insert.sql(pretty=True, dialect=sql_dialect)};')
+                continue
+
+            all_rows = []
+            for insert in inserts:
+                values_node = insert.expression
+                if isinstance(values_node, exp.Values):
+                    all_rows.extend(values_node.expressions)
+
+            new_values = exp.Values(expressions=all_rows)
+            merged = exp.Insert(this=first.this, expression=new_values)
+            result.append(f'{merged.sql(pretty=True, dialect=sql_dialect)};')
+
+    return result
 
 
 @dataclass
@@ -68,11 +120,11 @@ class Dataset:
     @staticmethod
     def from_sql(sql_str: str, sql_dialect: str) -> 'Dataset':
         '''Create a Dataset instance from a raw SQL string containing CREATE TABLE and INSERT INTO commands.'''
-    
+
         try:
             parsed = sqlglot.parse(sql_str, read=sql_dialect)
             create_commands = []
-            insert_commands = []
+            insert_asts = []
 
             for statement in parsed:
                 if isinstance(statement, exp.Create):
@@ -80,12 +132,14 @@ class Dataset:
                         continue  # skip non-table creation statements, e.g. CREATE SCHEMA
                     create_commands.append(f'{statement.sql()};')
                 elif isinstance(statement, exp.Insert):
-                    insert_commands.append(f'{statement.sql()};')
+                    insert_asts.append(statement)
 
             if not create_commands:
                 raise ValueError("No CREATE TABLE commands found in the provided SQL string.")
         except Exception as e:
             raise SQLParsingError(f"Error parsing SQL string: {e}", sql_str)
+
+        insert_commands = _normalize_inserts(insert_asts, sql_dialect)
 
         return Dataset(
             create_commands=create_commands,
@@ -157,7 +211,7 @@ class Dataset:
                             ).get(language),
                             create_table
                         )
-                insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_inserts]
+                insert_commands = _normalize_inserts(parsed_inserts, sql_dialect)
 
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
 

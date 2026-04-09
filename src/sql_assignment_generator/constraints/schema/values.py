@@ -53,6 +53,38 @@ class MinRows(SchemaConstraint):
     def merge(self, other: SchemaConstraint) -> 'MinRows':
         if not isinstance(other, MinRows):
             raise ConstraintMergeError(self, other)
-        
+
         min_rows = max(self.min, other.min)
         return MinRows(min_=min_rows)
+
+class SingleInsertPerTable(SchemaConstraint):
+    '''Requires that each table has exactly one INSERT statement (multi-row format).'''
+
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
+        table_insert_counts = Counter()
+
+        for value in values_sql:
+            table_name = value.this.this.name.lower()
+            table_insert_counts[table_name] += 1
+
+        violating_tables = [t for t, c in table_insert_counts.items() if c > 1]
+        if violating_tables:
+            table_list = ', '.join(f'"{t}"' for t in violating_tables)
+            raise ConstraintValidationError(
+                TranslatableText(
+                    f'Tables {table_list} have multiple INSERT statements. Each table must have exactly one multi-row INSERT.',
+                    it=f'Le tabelle {table_list} hanno più istruzioni INSERT. Ogni tabella deve avere esattamente un\'istruzione INSERT multi-riga.'
+                )
+            )
+
+    @property
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            'Each table must have exactly one INSERT INTO statement with all rows in multi-row format.',
+            it='Ogni tabella deve avere esattamente un\'istruzione INSERT INTO con tutte le righe in formato multi-riga.'
+        )
+
+    def merge(self, other: SchemaConstraint) -> 'SingleInsertPerTable':
+        if not isinstance(other, SingleInsertPerTable):
+            raise ConstraintMergeError(self, other)
+        return SingleInsertPerTable()
