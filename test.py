@@ -14,14 +14,23 @@ if __name__ == '__main__':
     # change these values as needed
     domain = None
     errors = [
-        (SqlErrors.SYN_22_OMITTING_THE_SEMICOLON, DifficultyLevel.EASY),
-        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
-    ]*3
+        (SqlErrors.LOG_72_MISSING_DISTINCT_FROM_SELECT, DifficultyLevel.MEDIUM),
+        (SqlErrors.LOG_73_MISSING_AS_FROM_SELECT, DifficultyLevel.MEDIUM),
+        # (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
+    ]
 
     assignment = generate_assignment(
-        errors,
+        errors=errors,
+        db_host='localhost',
+        db_port=5432,
+        db_user='postgres',
+        db_password='password',
+        sql_dialect='postgres',
         domain=domain,
-        language='it',
+        language='en',
+        max_dataset_attempts=10,
+        max_exercise_attempts=10,
+
     )
     
     dav_tools.messages.message(

@@ -13,6 +13,7 @@ from .assignments import Assignment, Dataset, Exercise
 from .constraints import SchemaConstraint, QueryConstraint
 from .error_requirements import SqlErrorRequirements, ERROR_REQUIREMENTS_MAP
 from .exceptions import ExerciseGenerationError
+from .db import Database, QueryExecutionError
 
 import dav_tools
 from sql_error_taxonomy import SqlErrors
@@ -20,6 +21,10 @@ from sql_error_taxonomy import SqlErrors
 
 def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
         sql_dialect: str = 'postgres',
         *,
         language: str = 'en',
@@ -107,6 +112,10 @@ def generate_assignment(
             extra_details=dataset_extra_details,
             language=language,
             max_attempts=max_dataset_attempts,
+            db_host=db_host,
+            db_port=db_port,
+            db_user=db_user,
+            db_password=db_password
         )
     else:
         dataset = Dataset.from_sql(

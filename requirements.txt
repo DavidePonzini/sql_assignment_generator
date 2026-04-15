@@ -6,6 +6,8 @@ sqlscope>=1.0.10
 sqlglot
 dotenv
 openai
+psycopg2
+mysql-connector-python
 
 # Dependencies for development
 ipython

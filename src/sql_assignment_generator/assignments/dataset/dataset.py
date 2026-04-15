@@ -12,6 +12,7 @@ from ... import llm
 from ...constraints import SchemaConstraint, schema as schema_constraints
 from ...exceptions import SQLParsingError, ConstraintValidationError, DatasetGenerationError
 from ...translatable_text import TranslatableText
+from ...db import get_database, QueryExecutionError
 
 
 def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> list[str]:
@@ -151,6 +152,10 @@ class Dataset:
     def generate(
         domain: str,
         sql_dialect: str,
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
         constraints: Sequence[SchemaConstraint],
         extra_details: list[str] = [],
         *,
@@ -178,6 +183,8 @@ class Dataset:
             # messages.print_chat()
             
             try:
+                dav_tools.messages.progress(f'Generating dataset (Attempt {attempt + 1}/{max_attempts})...')
+
                 answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
 
@@ -213,9 +220,28 @@ class Dataset:
                         )
                 insert_commands = _normalize_inserts(parsed_inserts, sql_dialect)
 
+                # try executing the generated SQL to ensure it's valid and to build the catalog for constraint validation
+                dav_tools.messages.progress('Executing SQL...')
+                
+                with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
+                    full_sql = '\n'.join(create_commands + insert_commands)
+                    try:
+                        db.execute_query(full_sql)
+                    except QueryExecutionError as e:
+                        raise SQLParsingError(
+                            TranslatableText(
+                                f"Error executing generated SQL: {e}",
+                                it=f"Errore durante l'esecuzione dell'SQL generato: {e}"
+                            ).get(language),
+                            full_sql
+                        )
+
+                # build catalog for constraint validation
                 catalog = build_catalog_from_sql('; '.join(cmd.sql() for cmd in parsed_tables))
 
                 # check if constraints are satisfied
+                dav_tools.messages.progress('Checking constraints...')
+                
                 errors = []
                 for constraint in constraints:
                     try:
