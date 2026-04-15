@@ -26,7 +26,7 @@ class DummyDatabase(Database):
     def disconnect(self) -> None:
         pass
 
-    def execute_query(self, query: str) -> list[tuple]:
+    def execute(self, query: str) -> list[tuple]:
         return []
     
     def create_schema(self, schema: str) -> None:

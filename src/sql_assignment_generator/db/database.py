@@ -38,7 +38,7 @@ class Database(ABC):
             self.schema = None
 
     @abstractmethod
-    def execute_query(self, query: str) -> list[tuple]:
+    def execute(self, query: str) -> list[tuple]:
         pass
 
     @abstractmethod

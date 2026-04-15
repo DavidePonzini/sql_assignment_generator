@@ -152,13 +152,13 @@ class Dataset:
     def generate(
         domain: str,
         sql_dialect: str,
+        constraints: Sequence[SchemaConstraint],
+        extra_details: list[str] = [],
+        *,
         db_host: str,
         db_port: int,
         db_user: str,
         db_password: str,
-        constraints: Sequence[SchemaConstraint],
-        extra_details: list[str] = [],
-        *,
         language: str,
         max_attempts: int = 5
     ) -> 'Dataset':
@@ -226,7 +226,7 @@ class Dataset:
                 with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
                     full_sql = '\n'.join(create_commands + insert_commands)
                     try:
-                        db.execute_query(full_sql)
+                        db.execute(full_sql)
                     except QueryExecutionError as e:
                         raise SQLParsingError(
                             TranslatableText(

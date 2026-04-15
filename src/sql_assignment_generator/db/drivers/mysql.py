@@ -15,7 +15,7 @@ class MySQLDatabase(Database):
     def disconnect(self) -> None:
         self.connection.close()
 
-    def execute_query(self, query: str) -> list[tuple]:
+    def execute(self, query: str) -> list[tuple]:
         with self.connection.cursor() as cursor:
             try:
                 cursor.execute(query)
