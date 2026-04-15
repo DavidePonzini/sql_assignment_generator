@@ -18,18 +18,22 @@ class SqlErrorRequirements(ABC):
             return [
                 schema_constraints.tables.MinTables(2),
                 schema_constraints.tables.MinColumns(2, tables=1),
-                schema_constraints.values.MinRows(3)
+                schema_constraints.values.MinRows(3),
+                schema_constraints.values.SingleInsertPerTable(),
             ]
         if difficulty == DifficultyLevel.MEDIUM:
             return [
                 schema_constraints.tables.MinTables(4),
                 schema_constraints.tables.MinColumns(4, tables=2),
-                schema_constraints.values.MinRows(4)]
+                schema_constraints.values.MinRows(4),
+                schema_constraints.values.SingleInsertPerTable(),
+            ]
         if difficulty == DifficultyLevel.HARD:
             return [
                 schema_constraints.tables.MinTables(6),
                 schema_constraints.tables.MinColumns(5, tables=3),
-                schema_constraints.values.MinRows(5)
+                schema_constraints.values.MinRows(5),
+                schema_constraints.values.SingleInsertPerTable(),
             ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[QueryConstraint]:

@@ -47,6 +47,7 @@ Generate a {sql_dialect} SQL dataset about the following domain: "{domain}".
 MANDATORY CONSTRAINTS:
 - FOREIGN KEY attributes should have the REFERENCES keyword inline (e.g. "col TYPE REFERENCES table_name(column_name)").
 - VARCHAR columns should not have a length specified (e.g. use "col VARCHAR" instead of "col VARCHAR(255)").
+- Each table must have EXACTLY ONE INSERT INTO statement containing ALL rows for that table. Never write multiple INSERT statements for the same table.
 {formatted_constraints}
 
 MANDATORY OUTPUT (JSON) - each line in both lists must correspond to a single table:
@@ -61,12 +62,12 @@ MANDATORY OUTPUT (JSON) - each line in both lists must correspond to a single ta
     ]
 }}
 
-INSERT INTO statements must have following format (Multi-row insert): 
-INSERT INTO tableName(<all columns except SERIAL/AUTO_INCREMENT>) VALUES 
+INSERT INTO statements must have following format (Multi-row insert):
+INSERT INTO tableName(<all columns except SERIAL/AUTO_INCREMENT>) VALUES
     (val_1, val_2, ...),
     (val_n, val_n+1, ...);
 
-For each table, insert at least 5 rows of data.
+For each table, insert at least 5 rows of data. All rows for a table must be in a single INSERT statement.
 Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
 ''',
         it=f'''Genera un dataset SQL {sql_dialect} sul seguente dominio: "{domain}".
@@ -75,6 +76,7 @@ Skip any SERIAL/AUTO_INCREMENT columns in the INSERT statements.
 CONSTRAINT OBBLIGATORIE:
 - Gli attributi FOREIGN KEY devono avere la keyword REFERENCES inline (es. "col TYPE REFERENCES table_name(column_name)").
 - Le colonne VARCHAR non devono avere una lunghezza specificata (es. usa "col VARCHAR" invece di "col VARCHAR(255)").
+- Ogni tabella deve avere ESATTAMENTE UN'istruzione INSERT INTO contenente TUTTE le righe per quella tabella. Non scrivere mai pi\u00f9 istruzioni INSERT per la stessa tabella.
 {formatted_constraints}
 
 OUTPUT OBBLIGATORIO (JSON) - ogni riga in entrambe le liste deve corrispondere a una singola tabella:
@@ -94,7 +96,7 @@ INSERT INTO tableName(<tutte le colonne tranne SERIAL/AUTO_INCREMENT>) VALUES
     (val_1, val_2, ...),
     (val_n, val_n+1, ...);
 
-Per ogni tabella, inserisci almeno 5 righe di dati.
+Per ogni tabella, inserisci almeno 5 righe di dati. Tutte le righe di una tabella devono essere in un'unica istruzione INSERT.
 ''',
     ).get(language)
 

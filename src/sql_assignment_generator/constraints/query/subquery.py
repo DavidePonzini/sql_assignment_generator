@@ -74,13 +74,13 @@ class Subqueries(QueryConstraint):
             raise ConstraintValidationError(
                 TranslatableText(
                     f'Exercise must require at least {self.min} unnested subqueries, but no SELECT clause has that many unnested subqueries.',
-                    it=f'L\'esercizio deve richiedere almeno {self.min} subqueries non annidate, ma nessuna clausola SELECT ha quel numero di subqueries non annidate.'
+                    it=f'L\'esercizio deve richiedere almeno {self.min} subquery non annidate, ma nessuna clausola SELECT ha quel numero di subquery non annidate.'
                 )
             )
         raise ConstraintValidationError(
             TranslatableText(
                 f'Exercise must require between {self.min} and {self.max} unnested subqueries, but no SELECT clause has that many unnested subqueries.',
-                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subqueries non annidate, ma nessuna clausola SELECT ha quel numero di subqueries non annidate.'
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subquery non annidate, ma nessuna clausola SELECT ha quel numero di subquery non annidate.'
             )
         )
 
@@ -89,16 +89,16 @@ class Subqueries(QueryConstraint):
         if self.max is None:
             return TranslatableText(
                 f'Exercise must require at least {self.min} unnested subqueries.',
-                it=f'L\'esercizio deve richiedere almeno {self.min} subqueries non annidate.'
+                it=f'L\'esercizio deve richiedere almeno {self.min} subquery non annidate.'
             )
         if self.min == self.max:
             return TranslatableText(
                 f'Exercise must require exactly {self.min} unnested subqueries.',
-                it=f'L\'esercizio deve richiedere esattamente {self.min} subqueries non annidate.'
+                it=f'L\'esercizio deve richiedere esattamente {self.min} subquery non annidate.'
             )
         return TranslatableText(
             f'Exercise must require between {self.min} and {self.max} unnested subqueries.',
-            it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subqueries non annidate.'
+            it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subquery non annidate.'
         )
 class NestedSubqueries(QueryConstraint):
     '''Requires the presence of a certain number of subqueries that contain at least one nested subquery.'''
@@ -123,7 +123,7 @@ class NestedSubqueries(QueryConstraint):
             raise ConstraintValidationError(
                 TranslatableText(
                     f'Exercise must require at least {self.min} subqueries containing nested subqueries, but no SELECT clause has that many nested subqueries. Current nesting counts: {nested_counts}',
-                    it=f'L\'esercizio deve richiedere almeno {self.min} subqueries contenenti subqueries annidate, ma nessuna clausola SELECT ha quel numero di subqueries annidate. Conteggio corrente: {nested_counts}'
+                    it=f'L\'esercizio deve richiedere almeno {self.min} subquery contenenti subquery annidate, ma nessuna clausola SELECT ha quel numero di subquery annidate. Conteggio corrente: {nested_counts}'
                 )
             )
         if self.min <= max_nested <= self.max:
@@ -131,7 +131,7 @@ class NestedSubqueries(QueryConstraint):
         raise ConstraintValidationError(
             TranslatableText(
                 f'Exercise must require between {self.min} and {self.max} subqueries containing nested subqueries, but no SELECT clause has that many nested subqueries. Current nesting counts: {nested_counts}',
-                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subqueries contenenti subqueries annidate, ma nessuna clausola SELECT ha quel numero di subqueries annidate. Conteggio corrente: {nested_counts}'
+                it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subquery contenenti subquery annidate, ma nessuna clausola SELECT ha quel numero di subquery annidate. Conteggio corrente: {nested_counts}'
             )
         )
 
@@ -140,14 +140,14 @@ class NestedSubqueries(QueryConstraint):
         if self.max is None:
             return TranslatableText(
                 f'Exercise must require at least {self.min} subqueries containing nested subqueries.',
-                it=f'L\'esercizio deve richiedere almeno {self.min} subqueries contenenti subqueries annidate.'
+                it=f'L\'esercizio deve richiedere almeno {self.min} subquery contenenti subquery annidate.'
             )
         if self.min == self.max:
             return TranslatableText(
                 f'Exercise must require exactly {self.min} subqueries containing nested subqueries.',
-                it=f'L\'esercizio deve richiedere esattamente {self.min} subqueries contenenti subqueries annidate.'
+                it=f'L\'esercizio deve richiedere esattamente {self.min} subquery contenenti subquery annidate.'
             )
         return TranslatableText(
             f'Exercise must require between {self.min} and {self.max} subqueries containing nested subqueries.',
-            it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subqueries contenenti subqueries annidate.'
+            it=f'L\'esercizio deve richiedere tra {self.min} e {self.max} subquery contenenti subquery annidate.'
         )
