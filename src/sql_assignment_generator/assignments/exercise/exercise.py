@@ -10,6 +10,7 @@ from ...difficulty_level import DifficultyLevel
 from ... import llm
 from ...exceptions import ExerciseGenerationError, SQLParsingError, ConstraintValidationError
 from ...translatable_text import TranslatableText
+from ...db import get_database, QueryExecutionError
 
 @dataclass
 class Exercise:
@@ -36,6 +37,10 @@ class Exercise:
         difficulty: DifficultyLevel,
         constraints: list[QueryConstraint],
         *,
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
         extra_details: str,
         dataset: Dataset,
         title: str,
@@ -70,6 +75,20 @@ class Exercise:
                         ).get(language),
                         answer.solution
                     )
+                
+                # execute the query to ensure it runs without errors
+                with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
+                    try:
+                        db.execute(dataset.to_sql_no_context())
+                        db.execute(query.sql)
+                    except QueryExecutionError as e:
+                        raise SQLParsingError(
+                            TranslatableText(
+                                f"Generated SQL solution cannot be executed: {e}",
+                                it=f"La soluzione SQL generata non può essere eseguita: {e}"
+                            ).get(language),
+                            query.sql
+                        )
 
                 # constraint validation
                 constraint_errors = []
