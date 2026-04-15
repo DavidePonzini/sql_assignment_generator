@@ -967,9 +967,6 @@ class InAnyAll(QueryConstraint):
             exps = select.ast.find_all((exp.In, exp.Any, exp.All)) # type: ignore
             count += len(list(exps))
 
-        import dav_tools
-        dav_tools.messages.debug(count)
-
         if count < self.min:
             error_msg = TranslatableText()
             if 'IN' in self.options:
