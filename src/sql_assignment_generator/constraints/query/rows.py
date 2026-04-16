@@ -90,12 +90,14 @@ class Distinct(QueryConstraint):
                     f'The exercise must use the DISTINCT keyword to eliminate duplicate rows that would otherwise be returned, but the query does not use DISTINCT in the main SELECT statement. '\
                         f'You can achieve this by selecting columns that do not form a unique key and that do not have unique constraints on the referenced tables. '\
                         f'Current unique constraints on output columns: {output_constraints}. '\
-                        f'Don\'t select the following combinations of columns: {columns_to_avoid}, since they have unique constraints, unless you only select a part of them (i.e. (a, b) -> you can select `a` or `b`, but not both).',
+                        f'Don\'t select the following combinations of columns (indicated as tuples): {columns_to_avoid}, since they have unique constraints, unless you only select a part of them '\
+                        f'(i.e. (a) -> you cannot select it at all; (a, b) -> you can select `a` or `b`, but not both).',
 
                     it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate che altrimenti verrebbero restituite, ma la query non usa DISTINCT nella dichiarazione SELECT principale. '\
                         f'Puoi ottenere questo risultato selezionando colonne che non formano una chiave univoca e che non hanno vincoli univoci sulle tabelle referenziate. '\
                         f'Vincoli univoci correnti sulle colonne di output: {output_constraints}. '\
-                        f'Non selezionare le seguenti combinazioni di colonne: {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse (es. (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
+                        f'Non selezionare le seguenti combinazioni di colonne (indicate come tuple): {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse '\
+                        f'(es. (a) -> non puoi selezionarlo affatto; (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
                 )
             )
         if len(other_constraints) > 0:
@@ -103,13 +105,14 @@ class Distinct(QueryConstraint):
                 TranslatableText(
                     f'The exercise must use the DISTINCT keyword to eliminate duplicate rows that would otherwise be returned, but the query has other unique constraints on the output columns. '\
                         f'You can achieve this by selecting columns that do not form a unique key and that do not have unique constraints on the referenced tables. '\
-                        f'Current unique constraints: {output_constraints} (only DISTINCT should be present) ' \
-                        f'Don\'t select the following combinations of columns: {columns_to_avoid}, since they have unique constraints, unless you only select a part of them (i.e. (a, b) -> you can select `a` or `b`, but not both).',
+                        f'Don\'t select the following combinations of columns (indicated as tuples): {columns_to_avoid}, since they have unique constraints, unless you only select a part of them '\
+                        f'(i.e. (a) -> you cannot select it at all; (a, b) -> you can select `a` or `b`, but not both).',
 
                     it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate che altrimenti verrebbero restituite, ma la query ha altri vincoli univoci sulle colonne di output. '\
                         f'Puoi ottenere questo risultato selezionando colonne che non formano una chiave univoca e che non hanno vincoli univoci sulle tabelle referenziate. '\
                         f'Vincoli univoci correnti: {output_constraints} (solo DISTINCT dovrebbe essere presente) ' \
-                        f'Non selezionare le seguenti combinazioni di colonne: {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse (es. (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
+                        f'Non selezionare le seguenti combinazioni di colonne (indicate come tuple): {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse '\
+                        f'(es. (a) -> non puoi selezionarlo affatto; (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
                 )
             )
 
