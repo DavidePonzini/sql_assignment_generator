@@ -3,12 +3,11 @@ from pydantic import BaseModel
 from .message import Message
 
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 client = OpenAI()
 
-def generate_answer(message: Message, *, json_format: type[BaseModel], add_to_messages: bool = True, **kwargs) -> BaseModel:
+def generate_answer(message: Message, *, model: str, json_format: type[BaseModel], add_to_messages: bool = True, **kwargs) -> BaseModel:
     '''
     Generate an answer from the LLM using the provided message and tools.
     '''
@@ -17,7 +16,7 @@ def generate_answer(message: Message, *, json_format: type[BaseModel], add_to_me
     schema['additionalProperties'] = False      # Required for strict validation
 
     response = client.chat.completions.create(
-        model=os.getenv('LLM_MODEL', 'gpt-5.4-nano'),
+        model=model,
         messages=message.messages,
         response_format={
             'type': 'json_schema',

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from sql_error_taxonomy import SqlErrors
 from sqlscope import Query
 import dav_tools
+import os
 
 from . import strings
 from ..dataset import Dataset
@@ -57,6 +58,7 @@ class Exercise:
             constraints=constraints,
             sql_dialect=sql_dialect,
             language=language,
+            difficulty=difficulty
         ))
 
         # start with a lower temperature for more focused generation,
@@ -66,6 +68,7 @@ class Exercise:
                 answer = llm.generate_answer(
                     messages,
                     json_format=llm.models.Assignment,
+                    model=os.getenv('SQL_GENERATION_LLM_MODEL_EXERCISE', 'gpt-5.4-nano'),
                 )
                 assert isinstance(answer, llm.models.Assignment)
                 
@@ -115,6 +118,7 @@ class Exercise:
                 answer_refinement = llm.generate_answer(
                     messages_refinement,
                     json_format=llm.models.RemoveHints,
+                    model=os.getenv('SQL_GENERATION_LLM_MODEL_EXERCISE_NL_REQUEST', 'gpt-4o-mini')
                 )
 
                 assert isinstance(answer_refinement, llm.models.RemoveHints)

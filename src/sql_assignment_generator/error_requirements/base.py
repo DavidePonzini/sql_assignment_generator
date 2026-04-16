@@ -1,5 +1,5 @@
 from ..difficulty_level import DifficultyLevel
-from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints
+from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints, query as query_constraints
 from abc import ABC
 from ..difficulty_level import DifficultyLevel
 from ..translatable_text import TranslatableText
@@ -38,7 +38,18 @@ class SqlErrorRequirements(ABC):
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[QueryConstraint]:
         '''Constraints the exercise must satisfy to likely trigger the error.'''
-        return []
+        
+        # base constraints common to all errors
+        if difficulty == DifficultyLevel.EASY:
+            return [
+                query_constraints.aggregation.NoPartitioning(),
+            ]
+        if difficulty == DifficultyLevel.MEDIUM:
+            return [
+                query_constraints.aggregation.NoPartitioning(),
+            ]
+        if difficulty == DifficultyLevel.HARD:
+            return []
 
     def exercise_extra_details(self) -> TranslatableText:
         '''Additional details or instructions for the exercise.'''

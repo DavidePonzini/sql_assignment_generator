@@ -1,3 +1,4 @@
+from ...difficulty_level import DifficultyLevel
 from ...constraints import QueryConstraint
 from sqlscope import Query
 from ...translatable_text import TranslatableText
@@ -8,8 +9,16 @@ def prompt_generate(
         constraints: list[QueryConstraint],
         *,
         sql_dialect: str,
-        language: str
+        language: str,
+        difficulty: DifficultyLevel
     ) -> str:
+
+    if difficulty == DifficultyLevel.EASY:
+        difficulty_str = TranslatableText('beginner', it='principiante').get(language)
+    elif difficulty == DifficultyLevel.MEDIUM:
+        difficulty_str = TranslatableText('intermediate', it='intermedio').get(language)
+    else:
+        difficulty_str = TranslatableText('advanced', it='avanzato').get(language)
 
     formatted_constraints = '\n'.join(f'- {constraint.description.get(language)}' for constraint in constraints)
 
@@ -28,6 +37,7 @@ def prompt_generate(
 
 ### GUIDELINES ###
 Generate a {sql_dialect} SQL exercise based on the dataset above.
+The difficulty should be appropriate for a {difficulty_str} student.
 {extra_details_formatted}
 
 ### MANDATORY REQUIREMENTS FOR THE EXERCISE ###
@@ -73,9 +83,10 @@ def prompt_refine_request(request: str, query: Query, *, language: str) -> str:
 {query.sql}
 --- SOLUTION END ---
 
-Reword the natural language request to remove any kind of hints on how to write it. 
-Keep the condition purely at the problem level, not the SQL level.
-Keep it realistic, simple and straightforward. It doesn't have to sound like a school exercise, but like a real-world request.
+Rephrase the natural language request to remove any kind of hints on how to write it. 
+Keep the condition purely at the problem level (what should be accomplished), not the SQL level (how to accomplish it).
+Keep it simple and brief.
+
 Do not use generic phrases like "a certain amount"; instead specify exact terms.
 Avoid mentioning tables explicitly. Remove any reference to joins or join keys.
 Do not use any formatting on the answer.
@@ -108,21 +119,21 @@ Non usare alcun formato nella risposta.
     if aliases:
         aliases_str = ', '.join([f'"{alias}"' for real_name, alias in aliases])
         result += TranslatableText(
-            f"\nIn particular, you must specify the need to use the following aliases: {aliases_str}.",
+            f"\nIn particular, you must specify the need to use the following aliases, without giving away the solution: {aliases_str}.",
             it=f"\nIn particolare, devi specificare la necessità di utilizzare i seguenti alias: {aliases_str}."
         )
 
     result += TranslatableText(
         f'''
 
-Natural Language Request:
+Natural Language Request to be rephrased:
 --- REQUEST START ---
 {request}
 --- REQUEST END ---
 ''',
         it=f'''
 
-Richiesta in Linguaggio Naturale:
+Richiesta in Linguaggio Naturale da riformulare:
 --- REQUEST START ---
 {request}
 --- REQUEST END ---

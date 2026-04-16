@@ -73,28 +73,43 @@ class Distinct(QueryConstraint):
         has_distinct_constraint = any(c.constraint_type == ConstraintType.DISTINCT for c in output_constraints)
         other_constraints = [c for c in output_constraints if c.constraint_type != ConstraintType.DISTINCT]
 
-        if not has_distinct_constraint:
-            all_tables_names = query.catalog[query.search_path].table_names
-            all_tables = [query.catalog[query.search_path][table_name] for table_name in all_tables_names]
-            all_constraints = [(t.name, c) for t in all_tables for c in t.unique_constraints]
-            columns_to_avoid: set[tuple[str, ...]] = set()
-            for table_name, constraint in all_constraints:
-                cols: list[str] = []
-                for column in constraint.columns:
-                    cols.append(f'{table_name}.{column.name}')
-                columns_to_avoid.add(tuple(cols))
+        all_tables_names = query.catalog[query.search_path].table_names
+        all_tables = [query.catalog[query.search_path][table_name] for table_name in all_tables_names]
+        all_constraints = [(t.name, c) for t in all_tables for c in t.unique_constraints]
+        columns_to_avoid: set[tuple[str, ...]] = set()
 
+        for table_name, constraint in all_constraints:
+            cols: list[str] = []
+            for column in constraint.columns:
+                cols.append(f'{table_name}.{column.name}')
+            columns_to_avoid.add(tuple(cols))
+
+        if not has_distinct_constraint:
             raise ConstraintValidationError(
                 TranslatableText(
-                    f'The exercise must use the DISTINCT keyword to eliminate duplicate rows, but the query does not use DISTINCT in the main SELECT statement. Create a query that without DISTINCT would return duplicate rows, but with DISTINCT returns unique rows. You can achieve this by selecting columns that do not form a unique key and that do not have unique constraints on the referenced tables. Current unique constraints on output columns: {output_constraints}. Don\'t select the following combinations of columns: {columns_to_avoid}, since they have unique constraints.\n{query.sql}',
-                    it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate, ma la query non la usa. Crea una query che senza DISTINCT restituirebbe righe duplicate, ma con DISTINCT restituisce righe uniche. Puoi ottenere questo selezionando colonne che non formano una chiave univoca e che non hanno vincoli univoci sulle tabelle referenziate. Vincoli univoci correnti sulle colonne di output: {output_constraints}. Non selezionare le seguenti combinazioni di colonne: {columns_to_avoid}, poiché hanno vincoli univoci.'
+                    f'The exercise must use the DISTINCT keyword to eliminate duplicate rows that would otherwise be returned, but the query does not use DISTINCT in the main SELECT statement. '\
+                        f'You can achieve this by selecting columns that do not form a unique key and that do not have unique constraints on the referenced tables. '\
+                        f'Current unique constraints on output columns: {output_constraints}. '\
+                        f'Don\'t select the following combinations of columns: {columns_to_avoid}, since they have unique constraints, unless you only select a part of them (i.e. (a, b) -> you can select `a` or `b`, but not both).',
+
+                    it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate che altrimenti verrebbero restituite, ma la query non usa DISTINCT nella dichiarazione SELECT principale. '\
+                        f'Puoi ottenere questo risultato selezionando colonne che non formano una chiave univoca e che non hanno vincoli univoci sulle tabelle referenziate. '\
+                        f'Vincoli univoci correnti sulle colonne di output: {output_constraints}. '\
+                        f'Non selezionare le seguenti combinazioni di colonne: {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse (es. (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
                 )
             )
         if len(other_constraints) > 0:
             raise ConstraintValidationError(
                 TranslatableText(
-                    f'The exercise must use the DISTINCT keyword to eliminate duplicate rows that would otherwise be returned, but the query has other unique constraints on the output columns. With DISTINCT, the query should return unique rows, but without DISTINCT it should return duplicate rows. Current unique constraints: {output_constraints} (only DISTINCT should be present)',
-                    it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate che altrimenti verrebbero restituite, ma la query ha altri vincoli univoci sulle colonne di output. Con DISTINCT, la query dovrebbe restituire righe uniche, ma senza DISTINCT dovrebbe restituire righe duplicate. Vincoli univoci correnti: {output_constraints} (solo DISTINCT dovrebbe essere presente)'
+                    f'The exercise must use the DISTINCT keyword to eliminate duplicate rows that would otherwise be returned, but the query has other unique constraints on the output columns. '\
+                        f'You can achieve this by selecting columns that do not form a unique key and that do not have unique constraints on the referenced tables. '\
+                        f'Current unique constraints: {output_constraints} (only DISTINCT should be present) ' \
+                        f'Don\'t select the following combinations of columns: {columns_to_avoid}, since they have unique constraints, unless you only select a part of them (i.e. (a, b) -> you can select `a` or `b`, but not both).',
+
+                    it=f'L\'esercizio deve usare la parola chiave DISTINCT per eliminare le righe duplicate che altrimenti verrebbero restituite, ma la query ha altri vincoli univoci sulle colonne di output. '\
+                        f'Puoi ottenere questo risultato selezionando colonne che non formano una chiave univoca e che non hanno vincoli univoci sulle tabelle referenziate. '\
+                        f'Vincoli univoci correnti: {output_constraints} (solo DISTINCT dovrebbe essere presente) ' \
+                        f'Non selezionare le seguenti combinazioni di colonne: {columns_to_avoid}, poiché hanno vincoli univoci, a meno che tu non selezioni solo una parte di esse (es. (a, b) -> puoi selezionare `a` o `b`, ma non entrambi).'
                 )
             )
 

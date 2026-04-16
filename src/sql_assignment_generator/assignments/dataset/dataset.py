@@ -5,6 +5,7 @@ import dav_tools
 import sqlglot
 from sqlglot import exp
 from sqlscope import Catalog, build_catalog_from_sql
+import os
 
 from . import strings
 from ...constraints.schema import SchemaConstraint
@@ -185,7 +186,11 @@ class Dataset:
             try:
                 dav_tools.messages.progress(f'Generating dataset (Attempt {attempt + 1}/{max_attempts})...')
 
-                answer = llm.generate_answer(messages, json_format=llm.models.Schema) 
+                answer = llm.generate_answer(
+                    messages,
+                    json_format=llm.models.Schema,
+                    model=os.getenv('SQL_GENERATION_LLM_MODEL_DATASET', 'gpt-5.4-nano')
+                ) 
                 assert isinstance(answer, llm.models.Schema), "The response is not in the expected JSON format."
 
                 # parse CREATE TABLEs
