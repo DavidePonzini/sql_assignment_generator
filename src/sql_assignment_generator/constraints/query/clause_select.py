@@ -95,8 +95,8 @@ class Alias(QueryConstraint):
             if alias_count < self.min:
                 raise ConstraintValidationError(
                     TranslatableText(
-                        f'At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found.',
-                        it=f'Almeno {self.min} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate solo {alias_count}.'
+                        f'At least {self.min} columns in SELECT must be renamed using an alias (AS), but only {alias_count} were found. Rename the remaining columns.',
+                        it=f'Almeno {self.min} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate solo {alias_count}. Rinomina le colonne rimanenti.',
                     )
                 )
             return
@@ -104,8 +104,8 @@ class Alias(QueryConstraint):
         if not (self.min <= alias_count <= self.max):
             raise ConstraintValidationError(
                 TranslatableText(
-                    f'Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found.',
-                    it=f'Tra {self.min} e {self.max} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate {alias_count}.'
+                    f'Between {self.min} and {self.max} columns in SELECT must be renamed using an alias (AS), but {alias_count} were found. Rename the columns to meet the requirement.',
+                    it=f'Tra {self.min} e {self.max} colonne nella SELECT devono essere rinominate usando un alias (AS), ma ne sono state trovate {alias_count}. Rinomina le colonne per soddisfare il requisito.',
                 )
             )
 

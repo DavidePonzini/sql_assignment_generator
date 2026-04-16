@@ -59,9 +59,14 @@ class Exercise:
             language=language,
         ))
 
+        # start with a lower temperature for more focused generation,
+        # and increase it with each attempt to encourage more diversity in the generated solutions
         for attempt in range(max_attempts):
             try:
-                answer = llm.generate_answer(messages, json_format=llm.models.Assignment)
+                answer = llm.generate_answer(
+                    messages,
+                    json_format=llm.models.Assignment,
+                )
                 assert isinstance(answer, llm.models.Assignment)
                 
                 # check syntax correctness of solution
@@ -96,11 +101,11 @@ class Exercise:
                 for constraint in constraints:
                     try:
                         constraint.validate(query)
-                    except ConstraintValidationError:
-                        constraint_errors.append(constraint.description.get(language))
+                    except ConstraintValidationError as e:
+                        constraint_errors.append(e.get(language))
 
                 if constraint_errors:
-                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements: {", ".join(constraint_errors)}')
+                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements:\n\t- {"\n\t- ".join(constraint_errors)}')
                     messages.add_message_user(strings.feedback_validation_errors(constraint_errors, language=language))
                     continue
 
@@ -109,7 +114,7 @@ class Exercise:
                 messages_refinement.add_message_user(strings.prompt_refine_request(answer.request, query, language=language))
                 answer_refinement = llm.generate_answer(
                     messages_refinement,
-                    json_format=llm.models.RemoveHints
+                    json_format=llm.models.RemoveHints,
                 )
 
                 assert isinstance(answer_refinement, llm.models.RemoveHints)

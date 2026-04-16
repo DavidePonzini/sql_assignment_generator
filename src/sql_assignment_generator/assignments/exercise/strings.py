@@ -61,8 +61,8 @@ Genera un esercizio SQL {sql_dialect} basato sul dataset sopra.
 
 def feedback_validation_errors(errors: list[str], *, language: str) -> str:
     return TranslatableText(
-        f"The previous JSON output was rejected because it violated these constraints: {', '.join(errors)}\n Regenerate the JSON to satisfy all constraints.",
-        it=f"Il precedente output JSON è stato rifiutato perché violava questi vincoli: {', '.join(errors)}\n Rigenera il JSON per soddisfare tutti i vincoli."
+        f"The previous JSON output was rejected because it violated these constraints:\n\t- {'\n\t- '.join(errors)}\n Regenerate the JSON to satisfy all constraints.",
+        it=f"Il precedente output JSON è stato rifiutato perché violava questi vincoli:\n\t- {'\n\t- '.join(errors)}\n Rigenera il JSON per soddisfare tutti i vincoli."
     ).get(language)
 
 

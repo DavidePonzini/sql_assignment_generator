@@ -1,9 +1,8 @@
 dav_tools>=0.4.22
-# progress>=1.6
 pydantic>=2.10.4
 sql-error-taxonomy>=1.0.2
-sqlscope>=1.0.10
-sqlglot
+sqlscope>=1.0.12
+sqlglot>=11.5.6
 dotenv
 openai
 psycopg2
