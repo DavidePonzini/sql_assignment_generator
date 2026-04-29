@@ -1,6 +1,5 @@
 from .database import Database
-from .drivers.postgresql import PostgresqlDatabase
-from .drivers.mysql import MySQLDatabase
+from .drivers import PostgresqlDatabase, MySQLDatabase
 from .exceptions import QueryExecutionError
 import dav_tools
 
