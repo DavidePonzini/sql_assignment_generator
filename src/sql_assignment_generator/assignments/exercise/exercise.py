@@ -108,7 +108,8 @@ class Exercise:
                         constraint_errors.append(e.get(language))
 
                 if constraint_errors:
-                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements:\n\t- {"\n\t- ".join(constraint_errors)}')
+                    missing_reqs = "\n\t- ".join(constraint_errors)
+                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements:\n\t- {missing_reqs}')
                     messages.add_message_user(strings.feedback_validation_errors(constraint_errors, language=language))
                     continue
 
