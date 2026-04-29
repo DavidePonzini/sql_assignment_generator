@@ -85,7 +85,8 @@ def test_no_alias_fail(sql):
     ("SELECT col1 AS a, col2 AS b FROM t", 2, None), # 2 aliases, min 2 required
     ("SELECT col1 AS a, col2 FROM t", 1, 1), # Exactly 1 alias
     ("SELECT col1 AS a, col2 AS b, col3 FROM t", 1, 2), # 2 aliases, range 1-2
-    ("SELECT name AS n, (SELECT MAX(a) FROM t1) AS max FROM t2", 2, 2) # 2 aliases and exactly 2 require
+    ("SELECT name AS n, b AS max FROM t2", 2, 2), # 2 aliases and exactly 2 require
+    ("SELECT name AS n, (SELECT MAX(a) FROM t1) AS max FROM t2", 2, 2), # 2 aliases and exactly 2 require
 ])
 
 def test_alias_pass(sql, min_, max_):

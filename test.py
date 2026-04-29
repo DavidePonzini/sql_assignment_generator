@@ -16,7 +16,7 @@ if __name__ == '__main__':
     errors = [
         (SqlErrors.LOG_72_MISSING_DISTINCT_FROM_SELECT, DifficultyLevel.MEDIUM),
         (SqlErrors.LOG_73_MISSING_AS_FROM_SELECT, DifficultyLevel.MEDIUM),
-        # (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
+        (SqlErrors.SYN_2_AMBIGUOUS_COLUMN, DifficultyLevel.HARD),
     ]
 
     assignment = generate_assignment(

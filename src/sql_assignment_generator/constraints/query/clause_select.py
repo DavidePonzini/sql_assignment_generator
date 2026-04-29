@@ -89,9 +89,9 @@ class Alias(QueryConstraint):
         aliased_columns: list[tuple[str, str]] = []  # List of (real_name, alias) for aliased columns
         unaliased_columns: list[tuple[str, str]] = []  # List of (real_name, alias) for aliased columns
         for col in output.columns:
-            if col.table_idx is None:
-                # computed column, skip it
-                continue
+            # if col.table_idx is None:
+            #     # computed column, skip it
+            #     continue
 
             if col.name != col.real_name:
                 aliased_columns.append((col.real_name, col.name))

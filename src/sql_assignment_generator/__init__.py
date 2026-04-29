@@ -117,6 +117,7 @@ def generate_assignment(
             db_user=db_user,
             db_password=db_password
         )
+        dav_tools.messages.success(f'Dataset generated')
     else:
         dataset = Dataset.from_sql(
             sql_str=dataset_str,
