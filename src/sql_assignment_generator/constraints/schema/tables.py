@@ -255,3 +255,37 @@ class SameColumnNames(SchemaConstraint):
         
         min_tables = max(self.pairs, other.pairs)
         return SameColumnNames(pairs=min_tables)
+    
+class MaxColumns(SchemaConstraint):
+    '''Requires the schema to have a specific maximum number of columns for each table.'''
+
+    def __init__(self, max_columns: int) -> None:
+        self.max_columns = max_columns
+
+    def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
+        for schema_name in catalog.schema_names:
+            for table_name in catalog[schema_name].table_names:
+                table = catalog[schema_name][table_name]
+                column_count = len(table.columns)
+
+                if column_count > self.max_columns:
+                    raise ConstraintValidationError(
+                        TranslatableText(
+                            f'Table "{table_name}" has {column_count} columns, which exceeds the maximum allowed of {self.max_columns}. Reduce the number of columns in this table to meet the requirement.',
+                            it=f'La tabella "{table_name}" ha {column_count} colonne, che supera il massimo consentito di {self.max_columns}. Riduci il numero di colonne in questa tabella per soddisfare il requisito.'
+                        )
+                    )
+                
+    @property
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            f'Each table in the schema must have at most {self.max_columns} columns',
+            it=f'Ogni tabella nello schema deve avere al massimo {self.max_columns} colonne'
+        )
+    
+    def merge(self, other: SchemaConstraint) -> 'MaxColumns':
+        if not isinstance(other, MaxColumns):
+            raise ConstraintMergeError(self, other)
+        
+        max_cols = min(self.max_columns, other.max_columns)
+        return MaxColumns(max_columns=max_cols)
