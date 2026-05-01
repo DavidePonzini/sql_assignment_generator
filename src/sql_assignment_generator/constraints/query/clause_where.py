@@ -57,8 +57,8 @@ class Condition(QueryConstraint):
             if count < self.min:
                 raise ConstraintValidationError(
                     TranslatableText(
-                        f'Query must require at least {self.min} comparisons on rows (WHERE conditions), but only {count} were found.',
-                        it=f'La query deve richiedere almeno {self.min} confronti sulle righe (condizioni WHERE), ma ne sono state trovate solo {count}.'
+                        f'Query must require at least {self.min} comparisons on rows (WHERE conditions), but only {count} were found. Add more conditions to the WHERE clause.',
+                        it=f'La query deve richiedere almeno {self.min} confronti sulle righe (condizioni WHERE), ma ne sono state trovate solo {count}. Aggiungi più condizioni alla clausola WHERE.'
                     )
                 )
             return
@@ -966,9 +966,6 @@ class InAnyAll(QueryConstraint):
             
             exps = select.ast.find_all((exp.In, exp.Any, exp.All)) # type: ignore
             count += len(list(exps))
-
-        import dav_tools
-        dav_tools.messages.debug(count)
 
         if count < self.min:
             error_msg = TranslatableText()

@@ -1,5 +1,5 @@
 from ..difficulty_level import DifficultyLevel
-from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints
+from ..constraints import SchemaConstraint, QueryConstraint, schema as schema_constraints, query as query_constraints
 from abc import ABC
 from ..difficulty_level import DifficultyLevel
 from ..translatable_text import TranslatableText
@@ -18,6 +18,7 @@ class SqlErrorRequirements(ABC):
             return [
                 schema_constraints.tables.MinTables(2),
                 schema_constraints.tables.MinColumns(2, tables=1),
+                schema_constraints.tables.MaxColumns(4),
                 schema_constraints.values.MinRows(3),
                 schema_constraints.values.SingleInsertPerTable(),
             ]
@@ -25,6 +26,7 @@ class SqlErrorRequirements(ABC):
             return [
                 schema_constraints.tables.MinTables(4),
                 schema_constraints.tables.MinColumns(4, tables=2),
+                schema_constraints.tables.MaxColumns(5),
                 schema_constraints.values.MinRows(4),
                 schema_constraints.values.SingleInsertPerTable(),
             ]
@@ -32,13 +34,25 @@ class SqlErrorRequirements(ABC):
             return [
                 schema_constraints.tables.MinTables(6),
                 schema_constraints.tables.MinColumns(5, tables=3),
+                schema_constraints.tables.MaxColumns(6),
                 schema_constraints.values.MinRows(5),
                 schema_constraints.values.SingleInsertPerTable(),
             ]
 
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[QueryConstraint]:
         '''Constraints the exercise must satisfy to likely trigger the error.'''
-        return []
+        
+        # base constraints common to all errors
+        if difficulty == DifficultyLevel.EASY:
+            return [
+                query_constraints.aggregation.NoPartitioning(),
+            ]
+        if difficulty == DifficultyLevel.MEDIUM:
+            return [
+                query_constraints.aggregation.NoPartitioning(),
+            ]
+        if difficulty == DifficultyLevel.HARD:
+            return []
 
     def exercise_extra_details(self) -> TranslatableText:
         '''Additional details or instructions for the exercise.'''

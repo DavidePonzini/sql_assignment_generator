@@ -1,7 +1,40 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.aggregation import NoAggregation, Aggregation
+from sql_assignment_generator.constraints.query.aggregation import NoAggregation, NoPartitioning, Aggregation
 from sql_assignment_generator.exceptions import ConstraintValidationError
+
+# =================================================================
+# TEST NO PARTITIONING FAIL
+# =================================================================
+
+@pytest.mark.parametrize("sql", [
+    "SELECT ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary) AS rn FROM employees;",
+    "SELECT name FROM employees WHERE salary > (SELECT AVG(salary) OVER (PARTITION BY department) FROM employees LIMIT 1);",
+    "SELECT name FROM employees ORDER BY ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary);",
+])
+def test_no_partitioning_fail(sql):
+    query = Query(sql)
+    constraint = NoPartitioning()
+
+    with pytest.raises(ConstraintValidationError):
+        constraint.validate(query)
+
+
+# =================================================================
+# TEST NO PARTITIONING PASS
+# =================================================================
+
+@pytest.mark.parametrize("sql", [
+    "SELECT name, salary + bonus AS total_compensation FROM employees;",
+    "SELECT department, AVG(salary) FROM employees GROUP BY department;",
+    "SELECT name FROM employees WHERE salary > 50000 ORDER BY salary DESC;",
+])
+def test_no_partitioning_pass(sql):
+    query = Query(sql)
+    constraint = NoPartitioning()
+
+    constraint.validate(query)
+
 
 # =================================================================
 # TEST NO AGGREGATION FAIL

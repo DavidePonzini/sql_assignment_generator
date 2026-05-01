@@ -5,6 +5,36 @@ from ...exceptions import ConstraintValidationError
 from ...translatable_text import TranslatableText
 
 
+class NoPartitioning(QueryConstraint):
+    '''Requires the absence of window functions in the SQL query.'''
+
+    def validate(self, query: Query) -> None:
+        for select in query.selects:
+            query_ast = select.ast
+            if query_ast is None:
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Invalid query: unable to parse the SQL query: {select.sql}',
+                        it=f'Query non valida: impossibile analizzare la query SQL: {select.sql}'
+                    )
+                )
+
+            window_functions_found = list(query_ast.find_all(exp.Window))
+            if len(window_functions_found) > 0:
+                raise ConstraintValidationError(
+                    TranslatableText(
+                        f'Exercise must not require any window functions. Found window functions: {[wf.sql() for wf in window_functions_found]}',
+                        it=f'L\'esercizio non deve richiedere funzioni di finestra. Sono state trovate le seguenti funzioni di finestra: {[wf.sql() for wf in window_functions_found]}'
+                    )
+                )
+    
+    @property
+    def description(self) -> TranslatableText:
+        return TranslatableText(
+            'Exercise must not require any window functions.',
+            it='L\'esercizio non deve richiedere funzioni di finestra.'
+        )
+
 class NoAggregation(QueryConstraint):
     '''Requires the absence of aggregation functions in the SQL query.'''
 

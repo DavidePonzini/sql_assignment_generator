@@ -1,11 +1,12 @@
 import pytest
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sql_assignment_generator.exceptions import ConstraintMergeError, ConstraintValidationError
 from sql_assignment_generator.constraints.schema.tables import (
     MinTables, 
     MinChecks, 
     MinColumns, 
     ComplexColumnName, 
-    SameColumnNames
+    SameColumnNames,
+    MaxColumns,
 )
 
 from . import prepare_catalog
@@ -152,3 +153,71 @@ def test_same_column_names_fail():
     constraint = SameColumnNames(pairs=1)
     with pytest.raises(ConstraintValidationError):
         constraint.validate(catalog, tables_ast, values_ast)
+
+
+# =================================================================
+# TEST MAX COLUMNS PASS
+# =================================================================
+
+@pytest.mark.parametrize("create_sqls, max_columns", [
+    (
+        [
+            "CREATE TABLE t1 (id INT PRIMARY KEY, name TEXT, age INT)",
+            "CREATE TABLE t2 (id INT PRIMARY KEY, status TEXT)"
+        ],
+        3
+    ),
+    (
+        ["CREATE TABLE t1 (id INT PRIMARY KEY, name TEXT)"],
+        2
+    ),
+])
+def test_max_columns_pass(create_sqls, max_columns):
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
+    constraint = MaxColumns(max_columns=max_columns)
+    constraint.validate(catalog, tables_ast, values_ast)
+
+
+# =================================================================
+# TEST MAX COLUMNS FAIL
+# =================================================================
+
+@pytest.mark.parametrize("create_sqls, max_columns", [
+    (
+        ["CREATE TABLE t1 (id INT PRIMARY KEY, name TEXT, age INT, email TEXT)"],
+        3
+    ),
+    (
+        [
+            "CREATE TABLE t1 (id INT PRIMARY KEY, name TEXT)",
+            "CREATE TABLE t2 (id INT PRIMARY KEY, status TEXT, created_at TIMESTAMP)"
+        ],
+        2
+    ),
+])
+def test_max_columns_fail(create_sqls, max_columns):
+    catalog, tables_ast, values_ast = prepare_catalog(create_sqls)
+    constraint = MaxColumns(max_columns=max_columns)
+    with pytest.raises(ConstraintValidationError):
+        constraint.validate(catalog, tables_ast, values_ast)
+
+
+# =================================================================
+# TEST MAX COLUMNS MERGE
+# =================================================================
+
+def test_max_columns_merge():
+    c1 = MaxColumns(max_columns=5)
+    c2 = MaxColumns(max_columns=3)
+    merged = c1.merge(c2)
+
+    assert merged.max_columns == 3
+    assert isinstance(merged, MaxColumns)
+
+
+def test_max_columns_merge_wrong_type():
+    c1 = MaxColumns(max_columns=4)
+    c2 = MinColumns(columns=3, tables=1)
+
+    with pytest.raises(ConstraintMergeError):
+        c1.merge(c2)

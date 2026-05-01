@@ -14,6 +14,9 @@ endif
 
 .PHONY: install build uninstall documentation upload download clean
 
+install: uninstall build
+	$(VENV_BIN)/python -m pip install ./dist/*.whl
+
 $(VENV):
 	python -m venv --clear $(VENV)
 	touch -a $(REQUIREMENTS)
@@ -25,9 +28,6 @@ $(VENV)_upgrade: $(VENV)
 .env:
 	cp .env.template .env
 	echo "Please edit the .env file to add your environment variables."
-
-install: uninstall build
-	$(VENV_BIN)/python -m pip install ./dist/*.whl
 
 build: $(VENV) .env
 	rm -rf dist/

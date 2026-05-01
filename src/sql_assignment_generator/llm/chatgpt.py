@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI()
 
-def generate_answer(message: Message, *, json_format: type[BaseModel], add_to_messages: bool = True, **kwargs) -> BaseModel:
+def generate_answer(message: Message, *, model: str, json_format: type[BaseModel], add_to_messages: bool = True, **kwargs) -> BaseModel:
     '''
     Generate an answer from the LLM using the provided message and tools.
     '''
@@ -16,7 +16,7 @@ def generate_answer(message: Message, *, json_format: type[BaseModel], add_to_me
     schema['additionalProperties'] = False      # Required for strict validation
 
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model=model,
         messages=message.messages,
         response_format={
             'type': 'json_schema',

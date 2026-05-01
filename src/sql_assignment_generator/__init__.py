@@ -148,6 +148,10 @@ def _validate_and_fix_queries(
 
 def generate_assignment(
         errors: list[tuple[SqlErrors, DifficultyLevel]],
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
         sql_dialect: str = 'postgres',
         *,
         language: str = 'en',
@@ -237,7 +241,12 @@ def generate_assignment(
             extra_details=dataset_extra_details,
             language=language,
             max_attempts=max_dataset_attempts,
+            db_host=db_host,
+            db_port=db_port,
+            db_user=db_user,
+            db_password=db_password
         )
+        dav_tools.messages.success(f'Dataset generated')
     else:
         dataset = Dataset.from_sql(
             sql_str=dataset_str,
@@ -274,7 +283,11 @@ def generate_assignment(
                     dataset=dataset,
                     title=title,
                     max_attempts=max_exercise_attempts,
-                    language=language
+                    language=language,
+                    db_host=db_host,
+                    db_port=db_port,
+                    db_user=db_user,
+                    db_password=db_password,
                 )
             except ExerciseGenerationError:
                 with log_lock:
@@ -295,6 +308,9 @@ def generate_assignment(
                     dav_tools.messages.warning(f'{title}: Duplicate solution detected for {error.name} (Attempt {attempt + 1}/{max_unique_attempts}). Regenerating...')
                 continue
 
+            with log_lock:
+                dav_tools.messages.info(f'{title}: Successfully generated.')
+                
             return (idx, generated_exercise)
 
         if last_generated_exercise is not None:
