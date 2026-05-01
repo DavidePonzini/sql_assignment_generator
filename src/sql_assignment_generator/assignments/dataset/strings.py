@@ -105,3 +105,65 @@ def feedback_constraint_violations(errors: list[str], * , language: str) -> str:
         f"The previous JSON output was rejected because the SQL violated these constraints: {', '.join(errors)}\n Regenerate the JSON correcting the SQL to satisfy all mandatory constraints.",
         it=f"Il precedente output JSON è stato rifiutato perché il SQL ha violato queste constraint: {', '.join(errors)}\n Rigenera il JSON correggendo il SQL per soddisfare tutte le constraint obbligatorie."
     ).get(language)
+
+
+def prompt_regenerate_data(
+        schema_sql: str,
+        failing_query: str,
+        current_data: str,
+        *,
+        sql_dialect: str,
+        language: str
+    ) -> str:
+    return TranslatableText(
+        f'''The following SQL query returns no results when executed against the dataset below. Generate new INSERT data that makes this query return at least one row.
+
+### SCHEMA ###
+{schema_sql}
+
+### FAILING QUERY ###
+{failing_query}
+
+### CURRENT INSERT DATA ###
+{current_data}
+
+Generate a complete set of INSERT INTO statements for ALL tables (replacing the current data). The new data must:
+- Be compatible with the schema above
+- Make the failing query return at least one row
+- Follow multi-row INSERT format (one INSERT per table)
+- Contain at least 5 rows per table
+
+MANDATORY OUTPUT (JSON):
+{{
+    "insert_commands": [
+        "INSERT INTO t1(...) VALUES (...), (...), ...;",
+        "INSERT INTO t2(...) VALUES (...), (...), ...;"
+    ]
+}}
+''',
+        it=f'''La seguente query SQL non restituisce risultati quando eseguita sul dataset sottostante. Genera nuovi dati INSERT che facciano restituire almeno una riga a questa query.
+
+### SCHEMA ###
+{schema_sql}
+
+### QUERY CHE FALLISCE ###
+{failing_query}
+
+### DATI INSERT CORRENTI ###
+{current_data}
+
+Genera un set completo di istruzioni INSERT INTO per TUTTE le tabelle (sostituendo i dati correnti). I nuovi dati devono:
+- Essere compatibili con lo schema sopra
+- Far restituire almeno una riga alla query che fallisce
+- Seguire il formato INSERT multi-riga (un INSERT per tabella)
+- Contenere almeno 5 righe per tabella
+
+OUTPUT OBBLIGATORIO (JSON):
+{{
+    "insert_commands": [
+        "INSERT INTO t1(...) VALUES (...), (...), ...;",
+        "INSERT INTO t2(...) VALUES (...), (...), ...;"
+    ]
+}}
+'''
+    ).get(language)

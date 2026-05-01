@@ -100,6 +100,14 @@ class Dataset:
         
         return self._catalog_cache
     
+    def with_inserts(self, insert_commands: list[str]) -> 'Dataset':
+        '''Return a new Dataset with replaced INSERT commands and invalidated catalog cache.'''
+        return Dataset(
+            create_commands=self.create_commands,
+            insert_commands=insert_commands,
+            domain=self.domain,
+        )
+
     def to_sql_no_context(self) -> str:
         '''Generate the SQL commands to create and populate the dataset without schema context.'''
 
