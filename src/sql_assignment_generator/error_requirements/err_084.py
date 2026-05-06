@@ -3,7 +3,7 @@ from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
 from ..translatable_text import TranslatableText
 
-class Err084_UnncessaryJoin(SqlErrorRequirements):
+class Err084_UnncessaryTableReference(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
 

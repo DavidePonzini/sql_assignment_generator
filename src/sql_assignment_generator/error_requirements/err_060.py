@@ -3,7 +3,7 @@ from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
 from ..translatable_text import TranslatableText
 
-class Err060_JoinOnIncorrectColumn(SqlErrorRequirements):
+class Err060_JoinConditionOnIncorrectColumn(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
 

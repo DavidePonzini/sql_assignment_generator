@@ -2,7 +2,7 @@ from .base import SqlErrorRequirements
 from ..constraints import query as query_constraints
 from ..difficulty_level import DifficultyLevel
 
-class Err058_JoinOnIncorrectTable(SqlErrorRequirements):
+class Err058_IncorrectTableReference(SqlErrorRequirements):
     def exercise_constraints(self, difficulty: DifficultyLevel) -> list[query_constraints.QueryConstraint]:
         constraints = super().exercise_constraints(difficulty)
 
