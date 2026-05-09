@@ -13,8 +13,9 @@ from .assignments import Assignment, Dataset, Exercise
 from .constraints import SchemaConstraint, QueryConstraint
 from .error_requirements import SqlErrorRequirements, ERROR_REQUIREMENTS_MAP
 from .exceptions import ExerciseGenerationError, SQLParsingError
-from .query_executor import create_db, execute_query, validate_assignment
+from .query_executor import execute_query, validate_assignment
 from .assignments.dataset import strings as dataset_strings
+from .db import get_database, QueryExecutionError
 
 import dav_tools
 from sql_error_taxonomy import SqlErrors
@@ -26,10 +27,14 @@ def _validate_and_fix_queries(
         sql_dialect: str,
         language: str,
         max_regeneration_attempts: int,
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
     ) -> Assignment:
     '''Execute all exercises, regenerate data for queries returning no results.'''
 
-    results = validate_assignment(assignment, sql_dialect)
+    results = validate_assignment(assignment, sql_dialect, db_host, db_port, db_user, db_password)
 
     # Find exercises that return no results (and not due to execution errors)
     failing_indices = [
@@ -95,31 +100,37 @@ def _validate_and_fix_queries(
 
                 # Try the new dataset
                 new_dataset = dataset.with_inserts(new_insert_commands)
-                conn = create_db(new_dataset, sql_dialect)
 
-                # Verify the failing query now returns results
-                failing_result = execute_query(conn, query_sql, sql_dialect)
-                if not failing_result.has_results:
-                    conn.close()
-                    dav_tools.messages.warning(
-                        f'{exercise.title}: Regenerated data still returns no results (attempt {attempt + 1}).'
-                    )
-                    continue
-
-                # Verify ALL other exercises still work
-                all_pass = True
-                for other_idx, other_exercise in enumerate(exercises):
-                    if other_idx == idx:
-                        continue
-                    other_result = execute_query(conn, other_exercise.solutions[0].sql, sql_dialect)
-                    if other_result.success and not other_result.has_results:
-                        all_pass = False
+                # Verify against the real DBMS
+                with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
+                    try:
+                        db.execute(new_dataset.to_sql_no_context())
+                    except QueryExecutionError:
                         dav_tools.messages.warning(
-                            f'{other_exercise.title}: Broken by regenerated data.'
+                            f'{exercise.title}: Regenerated data failed to load (attempt {attempt + 1}).'
                         )
-                        break
+                        continue
 
-                conn.close()
+                    # Verify the failing query now returns results
+                    failing_result = execute_query(db, query_sql)
+                    if not failing_result.has_results:
+                        dav_tools.messages.warning(
+                            f'{exercise.title}: Regenerated data still returns no results (attempt {attempt + 1}).'
+                        )
+                        continue
+
+                    # Verify ALL other exercises still work
+                    all_pass = True
+                    for other_idx, other_exercise in enumerate(exercises):
+                        if other_idx == idx:
+                            continue
+                        other_result = execute_query(db, other_exercise.solutions[0].sql)
+                        if other_result.success and not other_result.has_results:
+                            all_pass = False
+                            dav_tools.messages.warning(
+                                f'{other_exercise.title}: Broken by regenerated data.'
+                            )
+                            break
 
                 if all_pass:
                     dataset = new_dataset
@@ -367,6 +378,10 @@ def generate_assignment(
             sql_dialect=sql_dialect,
             language=language,
             max_regeneration_attempts=max_regeneration_attempts,
+            db_host=db_host,
+            db_port=db_port,
+            db_user=db_user,
+            db_password=db_password,
         )
 
     return assignment

@@ -1,6 +1,6 @@
 import pytest
+from unittest.mock import patch, MagicMock
 from sql_assignment_generator.query_executor import (
-    create_db,
     execute_query,
     validate_assignment,
     ExecutionResult,
@@ -9,6 +9,7 @@ from sql_assignment_generator.assignments import Assignment, Dataset, Exercise
 from sql_assignment_generator.difficulty_level import DifficultyLevel
 from sql_error_taxonomy import SqlErrors
 from sqlscope import Query
+from sql_assignment_generator.db.exceptions import QueryExecutionError
 
 
 def _make_dataset(create_sqls: list[str], insert_sqls: list[str]) -> Dataset:
@@ -20,55 +21,25 @@ def _make_dataset(create_sqls: list[str], insert_sqls: list[str]) -> Dataset:
 
 
 # =================================================================
-# CREATE DB
+# EXECUTION RESULT
 # =================================================================
 
-class TestCreateDb:
+class TestExecutionResult:
 
-    def test_basic_schema_and_data(self):
-        dataset = _make_dataset(
-            ['CREATE TABLE t1 (id INT PRIMARY KEY, name VARCHAR);'],
-            ["INSERT INTO t1 (id, name) VALUES (1, 'Alice'), (2, 'Bob');"],
-        )
-        conn = create_db(dataset, 'postgres')
-        rows = conn.execute('SELECT * FROM t1').fetchall()
-        conn.close()
-        assert len(rows) == 2
-        assert rows[0] == (1, 'Alice')
+    def test_has_results_true(self):
+        r = ExecutionResult(rows=[(1,)])
+        assert r.has_results
+        assert r.success
 
-    def test_multiple_tables(self):
-        dataset = _make_dataset(
-            [
-                'CREATE TABLE t1 (id INT PRIMARY KEY);',
-                'CREATE TABLE t2 (id INT PRIMARY KEY, name VARCHAR);',
-            ],
-            [
-                'INSERT INTO t1 (id) VALUES (1), (2);',
-                "INSERT INTO t2 (id, name) VALUES (1, 'x'), (2, 'y');",
-            ],
-        )
-        conn = create_db(dataset, 'postgres')
-        t1_rows = conn.execute('SELECT * FROM t1').fetchall()
-        t2_rows = conn.execute('SELECT * FROM t2').fetchall()
-        conn.close()
-        assert len(t1_rows) == 2
-        assert len(t2_rows) == 2
+    def test_has_results_false_empty(self):
+        r = ExecutionResult(rows=[])
+        assert not r.has_results
+        assert r.success
 
-    def test_foreign_key(self):
-        dataset = _make_dataset(
-            [
-                'CREATE TABLE dept (id INT PRIMARY KEY, name VARCHAR);',
-                'CREATE TABLE emp (id INT PRIMARY KEY, dept_id INT REFERENCES dept(id));',
-            ],
-            [
-                "INSERT INTO dept (id, name) VALUES (1, 'Engineering');",
-                "INSERT INTO emp (id, dept_id) VALUES (1, 1), (2, 1);",
-            ],
-        )
-        conn = create_db(dataset, 'postgres')
-        rows = conn.execute('SELECT * FROM emp').fetchall()
-        conn.close()
-        assert len(rows) == 2
+    def test_has_results_false_error(self):
+        r = ExecutionResult(rows=[], error='some error')
+        assert not r.has_results
+        assert not r.success
 
 
 # =================================================================
@@ -78,71 +49,26 @@ class TestCreateDb:
 class TestExecuteQuery:
 
     def test_returns_results(self):
-        dataset = _make_dataset(
-            ['CREATE TABLE t1 (id INT PRIMARY KEY, val INT);'],
-            ['INSERT INTO t1 (id, val) VALUES (1, 10), (2, 20), (3, 30);'],
-        )
-        conn = create_db(dataset, 'postgres')
-        result = execute_query(conn, 'SELECT * FROM t1 WHERE val > 15', 'postgres')
-        conn.close()
+        db = MagicMock()
+        db.execute.return_value = [(1, 10), (2, 20)]
+        result = execute_query(db, 'SELECT * FROM t1')
         assert result.success
         assert result.has_results
         assert len(result.rows) == 2
 
     def test_returns_empty(self):
-        dataset = _make_dataset(
-            ['CREATE TABLE t1 (id INT PRIMARY KEY, val INT);'],
-            ['INSERT INTO t1 (id, val) VALUES (1, 10), (2, 20);'],
-        )
-        conn = create_db(dataset, 'postgres')
-        result = execute_query(conn, 'SELECT * FROM t1 WHERE val > 100', 'postgres')
-        conn.close()
+        db = MagicMock()
+        db.execute.return_value = []
+        result = execute_query(db, 'SELECT * FROM t1 WHERE val > 100')
         assert result.success
         assert not result.has_results
-        assert len(result.rows) == 0
 
     def test_query_error(self):
-        dataset = _make_dataset(
-            ['CREATE TABLE t1 (id INT PRIMARY KEY);'],
-            ['INSERT INTO t1 (id) VALUES (1);'],
-        )
-        conn = create_db(dataset, 'postgres')
-        result = execute_query(conn, 'SELECT * FROM nonexistent_table', 'postgres')
-        conn.close()
+        db = MagicMock()
+        db.execute.side_effect = QueryExecutionError('table not found')
+        result = execute_query(db, 'SELECT * FROM nonexistent')
         assert not result.success
         assert result.error is not None
-
-    def test_columns_returned(self):
-        dataset = _make_dataset(
-            ['CREATE TABLE t1 (id INT PRIMARY KEY, name VARCHAR);'],
-            ["INSERT INTO t1 (id, name) VALUES (1, 'Alice');"],
-        )
-        conn = create_db(dataset, 'postgres')
-        result = execute_query(conn, 'SELECT id, name FROM t1', 'postgres')
-        conn.close()
-        assert result.columns == ['id', 'name']
-
-
-# =================================================================
-# EXECUTION RESULT
-# =================================================================
-
-class TestExecutionResult:
-
-    def test_has_results_true(self):
-        r = ExecutionResult(rows=[(1,)], columns=['id'])
-        assert r.has_results
-        assert r.success
-
-    def test_has_results_false_empty(self):
-        r = ExecutionResult(rows=[], columns=[])
-        assert not r.has_results
-        assert r.success
-
-    def test_has_results_false_error(self):
-        r = ExecutionResult(rows=[], columns=[], error='some error')
-        assert not r.has_results
-        assert not r.success
 
 
 # =================================================================
@@ -151,7 +77,8 @@ class TestExecutionResult:
 
 class TestValidateAssignment:
 
-    def test_all_exercises_return_results(self):
+    @patch('sql_assignment_generator.query_executor.get_database')
+    def test_all_exercises_return_results(self, mock_get_db):
         dataset = _make_dataset(
             ['CREATE TABLE t1 (id INT PRIMARY KEY, val INT);'],
             ['INSERT INTO t1 (id, val) VALUES (1, 10), (2, 20);'],
@@ -166,12 +93,20 @@ class TestValidateAssignment:
             error=SqlErrors.SYN_1_OMITTING_CORRELATION_NAMES,
         )
         assignment = Assignment(dataset=dataset, exercises=[exercise])
-        results = validate_assignment(assignment, 'postgres')
+
+        mock_db = MagicMock()
+        mock_db.execute.return_value = [(1, 10), (2, 20)]
+        mock_db.__enter__ = MagicMock(return_value=mock_db)
+        mock_db.__exit__ = MagicMock(return_value=False)
+        mock_get_db.return_value = mock_db
+
+        results = validate_assignment(assignment, 'postgres', 'h', 5432, 'u', 'p')
         assert len(results) == 1
         _, result = results[0]
         assert result.has_results
 
-    def test_exercise_returns_no_results(self):
+    @patch('sql_assignment_generator.query_executor.get_database')
+    def test_exercise_returns_no_results(self, mock_get_db):
         dataset = _make_dataset(
             ['CREATE TABLE t1 (id INT PRIMARY KEY, val INT);'],
             ['INSERT INTO t1 (id, val) VALUES (1, 10), (2, 20);'],
@@ -186,13 +121,22 @@ class TestValidateAssignment:
             error=SqlErrors.SYN_1_OMITTING_CORRELATION_NAMES,
         )
         assignment = Assignment(dataset=dataset, exercises=[exercise])
-        results = validate_assignment(assignment, 'postgres')
+
+        mock_db = MagicMock()
+        # First call loads dataset, second call executes query returning empty
+        mock_db.execute.side_effect = [None, []]
+        mock_db.__enter__ = MagicMock(return_value=mock_db)
+        mock_db.__exit__ = MagicMock(return_value=False)
+        mock_get_db.return_value = mock_db
+
+        results = validate_assignment(assignment, 'postgres', 'h', 5432, 'u', 'p')
         assert len(results) == 1
         _, result = results[0]
         assert result.success
         assert not result.has_results
 
-    def test_multiple_exercises_mixed(self):
+    @patch('sql_assignment_generator.query_executor.get_database')
+    def test_multiple_exercises_mixed(self, mock_get_db):
         dataset = _make_dataset(
             ['CREATE TABLE t1 (id INT PRIMARY KEY, val INT);'],
             ['INSERT INTO t1 (id, val) VALUES (1, 10), (2, 20);'],
@@ -217,7 +161,44 @@ class TestValidateAssignment:
             ),
         ]
         assignment = Assignment(dataset=dataset, exercises=exercises)
-        results = validate_assignment(assignment, 'postgres')
+
+        mock_db = MagicMock()
+        # 1st call: dataset load, 2nd: q_ok returns rows, 3rd: q_empty returns empty
+        mock_db.execute.side_effect = [None, [(1, 10), (2, 20)], []]
+        mock_db.__enter__ = MagicMock(return_value=mock_db)
+        mock_db.__exit__ = MagicMock(return_value=False)
+        mock_get_db.return_value = mock_db
+
+        results = validate_assignment(assignment, 'postgres', 'h', 5432, 'u', 'p')
         assert len(results) == 2
         assert results[0][1].has_results
         assert not results[1][1].has_results
+
+    @patch('sql_assignment_generator.query_executor.get_database')
+    def test_dataset_load_failure(self, mock_get_db):
+        dataset = _make_dataset(
+            ['CREATE TABLE t1 (id INT PRIMARY KEY);'],
+            ['INSERT INTO t1 (id) VALUES (1);'],
+        )
+        catalog = dataset.catalog
+        query = Query('SELECT * FROM t1', catalog=catalog)
+        exercise = Exercise(
+            title='Test',
+            request='r',
+            solutions=[query],
+            difficulty=DifficultyLevel.EASY,
+            error=SqlErrors.SYN_1_OMITTING_CORRELATION_NAMES,
+        )
+        assignment = Assignment(dataset=dataset, exercises=[exercise])
+
+        mock_db = MagicMock()
+        mock_db.execute.side_effect = QueryExecutionError('schema error')
+        mock_db.__enter__ = MagicMock(return_value=mock_db)
+        mock_db.__exit__ = MagicMock(return_value=False)
+        mock_get_db.return_value = mock_db
+
+        results = validate_assignment(assignment, 'postgres', 'h', 5432, 'u', 'p')
+        assert len(results) == 1
+        _, result = results[0]
+        assert not result.success
+        assert 'Dataset failed to load' in result.error
