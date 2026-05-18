@@ -1,7 +1,7 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.subquery import NoSubquery, Subqueries, NestedSubqueries, NoNesting
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.constraints.query.subquery import NoSubquery, Subqueries, NestedSubqueries, NoNesting
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST NO SUBQUERY PASS

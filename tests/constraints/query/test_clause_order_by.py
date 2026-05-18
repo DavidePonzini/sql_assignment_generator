@@ -1,12 +1,12 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.clause_order_by import (
+from sqlexercise.constraints.query.clause_order_by import (
     NoOrderBy, 
     OrderBy, 
     OrderByASC, 
     OrderByDESC
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST NO ORDER BY PASS

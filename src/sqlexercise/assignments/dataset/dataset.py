@@ -14,6 +14,7 @@ from ...constraints import SchemaConstraint, schema as schema_constraints
 from ...exceptions import SQLParsingError, ConstraintValidationError, DatasetGenerationError
 from ...translatable_text import TranslatableText
 from ...db import get_database, QueryExecutionError
+from ... import log 
 
 
 def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> list[str]:
@@ -141,7 +142,10 @@ class Dataset:
         except Exception as e:
             raise SQLParsingError(f"Error parsing SQL string: {e}", sql_str)
 
-        insert_commands = _normalize_inserts(insert_asts, sql_dialect)
+        try:
+            insert_commands = _normalize_inserts(insert_asts, sql_dialect)
+        except Exception as e:
+            insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in insert_asts]
 
         return Dataset(
             create_commands=create_commands,
@@ -182,7 +186,6 @@ class Dataset:
         
         for attempt in range(max_attempts):
             # messages.print_chat()
-            
             try:
                 dav_tools.messages.progress(f'Generating dataset (Attempt {attempt + 1}/{max_attempts})...')
 
@@ -223,7 +226,11 @@ class Dataset:
                             ).get(language),
                             create_table
                         )
-                insert_commands = _normalize_inserts(parsed_inserts, sql_dialect)
+                    
+                try:
+                    insert_commands = _normalize_inserts(parsed_inserts, sql_dialect)
+                except Exception as e:
+                    insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_inserts]
 
                 # try executing the generated SQL to ensure it's valid and to build the catalog for constraint validation
                 dav_tools.messages.progress('Executing SQL...')
@@ -247,12 +254,20 @@ class Dataset:
                 # check if constraints are satisfied
                 dav_tools.messages.progress('Checking constraints...')
                 
-                errors = []
+                errors: list[str] = []
                 for constraint in constraints:
                     try:
                         constraint.validate(catalog, parsed_tables, parsed_inserts)
                     except ConstraintValidationError as e:
                         errors.append(e.get(language=language))
+                        log.log_message(
+                                message=f'Constraint validation failed',
+                                details=constraint.__class__.__name__,
+                                is_dataset=True,
+                                attempt=attempt + 1,
+                                attempt_max=max_attempts,
+                                sql=full_sql
+                            )
                         continue
 
                 # no errors, return dataset
@@ -266,6 +281,15 @@ class Dataset:
                     result._catalog_cache = catalog
                     result._catalog_cache_commands_hash = hash(tuple(create_commands))
                     
+                    log.log_message(
+                        message=f'SUCCESS',
+                        details=None,
+                        is_dataset=True,
+                        attempt=attempt + 1,
+                        attempt_max=max_attempts,
+                        sql=full_sql
+                    )
+
                     return result
                 
                 dav_tools.messages.error(f'Validation failed for attempt {attempt + 1}. Missing requirements: {", ".join(errors)}')
@@ -274,6 +298,14 @@ class Dataset:
 
             except SQLParsingError as e:
                 dav_tools.messages.error(f"Error during generation (Attempt {attempt + 1}): {e}")
+                log.log_message(
+                    message=f'SQL parsing/execution error',
+                    details=None,
+                    is_dataset=True,
+                    attempt=attempt + 1,
+                    attempt_max=max_attempts,
+                    sql=e.sql
+                )
                 messages.add_message_user(
                     TranslatableText(
                         f"Generated SQL code is not syntactically valid: {str(e)}. Please regenerate valid SQL.",
@@ -281,4 +313,12 @@ class Dataset:
                     ).get(language)
                 )
         
+        log.log_message(
+            message=f'FAILED',
+            details=None,
+            is_dataset=True,
+            attempt=max_attempts,
+            attempt_max=max_attempts,
+            sql=None
+        )
         raise DatasetGenerationError(f'Failed to generate a valid dataset after {max_attempts} attempts.')

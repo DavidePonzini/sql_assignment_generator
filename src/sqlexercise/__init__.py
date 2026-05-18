@@ -6,6 +6,7 @@ from typing import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import random
+import datetime
 
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
@@ -13,8 +14,7 @@ from .assignments import Assignment, Dataset, Exercise
 from .constraints import SchemaConstraint, QueryConstraint
 from .error_requirements import SqlErrorRequirements, ERROR_REQUIREMENTS_MAP
 from .exceptions import ExerciseGenerationError
-from .db import Database, QueryExecutionError
-
+from . import log
 import dav_tools
 from sql_error_taxonomy import SqlErrors
 
@@ -35,7 +35,7 @@ def generate_assignment(
         max_dataset_attempts: int = 3,
         max_exercise_attempts: int = 3,
         max_unique_attempts: int = 3,
-        max_workers: int | None = None
+        max_workers: int | None = None,
     ) -> Assignment:
     '''
     Generate SQL assignments based on the given SQL errors and their corresponding difficulty levels.
@@ -60,6 +60,11 @@ def generate_assignment(
     Returns:
         Assignment: The generated assignment (stable order).
     '''
+
+    log.START_TS = datetime.datetime.now()
+    log.ERRORS = [e for e, _ in errors]
+    log.DIFFICULTIES = [d for _, d in errors]
+    log.DOMAIN = domain
     
     # filter only supported errors
     supported_errors: list[tuple[SqlErrors, DifficultyLevel]] = []
@@ -92,6 +97,8 @@ def generate_assignment(
         # No dataset string provided, so we need to generate a dataset based on the requirements of the exercises.
         if domain is None:
             domain = random_domain(language=language)
+            log.DOMAIN = domain
+        
 
         dataset_requirements: list[SchemaConstraint] = []
         for _, req, difficulty in requirements:
@@ -139,7 +146,8 @@ def generate_assignment(
     ) -> tuple[int, Exercise | None]:
         title = naming_func(error, difficulty)
 
-        dav_tools.messages.info(f'Starting generation for exercise: {title}')
+        with log_lock:
+            dav_tools.messages.info(f'[{idx}] Starting generation for exercise: {title}')
 
         last_generated_exercise: Exercise | None = None
 
@@ -162,7 +170,7 @@ def generate_assignment(
                 )
             except ExerciseGenerationError:
                 with log_lock:
-                    dav_tools.messages.warning(f'{title}: Skipping exercise generation for {error.name} due to validation failures.')
+                    dav_tools.messages.warning(f'[{idx}] VALIDATION_FAILURE {error.value} {difficulty.value} {title}: Skipping exercise generation for {error.name} due to validation failures.')
                 return (idx, None)
 
             last_generated_exercise = generated_exercise
@@ -176,17 +184,17 @@ def generate_assignment(
 
             if is_duplicate:
                 with log_lock:
-                    dav_tools.messages.warning(f'{title}: Duplicate solution detected for {error.name} (Attempt {attempt + 1}/{max_unique_attempts}). Regenerating...')
+                    dav_tools.messages.warning(f'[{idx}] {title}: Duplicate solution detected for {error.name} (Attempt {attempt + 1}/{max_unique_attempts}). Regenerating...')
                 continue
 
             with log_lock:
-                dav_tools.messages.info(f'{title}: Successfully generated.')
+                dav_tools.messages.info(f'[{idx}] {title}: Successfully generated.')
                 
             return (idx, generated_exercise)
 
         if last_generated_exercise is not None:
             with log_lock:
-                dav_tools.messages.error(f'{title}: Could not generate a UNIQUE exercise for {error.name} after {max_unique_attempts} retries. Skipping.')
+                dav_tools.messages.error(f'[{idx}] {title}: Could not generate a UNIQUE exercise for {error.name} after {max_unique_attempts} retries. Skipping.')
         return (idx, None)
 
     # Pre-allocate so we can preserve ordering no matter completion order.

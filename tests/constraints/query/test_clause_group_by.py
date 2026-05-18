@@ -1,7 +1,7 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.clause_group_by import NoGroupBy, GroupBy
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.constraints.query.clause_group_by import NoGroupBy, GroupBy
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST NO GROUP BY PASS

@@ -2,8 +2,8 @@ import pytest
 import sqlglot
 from sqlglot import exp
 from sqlscope import build_catalog_from_sql
-from sql_assignment_generator.constraints.schema.values import MinRows, SingleInsertPerTable
-from sql_assignment_generator.exceptions import ConstraintMergeError, ConstraintValidationError
+from sqlexercise.constraints.schema.values import MinRows, SingleInsertPerTable
+from sqlexercise.exceptions import ConstraintMergeError, ConstraintValidationError
 
 from . import prepare_catalog
 

@@ -1,7 +1,7 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.aggregation import NoAggregation, NoPartitioning, Aggregation
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.constraints.query.aggregation import NoAggregation, NoPartitioning, Aggregation
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST NO PARTITIONING FAIL

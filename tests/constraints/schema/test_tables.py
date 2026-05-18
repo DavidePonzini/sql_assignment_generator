@@ -1,6 +1,6 @@
 import pytest
-from sql_assignment_generator.exceptions import ConstraintMergeError, ConstraintValidationError
-from sql_assignment_generator.constraints.schema.tables import (
+from sqlexercise.exceptions import ConstraintMergeError, ConstraintValidationError
+from sqlexercise.constraints.schema.tables import (
     MinTables, 
     MinChecks, 
     MinColumns, 

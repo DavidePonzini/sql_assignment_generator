@@ -1,4 +1,4 @@
-from sql_assignment_generator.constraints.schema import tables
+from sqlexercise.constraints.schema import tables
 
 from .base import QueryConstraint
 from sqlscope import Query

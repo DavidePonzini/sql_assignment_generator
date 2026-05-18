@@ -1,6 +1,6 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.clause_where import (
+from sqlexercise.constraints.query.clause_where import (
     Condition, 
     StringComparison, 
     EmptyStringComparison, 
@@ -16,7 +16,7 @@ from sql_assignment_generator.constraints.query.clause_where import (
     MultipleConditionsOnSameColumn,
     InAnyAll
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST CONDITION PASS

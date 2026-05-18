@@ -245,8 +245,8 @@ class SameColumnNames(SchemaConstraint):
     @property
     def description(self) -> TranslatableText:
         return TranslatableText(
-            f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name but different semantic meaning',
-            it=f'Nel CREATE TABLE deve avere almeno {self.pairs} coppia/e di colonne non chiave (PK o FK) con lo stesso nome ma significato semantico diverso'
+            f'In CREATE TABLE must have at least {self.pairs} pair(s) of non-key columns (either PKs or FKs) with the same name but different semantic meaning. These columns should reference different concepts across tables (e.g. "name" in an "employees" table vs "name" in a "departments" table) to create ambiguity in column references.',
+            it=f'Nel CREATE TABLE deve avere almeno {self.pairs} coppia/e di colonne non chiave (PK o FK) con lo stesso nome ma significato semantico diverso. Queste colonne dovrebbero fare riferimento a concetti diversi tra le tabelle (es. "name" in una tabella "employees" vs "name" in una tabella "departments") per creare ambiguità nei riferimenti alle colonne.'
         )
 
     def merge(self, other: SchemaConstraint) -> 'SameColumnNames':

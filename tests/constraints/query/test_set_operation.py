@@ -1,11 +1,11 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.set_operations import (
+from sqlexercise.constraints.query.set_operations import (
     Union, 
     NoUnion, 
     UnionOfType
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST UNION PASS

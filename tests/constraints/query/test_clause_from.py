@@ -1,13 +1,13 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.clause_from import (
+from sqlexercise.constraints.query.clause_from import (
     TableReferences, 
     LeftJoin, 
     RightJoin, 
     NoJoin, 
     SelfJoin
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST TABLE REFERENCES FAIL

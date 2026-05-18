@@ -2,7 +2,7 @@
 # Type: PyPi
 # Author: Davide Ponzini
 
-NAME=sql_assignment_generator
+NAME=sqlexercise
 VENV=./venv
 REQUIREMENTS=requirements.txt
 

@@ -1,11 +1,11 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.rows import (
+from sqlexercise.constraints.query.rows import (
     Duplicates, 
     NoDuplicates, 
     Distinct
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST DUPLICATES PASS

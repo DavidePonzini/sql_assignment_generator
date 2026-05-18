@@ -1,11 +1,11 @@
 import pytest
 from sqlscope import Query
-from sql_assignment_generator.constraints.query.clause_select import (
+from sqlexercise.constraints.query.clause_select import (
     SelectedColumns, 
     NoAlias, 
     Alias
 )
-from sql_assignment_generator.exceptions import ConstraintValidationError
+from sqlexercise.exceptions import ConstraintValidationError
 
 # =================================================================
 # TEST SELECTED COLUMNS PASS
