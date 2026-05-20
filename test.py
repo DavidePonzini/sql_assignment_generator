@@ -3,39 +3,42 @@
 from src.sqlexercise.difficulty_level import DifficultyLevel
 from src.sqlexercise import generate_assignment
 from src.sqlexercise.exceptions import DatasetGenerationError, ExerciseGenerationError
+from src.sqlexercise.error_requirements import ERROR_REQUIREMENTS_MAP
 
 from sql_error_taxonomy import SqlErrors
 from dotenv import load_dotenv
+from concurrent.futures import ProcessPoolExecutor
 import random
 import dav_tools
+
+# change these values as needed
+DOMAIN = None
+DATASET_SQL = None
+
 
 if __name__ == '__main__':
     load_dotenv()
 
-    with open('dataset_adbis.sql', 'r') as f:
-        dataset_sql = f.read()
-    # dataset_sql = None
+    # with open('dataset_adbis.sql', 'r') as f:
+        # dataset_sql = f.read()
 
-    # change these values as needed
-    domain = 'employees(emp_id, name, city, salary); departments(dept_id, name, city, budget)'
-    # all_errors = [(e, d) for e in SqlErrors for d in DifficultyLevel]
     errors = [
-        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.MEDIUM),
+        (SqlErrors.MISSING_COLUMN_FROM_SELECT, DifficultyLevel.HARD),
     ]
 
     assignment = generate_assignment(
-        errors=errors,
-        db_host='localhost',
-        db_port=5432,
-        db_user='postgres',
-        db_password='password',
-        sql_dialect='postgres',
-        domain=domain,
-        language='en',
-        dataset_str=dataset_sql,
-        max_dataset_attempts=10,
-        max_exercise_attempts=10,
-    )
+            errors=errors,
+            db_host='localhost',
+            db_port=5432,
+            db_user='postgres',
+            db_password='password',
+            sql_dialect='postgres',
+            domain=DOMAIN,
+            language='en',
+            dataset_str=DATASET_SQL,
+            max_dataset_attempts=10,
+            max_exercise_attempts=10,
+        )
 
     dav_tools.messages.message(
         '-' * 50,
