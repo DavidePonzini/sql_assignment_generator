@@ -1,6 +1,5 @@
 from collections import Counter
 import random
-from typing import Callable
 from .base import QueryConstraint
 from sqlscope import Query
 from sqlglot import exp
@@ -441,6 +440,12 @@ class Not(QueryConstraint):
                 # Look for NOT operators
                 not_nodes = list(where.find_all(exp.Not))
                 count += len(not_nodes)
+
+                # `NOT LIKE` is represented as a `Like` node with `negate=True`, so we need to count those as well
+                not_like_nodes = list(where.find_all(exp.Like))
+                for like in not_like_nodes:
+                    if like.args.get('negate', False):
+                        count += 1
 
                 condition_count.append(count)
 

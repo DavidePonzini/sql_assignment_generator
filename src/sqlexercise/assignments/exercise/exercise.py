@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from sql_error_taxonomy import SqlErrors
+from sqlerrors import SqlErrors
 from sqlscope import Query
-import dav_tools
 import os
+from typing import Callable
+import logging
 
 from . import strings
 from ..dataset import Dataset
@@ -12,7 +13,8 @@ from ... import llm
 from ...exceptions import ExerciseGenerationError, SQLParsingError, ConstraintValidationError
 from ...translatable_text import TranslatableText
 from ...db import get_database, QueryExecutionError
-from ... import log
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Exercise:
@@ -49,6 +51,7 @@ class Exercise:
         sql_dialect: str,
         language: str,
         max_attempts: int = 3,
+        on_attempt_start: Callable[[], None] = lambda: None,
     ) -> 'Exercise':
         '''Generate a SQL exercise based on the specified parameters.'''
 
@@ -64,7 +67,9 @@ class Exercise:
 
         # start with a lower temperature for more focused generation,
         # and increase it with each attempt to encourage more diversity in the generated solutions
-        for attempt in range(max_attempts):
+        for _ in range(max_attempts):
+            on_attempt_start()
+
             try:
                 answer = llm.generate_answer(
                     messages,
@@ -77,15 +82,6 @@ class Exercise:
                 try:
                     query = Query(answer.solution, catalog=dataset.catalog)
                 except Exception as e:
-                    log.log_message(
-                        message=f'SQL parsing error',
-                        details=None,
-                        is_dataset=False,
-                        attempt=attempt + 1,
-                        attempt_max=max_attempts,
-                        sql=answer.solution
-                    )
-                    
                     raise SQLParsingError(
                         TranslatableText(
                             f"Generated SQL solution contains syntax errors: {e}",
@@ -100,15 +96,6 @@ class Exercise:
                         db.execute(dataset.to_sql_no_context())
                         db.execute(query.sql)
                     except QueryExecutionError as e:
-                        log.log_message(
-                            message=f'SQL execution error',
-                            details=None,
-                            is_dataset=False,
-                            attempt=attempt + 1,
-                            attempt_max=max_attempts,
-                            sql=query.sql
-                        )
-
                         raise SQLParsingError(
                             TranslatableText(
                                 f"Generated SQL solution cannot be executed: {e}",
@@ -124,19 +111,10 @@ class Exercise:
                     try:
                         constraint.validate(query)
                     except ConstraintValidationError as e:
-                        log.log_message(
-                            message=f'Constraint validation failed',
-                            details=constraint.__class__.__name__,
-                            is_dataset=False,
-                            attempt=attempt + 1,
-                            attempt_max=max_attempts,
-                            sql=query.sql
-                        )
                         constraint_errors.append(e.get(language))
 
                 if constraint_errors:
-                    missing_reqs = "\n\t- ".join(constraint_errors)
-                    dav_tools.messages.error(f'Validation failed for attempt {attempt + 1} (error: {error.name}). Missing requirements:\n\t- {missing_reqs}')
+                    logger.debug(f'Constraint validation errors found: {constraint_errors}')
                     messages.add_message_user(strings.feedback_validation_errors(constraint_errors, language=language))
                     continue
 
@@ -150,28 +128,20 @@ class Exercise:
                 )
 
                 assert isinstance(answer_refinement, llm.models.RemoveHints)
-                # dav_tools.messages.debug(f"Old Request: {answer.request}")
-                # dav_tools.messages.debug(f"Refined Request: {answer_refinement.request_without_hints}")
                 answer.request = answer_refinement.request_without_hints
 
-                log.log_message(
-                    message=f'SUCCESS',
-                    details=None,
-                    is_dataset=False,
-                    attempt=attempt + 1,
-                    attempt_max=max_attempts,
-                    sql=answer.solution
-                )
-
-                return Exercise(
+                result = Exercise(
                     title=title,
                     request=answer.request,
                     solutions=[query],
                     difficulty=difficulty,
                     error=error
                 )
+
+                return result
+
             except Exception as e:
-                dav_tools.messages.error(f"Error during exercise generation (Attempt {attempt + 1}): {e}")                
+                logger.debug(f'Error occurred while generating exercise: {e}')
                 messages.add_message_user(
                     TranslatableText(
                         f"An error occurred: {str(e)}. Please regenerate valid JSON/SQL.",
@@ -179,12 +149,4 @@ class Exercise:
                     ).get(language)
                 )
 
-        log.log_message(
-            message=f'FAILED',
-            details=None,
-            is_dataset=False,
-            attempt=max_attempts,
-            attempt_max=max_attempts,
-            sql=None
-        )
         raise ExerciseGenerationError(f'Failed to generate a valid exercise for {error.name} after {max_attempts} attempts.')

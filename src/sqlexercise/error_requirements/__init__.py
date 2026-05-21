@@ -1,4 +1,4 @@
-from sql_error_taxonomy import SqlErrors
+from sqlerrors import SqlErrors
 
 from .base import SqlErrorRequirements
 

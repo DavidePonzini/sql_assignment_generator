@@ -1,48 +1,35 @@
 '''Test script to generate an SQL assignment based on specified error, difficulty, and domain.'''
 
-from src.sqlexercise.difficulty_level import DifficultyLevel
-from src.sqlexercise import generate_assignment
-from src.sqlexercise.exceptions import DatasetGenerationError, ExerciseGenerationError
-from src.sqlexercise.error_requirements import ERROR_REQUIREMENTS_MAP
-
-from sql_error_taxonomy import SqlErrors
-from dotenv import load_dotenv
-from concurrent.futures import ProcessPoolExecutor
-import random
 import dav_tools
+import tqdm
+from dotenv import load_dotenv
+from sqlerrors import SqlErrors
+import logging
 
-# change these values as needed
-DOMAIN = None
-DATASET_SQL = None
+from src.sqlexercise import generate_assignment
+from src.sqlexercise.difficulty_level import DifficultyLevel
+from src.sqlexercise import Assignment, Dataset, Exercise
 
+logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-if __name__ == '__main__':
-    load_dotenv()
+PROGRESS = tqdm.tqdm()
 
-    # with open('dataset_adbis.sql', 'r') as f:
-        # dataset_sql = f.read()
+def on_domain_selection(domain: str) -> None:
+    dav_tools.messages.info(f'Selected domain: {domain}')
 
-    errors = [
-        (SqlErrors.MISSING_COLUMN_FROM_SELECT, DifficultyLevel.HARD),
-    ]
+def on_generation_progress(attempt: int, max_attempts: int, label: str) -> None:
+    PROGRESS.total = max_attempts
+    PROGRESS.n = attempt
+    PROGRESS.set_description(label, refresh=False)
+    PROGRESS.refresh()
 
-    assignment = generate_assignment(
-            errors=errors,
-            db_host='localhost',
-            db_port=5432,
-            db_user='postgres',
-            db_password='password',
-            sql_dialect='postgres',
-            domain=DOMAIN,
-            language='en',
-            dataset_str=DATASET_SQL,
-            max_dataset_attempts=10,
-            max_exercise_attempts=10,
-        )
+def on_exercise_generation_failure(error: SqlErrors, difficulty: DifficultyLevel) -> None:
+    tqdm.tqdm.write(f'Failed to generate exercise for error {error.value} ({error.name}) at difficulty {difficulty.name}')
 
+def print_dataset(dataset: Dataset):
     dav_tools.messages.message(
         '-' * 50,
-        assignment.dataset.to_sql('datasetExercise'),
+        dataset.to_sql('datasetExercise'),
         '-' * 50,
         default_text_options=[dav_tools.messages.TextFormat.Color.CYAN],
         sep='\n',
@@ -53,25 +40,63 @@ if __name__ == '__main__':
         ]
     )
 
+def print_exercise(exercise: Exercise):
+    dav_tools.messages.message(
+        exercise.title,
+        default_text_options=[dav_tools.messages.TextFormat.Style.BOLD],
+    )
+
+    dav_tools.messages.message(
+        exercise.request,
+        icon_options=[dav_tools.messages.TextFormat.Color.BLUE, dav_tools.messages.TextFormat.Style.BOLD],
+        icon='REQ',
+    )
+    for solution in exercise.solutions:
+        dav_tools.messages.message(
+            solution.sql,
+            default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
+            icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
+            icon='SOL',
+        )
+
+def print_assignment(assignment: Assignment):
+    print_dataset(assignment.dataset)
+
     dav_tools.messages.message()
-    
     for exercise in assignment.exercises:
-        dav_tools.messages.message(
-            exercise.title,
-            default_text_options=[dav_tools.messages.TextFormat.Style.BOLD],
-        )
-
-        dav_tools.messages.message(
-            exercise.request,
-            icon_options=[dav_tools.messages.TextFormat.Color.BLUE, dav_tools.messages.TextFormat.Style.BOLD],
-            icon='REQ',
-        )
-        for solution in exercise.solutions:
-            dav_tools.messages.message(
-                solution.sql,
-                default_text_options=[dav_tools.messages.TextFormat.Color.LIGHTGRAY],
-                icon_options=[dav_tools.messages.TextFormat.Color.GREEN, dav_tools.messages.TextFormat.Style.BOLD],
-                icon='SOL',
-            )
-
+        print_exercise(exercise)
         dav_tools.messages.message()
+
+if __name__ == '__main__':
+    load_dotenv()
+
+    errors = [
+        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+    ]
+
+    domain = None
+    dataset_sql = None
+    max_dataset_attempts = 10
+    max_exercise_attempts = 10
+
+    assignment = generate_assignment(
+        errors=errors,
+        db_host='localhost',
+        db_port=5432,
+        db_user='postgres',
+        db_password='password',
+        sql_dialect='postgres',
+        domain=domain,
+        language='en',
+        dataset_str=dataset_sql,
+        max_dataset_attempts=max_dataset_attempts,
+        max_exercise_attempts=max_exercise_attempts,
+        on_domain_selection=on_domain_selection,
+        on_dataset_generation_progress=lambda n, m: on_generation_progress(n, m, 'Dataset Generation'),
+        on_exercise_generation_progress=lambda n, m: on_generation_progress(n, m, 'Exercise Generation'),
+        on_exercise_generation_failure=on_exercise_generation_failure,
+    )
+
+    print_assignment(assignment)
