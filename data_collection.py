@@ -5,19 +5,36 @@ from src.sqlexercise import generate_assignment
 from src.sqlexercise.exceptions import DatasetGenerationError, ExerciseGenerationError
 from src.sqlexercise.error_requirements import ERROR_REQUIREMENTS_MAP
 
-from sql_error_taxonomy import SqlErrors
+from sqlerrors import SqlErrors
 from dotenv import load_dotenv
 from concurrent.futures import ProcessPoolExecutor
 import random
 import dav_tools
+from dav_tools import database
 
 # change these values as needed
 DOMAIN = None
 DATASET_SQL = None
 
+def log_event(label: str, success: bool, items: int):
+    db = database.PostgreSQL(
+        host='localhost',
+        port=5432,
+        database='postgres',
+        user='postgres',
+        password='password')
+    
+    db.insert(
+        schema='sqlexercise',
+        table='generation_log',
+        data={
+            'label': label,
+            'success': success,
+            'items': items
+        }
+    )
 
 def _generate_batch(items: int):
-
     supported_errors: list[SqlErrors] = list(ERROR_REQUIREMENTS_MAP.keys())
     errors: list[tuple[SqlErrors, DifficultyLevel]] = []
 
@@ -38,11 +55,14 @@ def _generate_batch(items: int):
             dataset_str=DATASET_SQL,
             max_dataset_attempts=10,
             max_exercise_attempts=10,
+            on_exercise_generation_failure=lambda e,d: log_event('exercise', False, items),
+            on_dataset_generation_success=lambda: log_event('dataset', True, items),
+            on_exercise_generation_success=lambda e,d: log_event('exercise', True, items),
         )
-    except (DatasetGenerationError, ExerciseGenerationError, ValueError, AttributeError, Exception):
-        pass
-
-        
+    except DatasetGenerationError:
+        log_event('dataset', False, items)
+    except (ValueError, AttributeError, Exception):
+        log_event('unknown', False, items)
 
 if __name__ == '__main__':
     load_dotenv()
