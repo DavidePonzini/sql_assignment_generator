@@ -71,9 +71,11 @@ if __name__ == '__main__':
     load_dotenv()
 
     errors = [
-        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
-        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
-        (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+        # (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.EASY),
+        # (SqlErrors.AMBIGUOUS_COLUMN, DifficultyLevel.MEDIUM),
+        (SqlErrors.COMPARISON_WITH_NULL, DifficultyLevel.EASY),
+        (SqlErrors.COMPARISON_WITH_NULL, DifficultyLevel.MEDIUM),
+        # (SqlErrors.COMPARISON_WITH_NULL, DifficultyLevel.HARD),
     ]
 
     domain = None

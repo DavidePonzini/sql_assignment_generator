@@ -44,3 +44,9 @@ Insert Value:
 class RemoveHints(BaseModel):
     '''JSON model for removing hints from a request'''
     request_without_hints: str
+
+
+@dataclass
+class InsertData(BaseModel):
+    '''JSON model for regenerated INSERT data'''
+    insert_commands: list[str]

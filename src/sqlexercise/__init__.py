@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from typing import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import random
+import dav_tools
+import sqlglot
 
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
@@ -13,8 +16,146 @@ from .assignments import Assignment, Dataset, Exercise
 from .constraints import SchemaConstraint, QueryConstraint
 from .error_requirements import SqlErrorRequirements, ERROR_REQUIREMENTS_MAP
 from .exceptions import ExerciseGenerationError
-import dav_tools
 from sqlerrors import SqlErrors
+from .query_executor import execute_query, validate_assignment
+from .assignments.dataset import strings as dataset_strings
+from .db import get_database, QueryExecutionError
+
+
+
+def _validate_and_fix_queries(
+        assignment: Assignment,
+        sql_dialect: str,
+        language: str,
+        max_regeneration_attempts: int,
+        db_host: str,
+        db_port: int,
+        db_user: str,
+        db_password: str,
+    ) -> Assignment:
+    '''Execute all exercises, regenerate data for queries returning no results.'''
+
+    results = validate_assignment(assignment, sql_dialect, db_host, db_port, db_user, db_password)
+
+    # Find exercises that return no results (and not due to execution errors)
+    failing_indices = [
+        i for i, (_, result) in enumerate(results)
+        if not result.has_results and result.success
+    ]
+
+    if not failing_indices:
+        return assignment
+
+    dav_tools.messages.warning(
+        f'{len(failing_indices)} exercise(s) return no results. Attempting to regenerate sample data.'
+    )
+
+    dataset = assignment.dataset
+    exercises = assignment.exercises
+    schema_sql = '\n'.join(dataset.create_commands)
+
+    for idx in failing_indices:
+        exercise = exercises[idx]
+        query_sql = exercise.solutions[0].sql
+        current_data = '\n'.join(dataset.insert_commands)
+
+        regenerated = False
+
+        for attempt in range(max_regeneration_attempts):
+            # Ask LLM to regenerate INSERT data
+            from . import llm
+
+            prompt = dataset_strings.prompt_regenerate_data(
+                schema_sql=schema_sql,
+                failing_query=query_sql,
+                current_data=current_data,
+                sql_dialect=sql_dialect,
+                language=language,
+            )
+
+            messages = llm.Message()
+            messages.add_message_user(prompt)
+
+            try:
+                answer = llm.generate_answer(messages, json_format=llm.models.InsertData, model=os.getenv('SQL_GENERATION_LLM_MODEL_DATASET', 'gpt-5.4-nano'))
+                assert isinstance(answer, llm.models.InsertData)
+
+                # Parse and normalize new INSERT commands
+                new_inserts = []
+                for cmd in answer.insert_commands:
+                    try:
+                        parsed = sqlglot.parse_one(cmd, read=sql_dialect)
+                        new_inserts.append(parsed)
+                    except Exception:
+                        new_inserts.append(cmd)
+
+                # Normalize using the existing function
+                from .assignments.dataset.dataset import _normalize_inserts
+                new_insert_commands = _normalize_inserts(
+                    [i for i in new_inserts if hasattr(i, 'sql')],
+                    sql_dialect
+                )
+
+                if not new_insert_commands:
+                    continue
+
+                # Try the new dataset
+                new_dataset = dataset.with_inserts(new_insert_commands)
+
+                # Verify against the real DBMS
+                with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
+                    try:
+                        db.execute(new_dataset.to_sql_no_context())
+                    except QueryExecutionError:
+                        dav_tools.messages.warning(
+                            f'{exercise.title}: Regenerated data failed to load (attempt {attempt + 1}).'
+                        )
+                        continue
+
+                    # Verify the failing query now returns results
+                    failing_result = execute_query(db, query_sql)
+                    if not failing_result.has_results:
+                        dav_tools.messages.warning(
+                            f'{exercise.title}: Regenerated data still returns no results (attempt {attempt + 1}).'
+                        )
+                        continue
+
+                    # Verify ALL other exercises still work
+                    all_pass = True
+                    for other_idx, other_exercise in enumerate(exercises):
+                        if other_idx == idx:
+                            continue
+                        other_result = execute_query(db, other_exercise.solutions[0].sql)
+                        if other_result.success and not other_result.has_results:
+                            all_pass = False
+                            dav_tools.messages.warning(
+                                f'{other_exercise.title}: Broken by regenerated data.'
+                            )
+                            break
+
+                if all_pass:
+                    dataset = new_dataset
+                    regenerated = True
+                    dav_tools.messages.success(
+                        f'{exercise.title}: Data regenerated successfully.'
+                    )
+                    break
+                else:
+                    dav_tools.messages.warning(
+                        f'{exercise.title}: Regenerated data broke other exercises (attempt {attempt + 1}).'
+                    )
+
+            except Exception as e:
+                dav_tools.messages.error(
+                    f'{exercise.title}: Error regenerating data (attempt {attempt + 1}): {e}'
+                )
+
+        if not regenerated:
+            dav_tools.messages.warning(
+                f'{exercise.title}: Could not regenerate data after {max_regeneration_attempts} attempts. Keeping original data.'
+            )
+
+    return Assignment(dataset=dataset, exercises=exercises)
 
 
 def generate_assignment(
@@ -40,6 +181,8 @@ def generate_assignment(
         on_dataset_generation_success: Callable[[], None] = lambda: None,
         on_exercise_generation_success: Callable[[SqlErrors, DifficultyLevel], None] = lambda e, d: None,
         on_exercise_generation_failure: Callable[[SqlErrors, DifficultyLevel], None] = lambda e, d: None,
+        validate_queries: bool = True,
+        max_regeneration_attempts: int = 2,
     ) -> Assignment:
     '''
     Generate SQL assignments based on the given SQL errors and their corresponding difficulty levels.
@@ -249,7 +392,22 @@ def generate_assignment(
 
     exercises: list[Exercise] = [ex for ex in ordered_results if ex is not None]
 
-    return Assignment(
+    assignment = Assignment(
         dataset=dataset,
         exercises=exercises
     )
+
+    # Post-generation validation: execute queries and check for empty results
+    if validate_queries and exercises:
+        assignment = _validate_and_fix_queries(
+            assignment=assignment,
+            sql_dialect=sql_dialect,
+            language=language,
+            max_regeneration_attempts=max_regeneration_attempts,
+            db_host=db_host,
+            db_port=db_port,
+            db_user=db_user,
+            db_password=db_password,
+        )
+
+    return assignment
