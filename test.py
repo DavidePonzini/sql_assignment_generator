@@ -5,6 +5,7 @@ import tqdm
 from dotenv import load_dotenv
 from sqlerrors import SqlErrors
 import logging
+from sqlscope import Dialect
 
 from src.sqlexercise import generate_assignment
 from src.sqlexercise.difficulty_level import DifficultyLevel
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         db_port=5432,
         db_user='postgres',
         db_password='password',
-        sql_dialect='postgres',
+        sql_dialect=Dialect.POSTGRES,
         domain=domain,
         language='en',
         dataset_str=dataset_sql,

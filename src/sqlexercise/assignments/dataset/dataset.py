@@ -219,7 +219,7 @@ class Dataset:
                             ).get(language),
                             create_table
                         )
-                create_commands = [f'{cmd.sql(pretty=True, dialect=dialect)};' for cmd in parsed_tables]
+                create_commands = [f'{cmd.sql(pretty=True, dialect=dialect.get_sqlglot_dialect())};' for cmd in parsed_tables]
 
                 # parse INSERT INTOs
                 parsed_inserts = []
@@ -239,7 +239,7 @@ class Dataset:
                 try:
                     insert_commands = _normalize_inserts(parsed_inserts, dialect)
                 except Exception as e:
-                    insert_commands = [f'{cmd.sql(pretty=True, dialect=dialect)};' for cmd in parsed_inserts]
+                    insert_commands = [f'{cmd.sql(pretty=True, dialect=dialect.get_sqlglot_dialect())};' for cmd in parsed_inserts]
 
                 # try executing the generated SQL to ensure it's valid and to build the catalog for constraint validation
                 with get_database(db_host, db_port, db_user, db_password, dialect) as db:
