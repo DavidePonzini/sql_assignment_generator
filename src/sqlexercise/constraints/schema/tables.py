@@ -111,8 +111,8 @@ class MinColumns(SchemaConstraint):
         valid_tables_count = 0
 
         for schema_name in catalog.schema_names:
-            for table_name in catalog[schema_name].table_names:
-                table = catalog[schema_name][table_name]
+            for table_name in catalog.get_schema(schema_name).table_names:
+                table = catalog.get_table(schema_name, table_name)
                 
                 # count columns in the table
                 column_count = len(table.columns)
@@ -163,9 +163,9 @@ class ComplexColumnName(SchemaConstraint):
         complex_cols_found = []
 
         for schema_name in catalog.schema_names:
-            for table_name in catalog[schema_name].table_names:
-                table = catalog[schema_name][table_name]
-                
+            for table_name in catalog.get_schema(schema_name).table_names:
+                table = catalog.get_table(schema_name, table_name)
+
                 for column in table.columns:
                     col_name = column.real_name
                     
@@ -209,8 +209,8 @@ class SameColumnNames(SchemaConstraint):
         '''Counter for column names across all tables.'''
 
         for schema_name in catalog.schema_names:
-            for table_name in catalog[schema_name].table_names:
-                table = catalog[schema_name][table_name]
+            for table_name in catalog.get_schema(schema_name).table_names:
+                table = catalog.get_table(schema_name, table_name)
 
                 pk_constraints = [c for c in table.unique_constraints if c.constraint_type == ConstraintType.PRIMARY_KEY]
                 pk_cols: set[str] = set()
@@ -264,8 +264,8 @@ class MaxColumns(SchemaConstraint):
 
     def validate(self, catalog: Catalog, tables_sql: list[exp.Create], values_sql: list[exp.Insert]) -> None:
         for schema_name in catalog.schema_names:
-            for table_name in catalog[schema_name].table_names:
-                table = catalog[schema_name][table_name]
+            for table_name in catalog.get_schema(schema_name).table_names:
+                table = catalog.get_table(schema_name, table_name)
                 column_count = len(table.columns)
 
                 if column_count > self.max_columns:

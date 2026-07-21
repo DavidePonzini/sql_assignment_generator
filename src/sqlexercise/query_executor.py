@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from sqlscope import Dialect
+
 from .assignments import Assignment, Exercise
 from .db import get_database, Database, QueryExecutionError
 
@@ -35,7 +37,7 @@ def execute_query(db: Database, query_sql: str) -> ExecutionResult:
 
 def validate_assignment(
         assignment: Assignment,
-        sql_dialect: str,
+        sql_dialect: Dialect,
         db_host: str,
         db_port: int,
         db_user: str,

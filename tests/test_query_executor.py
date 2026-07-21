@@ -7,7 +7,7 @@ from sqlexercise.query_executor import (
 from sqlexercise.assignments import Assignment, Dataset, Exercise
 from sqlexercise.difficulty_level import DifficultyLevel
 from sqlerrors import SqlErrors
-from sqlscope import Query
+from sqlscope import Query, Dialect
 from sqlexercise.db.exceptions import QueryExecutionError
 
 
@@ -15,7 +15,7 @@ def _make_dataset(create_sqls: list[str], insert_sqls: list[str]) -> Dataset:
     '''Create a Dataset from raw SQL strings.'''
     return Dataset.from_sql(
         sql_str='\n'.join(create_sqls + insert_sqls),
-        sql_dialect='postgres',
+        dialect=Dialect.POSTGRES,
     )
 
 

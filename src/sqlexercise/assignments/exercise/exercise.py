@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from sqlerrors import SqlErrors
-from sqlscope import Query
+from sqlscope import Query, Dialect
 import os
 from typing import Callable
 import logging
@@ -48,7 +48,7 @@ class Exercise:
         extra_details: str,
         dataset: Dataset,
         title: str,
-        sql_dialect: str,
+        sql_dialect: Dialect,
         language: str,
         max_attempts: int = 3,
         on_attempt_start: Callable[[], None] = lambda: None,
@@ -60,7 +60,7 @@ class Exercise:
             dataset_str=dataset.to_sql_no_context(),
             extra_details=extra_details,
             constraints=constraints,
-            sql_dialect=sql_dialect,
+            sql_dialect=sql_dialect.value,
             language=language,
             difficulty=difficulty
         ))

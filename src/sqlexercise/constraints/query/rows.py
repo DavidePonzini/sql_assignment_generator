@@ -73,8 +73,8 @@ class Distinct(QueryConstraint):
         has_distinct_constraint = any(c.constraint_type == ConstraintType.DISTINCT for c in output_constraints)
         other_constraints = [c for c in output_constraints if c.constraint_type != ConstraintType.DISTINCT]
 
-        all_tables_names = query.catalog[query.search_path].table_names
-        all_tables = [query.catalog[query.search_path][table_name] for table_name in all_tables_names]
+        all_tables_names = query.catalog.get_schema(query.search_path).table_names
+        all_tables = [query.catalog.get_table(query.search_path, table_name) for table_name in all_tables_names]
         all_constraints = [(t.name, c) for t in all_tables for c in t.unique_constraints]
         columns_to_avoid: set[tuple[str, ...]] = set()
 

@@ -28,7 +28,6 @@ def test_no_subquery_pass(sql):
     "SELECT a, (SELECT b FROM t2 LIMIT 1) FROM t1", # Subquery in SELECT
     "SELECT a FROM t1 WHERE x = 1 GROUP BY a HAVING COUNT(*) > (SELECT AVG(count) FROM t)" # Subquery in HAVING
 ])
-
 def test_no_subquery_fail(sql):
     query = Query(sql)
     constraint = NoSubquery()

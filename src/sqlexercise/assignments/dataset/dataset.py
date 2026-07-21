@@ -7,6 +7,7 @@ from sqlscope import Catalog, build_catalog_from_sql
 import os
 from typing import Callable
 import logging
+from sqlscope import Dialect
 
 from . import strings
 from ...constraints.schema import SchemaConstraint
@@ -17,7 +18,7 @@ from ...translatable_text import TranslatableText
 from ...db import get_database, QueryExecutionError
 
 
-def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> list[str]:
+def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: Dialect) -> list[str]:
     '''
     Merge multiple INSERT statements for the same table into a single multi-row INSERT.
     Returns the resulting list of SQL strings.
@@ -30,7 +31,7 @@ def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> li
     result = []
     for table_name, inserts in grouped.items():
         if len(inserts) == 1:
-            result.append(f'{inserts[0].sql(pretty=True, dialect=sql_dialect)};')
+            result.append(f'{inserts[0].sql(pretty=True, dialect=sql_dialect.get_sqlglot_dialect())};')
         else:
             # Check that all INSERTs have matching column lists before merging
             first = inserts[0]
@@ -52,7 +53,7 @@ def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> li
             if not columns_match:
                 # Column lists differ — keep separate, let constraint handle it
                 for insert in inserts:
-                    result.append(f'{insert.sql(pretty=True, dialect=sql_dialect)};')
+                    result.append(f'{insert.sql(pretty=True, dialect=sql_dialect.get_sqlglot_dialect())};')
                 continue
 
             all_rows = []
@@ -63,7 +64,7 @@ def _normalize_inserts(parsed_inserts: list[exp.Insert], sql_dialect: str) -> li
 
             new_values = exp.Values(expressions=all_rows)
             merged = exp.Insert(this=first.this, expression=new_values)
-            result.append(f'{merged.sql(pretty=True, dialect=sql_dialect)};')
+            result.append(f'{merged.sql(pretty=True, dialect=sql_dialect.get_sqlglot_dialect())};')
 
     return result
 
@@ -130,11 +131,11 @@ class Dataset:
         return strings.to_sql_format(schema=schema, create_cmds=create_cmds, insert_cmds=insert_cmds)
     
     @staticmethod
-    def from_sql(sql_str: str, sql_dialect: str) -> 'Dataset':
+    def from_sql(sql_str: str, dialect: Dialect) -> 'Dataset':
         '''Create a Dataset instance from a raw SQL string containing CREATE TABLE and INSERT INTO commands.'''
 
         try:
-            parsed = sqlglot.parse(sql_str, read=sql_dialect)
+            parsed = sqlglot.parse(sql_str, dialect=dialect.get_sqlglot_dialect())
             create_commands = []
             insert_asts = []
 
@@ -152,9 +153,9 @@ class Dataset:
             raise SQLParsingError(f"Error parsing SQL string: {e}", sql_str)
 
         try:
-            insert_commands = _normalize_inserts(insert_asts, sql_dialect)
+            insert_commands = _normalize_inserts(insert_asts, dialect)
         except Exception as e:
-            insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in insert_asts]
+            insert_commands = [f'{cmd.sql(pretty=True, dialect=dialect.get_sqlglot_dialect())};' for cmd in insert_asts]
 
         return Dataset(
             create_commands=create_commands,
@@ -165,7 +166,7 @@ class Dataset:
     @staticmethod
     def generate(
         domain: str,
-        sql_dialect: str,
+        dialect: Dialect,
         constraints: Sequence[SchemaConstraint],
         extra_details: list[str] = [],
         *,
@@ -186,7 +187,7 @@ class Dataset:
             domain=domain,
             extra_details=extra_details,
             constraints=constraints,
-            sql_dialect=sql_dialect,
+            sql_dialect=dialect.value,
             language=language,
         )
 
@@ -208,7 +209,7 @@ class Dataset:
                 parsed_tables = []
                 for create_table in answer.schema_tables:
                     try:
-                        parsed = sqlglot.parse_one(create_table, read=sql_dialect)
+                        parsed = sqlglot.parse_one(create_table, dialect=dialect.get_sqlglot_dialect())
                         parsed_tables.append(parsed)
                     except Exception as e:
                         raise SQLParsingError(
@@ -218,13 +219,13 @@ class Dataset:
                             ).get(language),
                             create_table
                         )
-                create_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_tables]
+                create_commands = [f'{cmd.sql(pretty=True, dialect=dialect)};' for cmd in parsed_tables]
 
                 # parse INSERT INTOs
                 parsed_inserts = []
                 for create_table in answer.insert_commands:
                     try:
-                        parsed = sqlglot.parse_one(create_table, read=sql_dialect)
+                        parsed = sqlglot.parse_one(create_table, dialect=dialect.get_sqlglot_dialect())
                         parsed_inserts.append(parsed)
                     except Exception as e:
                         raise SQLParsingError(
@@ -236,12 +237,12 @@ class Dataset:
                         )
                     
                 try:
-                    insert_commands = _normalize_inserts(parsed_inserts, sql_dialect)
+                    insert_commands = _normalize_inserts(parsed_inserts, dialect)
                 except Exception as e:
-                    insert_commands = [f'{cmd.sql(pretty=True, dialect=sql_dialect)};' for cmd in parsed_inserts]
+                    insert_commands = [f'{cmd.sql(pretty=True, dialect=dialect)};' for cmd in parsed_inserts]
 
                 # try executing the generated SQL to ensure it's valid and to build the catalog for constraint validation
-                with get_database(db_host, db_port, db_user, db_password, sql_dialect) as db:
+                with get_database(db_host, db_port, db_user, db_password, dialect) as db:
                     full_sql = '\n'.join(create_commands + insert_commands)
                     try:
                         db.execute(full_sql)

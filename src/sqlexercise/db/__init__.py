@@ -2,15 +2,16 @@ from .database import Database
 from .drivers import PostgresqlDatabase, MySQLDatabase
 from .exceptions import QueryExecutionError
 import dav_tools
+from sqlscope import Dialect
 
 
-def get_database(host: str, port: int, user: str, password: str, dbms: str) -> Database:
+def get_database(host: str, port: int, user: str, password: str, dbms: Dialect) -> Database:
     '''Factory function to get the appropriate database backend.'''
 
-    if dbms == 'postgres':
+    if dbms == Dialect.POSTGRES:
         return PostgresqlDatabase(host, port, user, password)
 
-    if dbms == 'mysql':
+    if dbms == Dialect.MYSQL:
         return MySQLDatabase(host, port, user, password)
 
     dav_tools.messages.warning(f'Unsupported database system "{dbms}". Skipping SQL execution steps.')

@@ -9,6 +9,7 @@ import threading
 import random
 import dav_tools
 import sqlglot
+from sqlscope import Dialect
 
 from .difficulty_level import DifficultyLevel
 from .domains import random_domain
@@ -25,7 +26,7 @@ from .db import get_database, QueryExecutionError
 
 def _validate_and_fix_queries(
         assignment: Assignment,
-        sql_dialect: str,
+        sql_dialect: Dialect,
         language: str,
         max_regeneration_attempts: int,
         db_host: str,
@@ -69,7 +70,7 @@ def _validate_and_fix_queries(
                 schema_sql=schema_sql,
                 failing_query=query_sql,
                 current_data=current_data,
-                sql_dialect=sql_dialect,
+                sql_dialect=sql_dialect.value,
                 language=language,
             )
 
@@ -84,7 +85,7 @@ def _validate_and_fix_queries(
                 new_inserts = []
                 for cmd in answer.insert_commands:
                     try:
-                        parsed = sqlglot.parse_one(cmd, read=sql_dialect)
+                        parsed = sqlglot.parse_one(cmd, dialect=sql_dialect.get_sqlglot_dialect())
                         new_inserts.append(parsed)
                     except Exception:
                         new_inserts.append(cmd)
@@ -164,7 +165,7 @@ def generate_assignment(
         db_port: int,
         db_user: str,
         db_password: str,
-        sql_dialect: str = 'postgres',
+        sql_dialect: Dialect = Dialect.POSTGRES,
         *,
         language: str = 'en',
         domain: str | None = None,
@@ -193,7 +194,7 @@ def generate_assignment(
 
     Args:
         errors (list[tuple[SqlErrors, DifficultyLevel]]): A list of (error, difficulty) pairs.
-        sql_dialect (str): The SQL dialect to use for generating the dataset and exercises (e.g., 'postgres', 'mysql').
+        sql_dialect (sqlscope.Dialect): The SQL dialect to use for generating the dataset and exercises (e.g., Dialect.POSTGRES, Dialect.MYSQL).
         domain (str | None): The domain for the assignments. If None, a random domain will be selected.
         language (str): The language for the assignment generation (e.g., 'en' for English).
         dataset_str (str | None): Optional SQL string to use as the dataset. If provided, it will be used instead of generating a new dataset.
@@ -264,7 +265,7 @@ def generate_assignment(
 
         dataset = Dataset.generate(
             domain=domain,
-            sql_dialect=sql_dialect,
+            dialect=sql_dialect,
             constraints=dataset_requirements,
             extra_details=dataset_extra_details,
             language=language,
@@ -280,7 +281,7 @@ def generate_assignment(
     else:
         dataset = Dataset.from_sql(
             sql_str=dataset_str,
-            sql_dialect=sql_dialect
+            dialect=sql_dialect
         )
 
     generated_solutions_hashes: set[str] = set()
